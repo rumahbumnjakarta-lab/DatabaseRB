@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Rumah BUMN Jakarta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2C4C;
+    --navy-deep:#0A1E36;
+    --gold:#C89A3A;
+    --gold-bright:#E0B655;
+    --paper:#F6F4EF;
+    --ink:#1B2430;
+    --line:#DCD6C8;
+    --card:#FFFFFF;
+    --green:#2E7D5B;
+    --red-warn:#B23A2F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+
+  /* HERO */
+  .hero{
+    background:linear-gradient(160deg,var(--navy) 0%, var(--navy-deep) 100%);
+    color:#fff;
+    padding:44px 32px 60px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-60px; top:-60px;
+    width:260px; height:260px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(224,182,85,0.18) 0%, rgba(224,182,85,0) 70%);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold-bright);
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:var(--gold-bright);display:inline-block;}
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  .hero p{
+    max-width:560px;
+    color:#C9D3E0;
+    font-size:15px;
+    line-height:1.6;
+    margin:0;
+  }
+  .stat-row{
+    display:flex;
+    gap:28px;
+    margin-top:30px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    border-left:2px solid rgba(224,182,85,0.4);
+    padding-left:12px;
+  }
+  .stat b{
+    display:block;
+    font-family:'Fraunces',serif;
+    font-size:24px;
+    color:var(--gold-bright);
+  }
+  .stat span{
+    font-size:11.5px;
+    color:#AEB9C9;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+
+  /* CONTROLS */
+  .controls{
+    max-width:1080px;
+    margin:-28px auto 0;
+    padding:0 24px;
+    position:relative;
+    z-index:2;
+  }
+  .search-bar{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 12px 30px -14px rgba(15,44,76,0.35);
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .search-bar svg{flex-shrink:0;color:#8A93A3;}
+  .search-bar input{
+    border:none;
+    outline:none;
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    background:transparent;
+    color:var(--ink);
+  }
+  .search-bar input::placeholder{color:#A5ACB8;}
+
+  .chips{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:18px 0 0;
+  }
+  .chip{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--navy);
+    cursor:pointer;
+    transition:all .15s ease;
+    user-select:none;
+  }
+  .chip:hover{border-color:var(--gold);}
+  .chip.active{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+
+  /* GRID */
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 24px 70px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:16px;
+    margin-top:8px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 18px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 14px 28px -18px rgba(15,44,76,0.4);
+  }
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .cat-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--navy);
+    background:#EDE7D8;
+    padding:4px 8px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .card h3{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    font-weight:600;
+    margin:0;
+    line-height:1.3;
+    color:var(--navy-deep);
+  }
+  .card p.note{
+    font-size:13px;
+    color:#5C6472;
+    margin:0;
+    line-height:1.5;
+  }
+  .card-actions{
+    margin-top:auto;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    transition:opacity .15s ease;
+  }
+  .btn:hover{opacity:.85;}
+  .btn-open{background:var(--navy);color:#fff;}
+  .btn-copy{background:#EDE7D8;color:var(--navy);}
+  .btn-copy.copied{background:var(--green);color:#fff;}
+
+  /* credential cards */
+  .card.credential{
+    border-color:#E9CFA0;
+    background:#FFFBF3;
+  }
+  .cred-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+  }
+  .cred-row .val.masked{letter-spacing:2px;}
+  .warn-tag{
+    font-size:11px;
+    color:var(--red-warn);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:#8A93A3;
+    font-family:'Fraunces',serif;
+    font-size:18px;
+  }
+
+  footer{
+    text-align:center;
+    padding:24px;
+    font-size:12px;
+    color:#9AA2AF;
+    font-family:'Inter',sans-serif;
+  }
+
+  @media (max-width:600px){
+    .hero{padding:32px 18px 50px;}
+    .controls{padding:0 14px;}
+    .wrap{padding:24px 14px 50px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Rumah BUMN Jakarta &middot; Operational Hub</div>
+  <h1>Database Link &amp; Akses</h1>
+  <p>Semua dokumen, spreadsheet, form, dan akses operasional Rumah BUMN Jakarta terkumpul di satu tempat. Cari, filter per kategori, dan buka langsung.</p>
+  <div class="stat-row">
+    <div class="stat"><b id="stat-total">0</b><span>Total Item</span></div>
+    <div class="stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+    <div class="stat"><b>2</b><span>Akun Email</span></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-bar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+  </div>
+  <div class="chips" id="chipRow"></div>
+</div>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyState" style="display:none;">Tidak ada hasil ditemukan.</div>
+</div>
+
+<footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
+
+<script>
+const items = [
+  {cat:"Akademik", title:"SILABUS", type:"link", url:"https://docs.google.com/spreadsheets/d/11TTCvGgx60Bsd2Tu8Q2YTKcF6DiSJaLL74UDNSn7Fv8/edit?gid=1071766875#gid=1071766875", note:"Spreadsheet silabus."},
+  {cat:"BRIncubator", title:"TOR BRIncubator", type:"link", url:"https://docs.google.com/document/d/1prj1QSM7_FAsURJjUdsXst2QSTgY4nE6gUvuozN8jwo/edit?usp=sharing", note:"Dokumen Term of Reference program BRIncubator."},
+  {cat:"BRIncubator", title:"1 Day 1 UMKM", type:"link", url:"https://docs.google.com/spreadsheets/d/1MszyYNSWSWeaXahbz68c3-8UUxADDknmREpFsctI3Hk/edit?usp=drivesdk", note:"Spreadsheet program 1 Day 1 UMKM."},
+  {cat:"Company Profile", title:"Company Profile", type:"link", url:"https://drive.google.com/file/d/1Hw6lIg4j5gtmtzpb3RbmNz72R-pBCe98/view?usp=share_link", note:"File company profile Rumah BUMN."},
+  {cat:"Katalog", title:"Catalog Display — Data Katalog", type:"link", url:"https://docs.google.com/spreadsheets/d/1li6TFJQ_c60NjuN7Uxkpn6lj-KvIdVlszxXUI5DfzHo/edit?usp=sharing", note:"Data katalog display produk UMKM."},
+  {cat:"Review", title:"Review — Jawaban RB Local", type:"link", url:"https://docs.google.com/spreadsheets/d/1wqki61UlGvZ-keppgqSiv9QjOOwq5_i7Py4zfLufi4Y/edit?usp=drivesdk", note:"Rekap jawaban review RB Lokal."},
+  {cat:"Desain", title:"Canva Workspace", type:"link", url:"https://www.canva.com/design/DAHOS7OIM1Q/YamRgQeYSk2LyAcDOkiY6A/edit", note:"File desain Canva Rumah BUMN."},
+  {cat:"Form", title:"Form Review Produk", type:"link", url:"https://bit.ly/ReviewProdukRBJKT", note:"Form review produk UMKM."},
+  {cat:"Form", title:"Form Display Produk", type:"link", url:"https://bit.ly/DisplayRBJkt", note:"Form pengajuan display produk."},
+  {cat:"Rebranding", title:"Kurasi Rebranding", type:"link", url:"https://docs.google.com/spreadsheets/d/1y0-VoWvNN8hTsPQJs1UX3GbOwF0nMxi7eQsDjM5xP0U/edit?usp=sharing", note:"Spreadsheet kurasi rebranding produk."},
+  {cat:"Dokumentasi", title:"MOM (Minutes of Meeting)", type:"link", url:"https://docs.google.com/document/d/1aSh9zKTdrYxV8hoF9PmZNAE-5XYt33MBBg1etEbJ2I0/edit?usp=sharing", note:"Dokumen notulen rapat."},
+  {cat:"Akun Email", title:"Email Merah", type:"cred", email:"Rumahbumnjakarta@gmail.com", pass:"Rumahbumn0417@", note:"Akun email operasional utama."},
+  {cat:"Akun Email", title:"Email Ijo", type:"cred", email:"rumahbumnjakapus@gmail.com", pass:"Rumahbumn123.", note:"Akun email operasional cabang Jakapus."},
+];
+
+const grid = document.getElementById('grid');
+const chipRow = document.getElementById('chipRow');
+const searchInput = document.getElementById('searchInput');
+const emptyState = document.getElementById('emptyState');
+
+const categories = ["Semua", ...new Set(items.map(i=>i.cat))];
+let activeCat = "Semua";
+
+document.getElementById('stat-total').textContent = items.length;
+document.getElementById('stat-cat').textContent = categories.length - 1;
+
+function renderChips(){
+  chipRow.innerHTML = "";
+  categories.forEach(cat=>{
+    const el = document.createElement('div');
+    el.className = 'chip' + (cat===activeCat ? ' active' : '');
+    el.textContent = cat;
+    el.onclick = ()=>{ activeCat = cat; renderChips(); renderGrid(); };
+    chipRow.appendChild(el);
+  });
+}
+
+function iconSvg(name){
+  if(name==='open') return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
+  if(name==='copy') return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  if(name==='eye') return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  return '';
+}
+
+function copyToClipboard(text, btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const original = btn.innerHTML;
+    btn.innerHTML = 'Tersalin ✓';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.innerHTML = original; btn.classList.remove('copied'); }, 1400);
+  }).catch(()=>{});
+}
+
+function renderGrid(){
+  const q = searchInput.value.trim().toLowerCase();
+  const filtered = items.filter(i=>{
+    const matchesCat = activeCat==="Semua" || i.cat===activeCat;
+    const haystack = (i.title + " " + i.cat + " " + (i.note||"")).toLowerCase();
+    const matchesSearch = haystack.includes(q);
+    return matchesCat && matchesSearch;
+  });
+
+  grid.innerHTML = "";
+  emptyState.style.display = filtered.length ? 'none' : 'block';
+
+  filtered.forEach((item, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card' + (item.type==='cred' ? ' credential' : '');
+
+    if(item.type === 'link'){
+      card.innerHTML = `
+        <div class="card-top">
+          <h3>${item.title}</h3>
+          <span class="cat-tag">${item.cat}</span>
+        </div>
+        <p class="note">${item.note}</p>
+        <div class="card-actions">
+          <a class="btn btn-open" href="${item.url}" target="_blank" rel="noopener">${iconSvg('open')} Buka</a>
+          <button class="btn btn-copy" data-copy="${item.url}">${iconSvg('copy')} Salin Link</button>
+        </div>
+      `;
+    } else {
+      const rowId = 'pass-' + idx;
+      card.innerHTML = `
+        <div class="card-top">
+          <h3>${item.title}</h3>
+          <span class="cat-tag">${item.cat}</span>
+        </div>
+        <p class="note">${item.note}</p>
+        <div class="cred-row">
+          <span>${item.email}</span>
+          <button class="btn btn-copy" data-copy="${item.email}">${iconSvg('copy')}</button>
+        </div>
+        <div class="cred-row">
+          <span class="val masked" id="${rowId}">••••••••••••</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-copy" id="toggle-${rowId}">${iconSvg('eye')}</button>
+            <button class="btn btn-copy" data-copy="${item.pass}">${iconSvg('copy')}</button>
+          </div>
+        </div>
+        <div class="warn-tag">⚠ Jaga kerahasiaan kredensial ini</div>
+      `;
+    }
+    grid.appendChild(card);
+
+    if(item.type === 'cred'){
+      const rowId = 'pass-' + idx;
+      const span = card.querySelector('#'+rowId);
+      const toggleBtn = card.querySelector('#toggle-'+rowId);
+      let revealed = false;
+      toggleBtn.onclick = ()=>{
+        revealed = !revealed;
+        span.textContent = revealed ? item.pass : '••••••••••••';
+        span.classList.toggle('masked', !revealed);
+      };
+    }
+
+    card.querySelectorAll('[data-copy]').forEach(btn=>{
+      btn.onclick = (e)=>{
+        e.preventDefault();
+        copyToClipboard(btn.getAttribute('data-copy'), btn);
+      };
+    });
+  });
+}
+
+searchInput.addEventListener('input', renderGrid);
+renderChips();
+renderGrid();
+</script>
+</body>
+</html>
