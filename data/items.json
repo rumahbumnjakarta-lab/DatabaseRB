@@ -1,0 +1,436 @@
+[
+  {
+    "id": "bd-1",
+    "division": "bd",
+    "cat": "Akademik",
+    "title": "SILABUS",
+    "type": "link",
+    "url": "https://docs.google.com/spreadsheets/d/11TTCvGgx60Bsd2Tu8Q2YTKcF6DiSJaLL74UDNSn7Fv8/edit?gid=1071766875#gid=1071766875",
+    "note": "Spreadsheet silabus."
+  },
+  {
+    "id": "bd-2",
+    "division": "bd",
+    "cat": "BRIncubator",
+    "title": "TOR BRIncubator",
+    "type": "link",
+    "url": "https://docs.google.com/document/d/1prj1QSM7_FAsURJjUdsXst2QSTgY4nE6gUvuozN8jwo/edit?usp=sharing",
+    "note": "Dokumen Term of Reference program BRIncubator."
+  },
+  {
+    "id": "bd-3",
+    "division": "bd",
+    "cat": "BRIncubator",
+    "title": "1 Day 1 UMKM",
+    "type": "link",
+    "url": "https://docs.google.com/spreadsheets/d/1MszyYNSWSWeaXahbz68c3-8UUxADDknmREpFsctI3Hk/edit?usp=drivesdk",
+    "note": "Spreadsheet program 1 Day 1 UMKM."
+  },
+  {
+    "id": "bd-4",
+    "division": "bd",
+    "cat": "Company Profile",
+    "title": "Company Profile",
+    "type": "link",
+    "url": "https://drive.google.com/file/d/1Hw6lIg4j5gtmtzpb3RbmNz72R-pBCe98/view?usp=share_link",
+    "note": "File company profile Rumah BUMN."
+  },
+  {
+    "id": "bd-5",
+    "division": "bd",
+    "cat": "Katalog",
+    "title": "Catalog Display — Data Katalog",
+    "type": "link",
+    "url": "https://docs.google.com/spreadsheets/d/1li6TFJQ_c60NjuN7Uxkpn6lj-KvIdVlszxXUI5DfzHo/edit?usp=sharing",
+    "note": "Data katalog display produk UMKM."
+  },
+  {
+    "id": "bd-6",
+    "division": "bd",
+    "cat": "Review",
+    "title": "Review — Jawaban RB Local",
+    "type": "link",
+    "url": "https://docs.google.com/spreadsheets/d/1wqki61UlGvZ-keppgqSiv9QjOOwq5_i7Py4zfLufi4Y/edit?usp=drivesdk",
+    "note": "Rekap jawaban review RB Lokal."
+  },
+  {
+    "id": "bd-7",
+    "division": "bd",
+    "cat": "Desain",
+    "title": "Canva Workspace",
+    "type": "link",
+    "url": "https://www.canva.com/design/DAHOS7OIM1Q/YamRgQeYSk2LyAcDOkiY6A/edit",
+    "note": "File desain Canva Rumah BUMN."
+  },
+  {
+    "id": "bd-8",
+    "division": "bd",
+    "cat": "Form",
+    "title": "Form Review Produk",
+    "type": "link",
+    "url": "https://bit.ly/ReviewProdukRBJKT",
+    "note": "Form review produk UMKM."
+  },
+  {
+    "id": "bd-9",
+    "division": "bd",
+    "cat": "Form",
+    "title": "Form Display Produk",
+    "type": "link",
+    "url": "https://bit.ly/DisplayRBJkt",
+    "note": "Form pengajuan display produk."
+  },
+  {
+    "id": "bd-10",
+    "division": "bd",
+    "cat": "Rebranding",
+    "title": "Kurasi Rebranding",
+    "type": "link",
+    "url": "https://docs.google.com/spreadsheets/d/1y0-VoWvNN8hTsPQJs1UX3GbOwF0nMxi7eQsDjM5xP0U/edit?usp=sharing",
+    "note": "Spreadsheet kurasi rebranding produk."
+  },
+  {
+    "id": "bd-11",
+    "division": "bd",
+    "cat": "Dokumentasi",
+    "title": "MOM (Minutes of Meeting)",
+    "type": "link",
+    "url": "https://docs.google.com/document/d/1aSh9zKTdrYxV8hoF9PmZNAE-5XYt33MBBg1etEbJ2I0/edit?usp=sharing",
+    "note": "Dokumen notulen rapat."
+  },
+  {
+    "id": "bd-12",
+    "division": "bd",
+    "cat": "Akun Email",
+    "title": "Email Merah",
+    "type": "cred",
+    "email": "Rumahbumnjakarta@gmail.com",
+    "pass": "Rumahbumn0417@",
+    "note": "Akun email operasional utama."
+  },
+  {
+    "id": "bd-13",
+    "division": "bd",
+    "cat": "Akun Email",
+    "title": "Email Ijo",
+    "type": "cred",
+    "email": "rumahbumnjakapus@gmail.com",
+    "pass": "Rumahbumn123.",
+    "note": "Akun email operasional cabang Jakapus."
+  },
+  {
+    "id": "design-1",
+    "division": "design",
+    "cat": "Brand",
+    "title": "Brand Guideline",
+    "type": "link",
+    "url": "#",
+    "note": "Panduan identitas visual brand Rumah BUMN Jakarta."
+  },
+  {
+    "id": "design-2",
+    "division": "design",
+    "cat": "Brand",
+    "title": "Logo Assets (PNG/SVG)",
+    "type": "link",
+    "url": "#",
+    "note": "Kumpulan file logo dalam berbagai format."
+  },
+  {
+    "id": "design-3",
+    "division": "design",
+    "cat": "Canva",
+    "title": "Canva Workspace Utama",
+    "type": "link",
+    "url": "#",
+    "note": "Workspace Canva untuk desain konten."
+  },
+  {
+    "id": "design-4",
+    "division": "design",
+    "cat": "Canva",
+    "title": "Template Feed Instagram",
+    "type": "link",
+    "url": "#",
+    "note": "Template desain feed Instagram."
+  },
+  {
+    "id": "design-5",
+    "division": "design",
+    "cat": "Canva",
+    "title": "Template Poster Event",
+    "type": "link",
+    "url": "#",
+    "note": "Template poster untuk berbagai event."
+  },
+  {
+    "id": "design-6",
+    "division": "design",
+    "cat": "Figma",
+    "title": "UI Kit — Figma",
+    "type": "link",
+    "url": "#",
+    "note": "Komponen UI reusable di Figma."
+  },
+  {
+    "id": "design-7",
+    "division": "design",
+    "cat": "Asset",
+    "title": "Stock Photo Library",
+    "type": "link",
+    "url": "#",
+    "note": "Koleksi foto stok untuk keperluan desain."
+  },
+  {
+    "id": "design-8",
+    "division": "design",
+    "cat": "Asset",
+    "title": "Icon & Illustration Pack",
+    "type": "link",
+    "url": "#",
+    "note": "Kumpulan ikon dan ilustrasi custom."
+  },
+  {
+    "id": "design-9",
+    "division": "design",
+    "cat": "Dokumentasi",
+    "title": "SOP Request Desain",
+    "type": "link",
+    "url": "#",
+    "note": "Standar prosedur pengajuan desain baru."
+  },
+  {
+    "id": "sosmed-1",
+    "division": "sosmed",
+    "cat": "Content Calendar",
+    "title": "Content Calendar Bulanan",
+    "type": "link",
+    "url": "#",
+    "note": "Kalender konten sosial media bulanan."
+  },
+  {
+    "id": "sosmed-2",
+    "division": "sosmed",
+    "cat": "Content Calendar",
+    "title": "Bank Ide Konten",
+    "type": "link",
+    "url": "#",
+    "note": "Kumpulan ide konten untuk posting."
+  },
+  {
+    "id": "sosmed-3",
+    "division": "sosmed",
+    "cat": "Analytics",
+    "title": "Report Instagram Analytics",
+    "type": "link",
+    "url": "#",
+    "note": "Laporan analytics Instagram Rumah BUMN."
+  },
+  {
+    "id": "sosmed-4",
+    "division": "sosmed",
+    "cat": "Analytics",
+    "title": "Report TikTok Analytics",
+    "type": "link",
+    "url": "#",
+    "note": "Laporan analytics TikTok Rumah BUMN."
+  },
+  {
+    "id": "sosmed-5",
+    "division": "sosmed",
+    "cat": "Template",
+    "title": "Template Caption Posting",
+    "type": "link",
+    "url": "#",
+    "note": "Template caption standar untuk posting."
+  },
+  {
+    "id": "sosmed-6",
+    "division": "sosmed",
+    "cat": "Template",
+    "title": "Template Instagram Story",
+    "type": "link",
+    "url": "#",
+    "note": "Template desain Instagram Story."
+  },
+  {
+    "id": "sosmed-7",
+    "division": "sosmed",
+    "cat": "Dokumentasi",
+    "title": "SOP Posting Konten",
+    "type": "link",
+    "url": "#",
+    "note": "Standar Operasional Prosedur posting konten."
+  },
+  {
+    "id": "sosmed-8",
+    "division": "sosmed",
+    "cat": "Dokumentasi",
+    "title": "Hashtag Research",
+    "type": "link",
+    "url": "#",
+    "note": "Riset hashtag untuk optimasi reach."
+  },
+  {
+    "id": "event-1",
+    "division": "event",
+    "cat": "Rundown",
+    "title": "Rundown Event Bulanan",
+    "type": "link",
+    "url": "#",
+    "note": "Jadwal dan rundown event bulanan Rumah BUMN."
+  },
+  {
+    "id": "event-2",
+    "division": "event",
+    "cat": "Rundown",
+    "title": "Timeline Event Tahunan",
+    "type": "link",
+    "url": "#",
+    "note": "Kalender event tahunan Rumah BUMN Jakarta."
+  },
+  {
+    "id": "event-3",
+    "division": "event",
+    "cat": "Vendor",
+    "title": "Database Vendor & Partner",
+    "type": "link",
+    "url": "#",
+    "note": "Database vendor dan partner untuk event."
+  },
+  {
+    "id": "event-4",
+    "division": "event",
+    "cat": "Vendor",
+    "title": "Price List Vendor",
+    "type": "link",
+    "url": "#",
+    "note": "Daftar harga vendor yang sudah bekerja sama."
+  },
+  {
+    "id": "event-5",
+    "division": "event",
+    "cat": "Budget",
+    "title": "Template RAB Event",
+    "type": "link",
+    "url": "#",
+    "note": "Template Rencana Anggaran Biaya event."
+  },
+  {
+    "id": "event-6",
+    "division": "event",
+    "cat": "Budget",
+    "title": "Laporan Realisasi Budget",
+    "type": "link",
+    "url": "#",
+    "note": "Laporan realisasi anggaran event."
+  },
+  {
+    "id": "event-7",
+    "division": "event",
+    "cat": "Dokumentasi",
+    "title": "Foto & Video Event",
+    "type": "link",
+    "url": "#",
+    "note": "Arsip foto dan video dokumentasi event."
+  },
+  {
+    "id": "event-8",
+    "division": "event",
+    "cat": "Dokumentasi",
+    "title": "Proposal Event Template",
+    "type": "link",
+    "url": "#",
+    "note": "Template proposal untuk pengajuan event."
+  },
+  {
+    "id": "event-9",
+    "division": "event",
+    "cat": "Dokumentasi",
+    "title": "Post-Event Report",
+    "type": "link",
+    "url": "#",
+    "note": "Template laporan pasca pelaksanaan event."
+  },
+  {
+    "id": "admin-1",
+    "division": "admin",
+    "cat": "Absensi",
+    "title": "Data Absensi Harian",
+    "type": "link",
+    "url": "#",
+    "note": "Spreadsheet absensi harian tim Rumah BUMN."
+  },
+  {
+    "id": "admin-2",
+    "division": "admin",
+    "cat": "Absensi",
+    "title": "Rekap Absensi Bulanan",
+    "type": "link",
+    "url": "#",
+    "note": "Rekap kehadiran bulanan seluruh divisi."
+  },
+  {
+    "id": "admin-3",
+    "division": "admin",
+    "cat": "Surat",
+    "title": "Template Surat Resmi",
+    "type": "link",
+    "url": "#",
+    "note": "Template surat resmi kelembagaan."
+  },
+  {
+    "id": "admin-4",
+    "division": "admin",
+    "cat": "Surat",
+    "title": "Arsip Surat Masuk/Keluar",
+    "type": "link",
+    "url": "#",
+    "note": "Arsip digital surat masuk dan keluar."
+  },
+  {
+    "id": "admin-5",
+    "division": "admin",
+    "cat": "Inventaris",
+    "title": "Data Inventaris Kantor",
+    "type": "link",
+    "url": "#",
+    "note": "Database inventaris barang kantor."
+  },
+  {
+    "id": "admin-6",
+    "division": "admin",
+    "cat": "Inventaris",
+    "title": "Form Peminjaman Barang",
+    "type": "link",
+    "url": "#",
+    "note": "Form pengajuan peminjaman barang inventaris."
+  },
+  {
+    "id": "admin-7",
+    "division": "admin",
+    "cat": "Keuangan",
+    "title": "Laporan Kas Kecil",
+    "type": "link",
+    "url": "#",
+    "note": "Spreadsheet laporan kas kecil operasional."
+  },
+  {
+    "id": "admin-8",
+    "division": "admin",
+    "cat": "Keuangan",
+    "title": "Form Pengajuan Dana",
+    "type": "link",
+    "url": "#",
+    "note": "Form pengajuan dana operasional."
+  },
+  {
+    "id": "admin-9",
+    "division": "admin",
+    "cat": "Dokumentasi",
+    "title": "SOP Administrasi",
+    "type": "link",
+    "url": "#",
+    "note": "Standar Operasional Prosedur administrasi."
+  }
+]

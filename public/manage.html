@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengelola Hub Database — Rumah BUMN Jakarta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Extra Dashboard Styles */
+  .btn-manage-back {
+    background: transparent;
+    color: var(--gold-bright);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 8px 16px;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .btn-manage-back:hover {
+    background: var(--gold);
+    color: var(--navy-deep);
+  }
+  .manage-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 70px;
+  }
+  .sidebar-form {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 8px 24px -12px rgba(15,44,76,0.15);
+    height: fit-content;
+    position: sticky;
+    top: 24px;
+  }
+  .sidebar-form h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--navy-deep);
+    margin: 0 0 18px;
+    font-weight: 600;
+  }
+  .form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5C6472;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--gold);
+  }
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .btn-submit {
+    flex: 1;
+    background: var(--navy);
+    color: #fff;
+    font-weight: 600;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-cancel {
+    background: #EDE7D8;
+    color: var(--navy);
+    font-weight: 600;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-cancel:hover { opacity: 0.9; }
+
+  /* Manage Table & Content Area */
+  .content-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .manage-table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px -12px rgba(15,44,76,0.15);
+  }
+  .table-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .table-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--navy-deep);
+    margin: 0;
+  }
+  .table-search {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 300px;
+    width: 100%;
+  }
+  .table-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13.5px;
+    width: 100%;
+    color: var(--ink);
+  }
+  .table-wrapper {
+    overflow-x: auto;
+  }
+  table.manage-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+  }
+  table.manage-table th {
+    background: rgba(15, 44, 76, 0.03);
+    padding: 14px 20px;
+    font-weight: 600;
+    color: var(--navy-deep);
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  table.manage-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.manage-table tr:last-child td {
+    border-bottom: none;
+  }
+  table.manage-table tr:hover td {
+    background: rgba(15, 44, 76, 0.01);
+  }
+  .btn-action {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.15s;
+  }
+  .btn-action:hover { opacity: 0.8; }
+  .btn-edit { background: var(--gold-bright); color: var(--navy-deep); }
+  .btn-delete { background: var(--red-warn); color: #fff; }
+
+  /* Modal styling */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 30, 54, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 440px;
+    width: 90%;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    transform: translateY(20px);
+    transition: transform 0.25s ease;
+  }
+  .modal-overlay.active .modal-box {
+    transform: translateY(0);
+  }
+  .modal-box h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--navy-deep);
+    margin: 0 0 10px;
+  }
+  .modal-box p {
+    font-size: 14px;
+    color: #5C6472;
+    line-height: 1.6;
+    margin: 0 0 20px;
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  /* Toast Notification */
+  .toast-container {
+    position: fixed;
+    top: 24px; right: 24px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toast {
+    background: var(--navy-deep);
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border-left: 4px solid var(--gold);
+    font-size: 13.5px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateX(120%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .toast.show {
+    transform: translateX(0);
+  }
+
+  @media (max-width: 900px) {
+    .manage-layout {
+      grid-template-columns: 1fr;
+    }
+    .sidebar-form {
+      position: static;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Division Navigation Bar -->
+<nav class="div-topbar">
+  <a href="/index.html" class="home-link" title="Kembali ke Beranda">⌂ Home</a>
+  <a href="#" data-tab="bd" class="active">Business Dev</a>
+  <a href="#" data-tab="sosmed">Sosmed</a>
+  <a href="#" data-tab="design">Design</a>
+  <a href="#" data-tab="admin">Admin</a>
+  <a href="#" data-tab="event">Event</a>
+</nav>
+
+<div class="hero">
+  <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta" class="hero-logo-small">
+  <div class="eyebrow">Pengelola Hub Database</div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h1>Pengelolaan Data &amp; Link</h1>
+      <p>Tambahkan, edit, atau hapus link operasional dan kredensial divisi Rumah BUMN Jakarta secara real-time.</p>
+    </div>
+    <a href="/index.html" class="btn-manage-back">Lihat Website Hub &rarr;</a>
+  </div>
+</div>
+
+<div class="controls" style="margin-bottom: 24px;">
+  <!-- Space buffer matching theme -->
+</div>
+
+<div class="manage-layout">
+  
+  <!-- Sidebar Form: Add/Edit Item -->
+  <aside class="sidebar-form">
+    <h2 id="formTitle">Tambah Item Baru</h2>
+    <form id="itemForm">
+      <input type="hidden" id="itemId" value="">
+      
+      <div class="form-group">
+        <label for="itemDivision">Divisi</label>
+        <select id="itemDivision" required>
+          <option value="bd">Business Development</option>
+          <option value="sosmed">Social Media</option>
+          <option value="design">Design</option>
+          <option value="admin">Admin</option>
+          <option value="event">Event</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="itemType">Tipe Item</label>
+        <select id="itemType" required>
+          <option value="link">Link Dokumen / Spreadsheet</option>
+          <option value="cred">Kredensial (Email &amp; Password)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="itemTitle">Judul Item</label>
+        <input type="text" id="itemTitle" placeholder="Contoh: Canva Workspace Utama" required>
+      </div>
+
+      <div class="form-group">
+        <label for="itemCat">Kategori</label>
+        <input type="text" id="itemCat" list="categorySuggestions" placeholder="Contoh: Canva, Surat, Akademik" required>
+        <datalist id="categorySuggestions"></datalist>
+      </div>
+
+      <!-- Conditional URL field for Link Type -->
+      <div class="form-group" id="urlGroup">
+        <label for="itemUrl">URL Link</label>
+        <input type="text" id="itemUrl" placeholder="https://docs.google.com/..." value="#">
+      </div>
+
+      <!-- Conditional Credential fields for Cred Type -->
+      <div id="credGroup" style="display: none;">
+        <div class="form-group">
+          <label for="itemEmail">Alamat Email</label>
+          <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
+        </div>
+        <div class="form-group">
+          <label for="itemPass">Password</label>
+          <input type="text" id="itemPass" placeholder="Password akun">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="itemNote">Catatan / Deskripsi</label>
+        <textarea id="itemNote" placeholder="Catatan singkat mengenai kegunaan item ini..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" id="btnSubmit">Simpan</button>
+        <button type="button" class="btn-cancel" id="btnCancel" style="display: none;">Batal</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Content Area: Item List Table -->
+  <main class="content-area">
+    <div class="manage-table-card">
+      <div class="table-header">
+        <h2 id="tableTitle">Daftar Item: Business Development</h2>
+        <div class="table-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="tableSearchInput" placeholder="Cari item di divisi ini...">
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="manage-table">
+          <thead>
+            <tr>
+              <th>Kategori</th>
+              <th>Judul / Informasi</th>
+              <th>Detail Tipe</th>
+              <th style="width: 140px; text-align: right;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamic items loaded here -->
+          </tbody>
+        </table>
+        <div class="empty" id="tableEmptyState" style="display: none;">Tidak ada data ditemukan.</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>Konfirmasi Hapus</h3>
+    <p>Apakah Anda yakin ingin menghapus item "<span id="deleteItemTitle"></span>"? Tindakan ini tidak dapat dibatalkan.</p>
+    <div class="modal-actions">
+      <button class="btn btn-copy" id="btnConfirmCancel">Batal</button>
+      <button class="btn btn-open" id="btnConfirmDelete" style="background: var(--red-warn);">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
+
+<script>
+// State Management
+let allItems = [];
+let activeDivision = 'bd';
+let deleteTargetId = null;
+
+// DOM Elements
+const tabs = document.querySelectorAll('nav.div-topbar a[data-tab]');
+const tableBody = document.getElementById('tableBody');
+const tableTitle = document.getElementById('tableTitle');
+const tableEmptyState = document.getElementById('tableEmptyState');
+const tableSearchInput = document.getElementById('tableSearchInput');
+const categorySuggestions = document.getElementById('categorySuggestions');
+
+// Form elements
+const itemForm = document.getElementById('itemForm');
+const itemIdInput = document.getElementById('itemId');
+const itemDivisionInput = document.getElementById('itemDivision');
+const itemTypeSelect = document.getElementById('itemType');
+const itemTitleInput = document.getElementById('itemTitle');
+const itemCatInput = document.getElementById('itemCat');
+const itemUrlInput = document.getElementById('itemUrl');
+const itemEmailInput = document.getElementById('itemEmail');
+const itemPassInput = document.getElementById('itemPass');
+const itemNoteInput = document.getElementById('itemNote');
+const formTitle = document.getElementById('formTitle');
+const btnSubmit = document.getElementById('btnSubmit');
+const btnCancel = document.getElementById('btnCancel');
+
+// Modal elements
+const deleteModal = document.getElementById('deleteModal');
+const deleteItemTitleSpan = document.getElementById('deleteItemTitle');
+const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+const btnConfirmCancel = document.getElementById('btnConfirmCancel');
+
+// Division translations
+const divNames = {
+  'bd': 'Business Development',
+  'sosmed': 'Social Media',
+  'design': 'Design',
+  'admin': 'Admin',
+  'event': 'Event'
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  fetchData();
+  setupEventListeners();
+});
+
+// Toast Helper
+function showToast(message) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>✓</span> <span>${message}</span>`;
+  container.appendChild(toast);
+  
+  // Trigger entry animation
+  setTimeout(() => toast.classList.add('show'), 50);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Fetch all data from API
+function fetchData() {
+  fetch('/api/items')
+    .then(res => res.json())
+    .then(data => {
+      allItems = data;
+      renderTable();
+      updateSuggestions();
+    })
+    .catch(err => {
+      console.error('Error fetching data:', err);
+      showToast('Gagal memuat data dari server!');
+    });
+}
+
+// Event Listeners setup
+function setupEventListeners() {
+  // Tab changes
+  tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeDivision = tab.getAttribute('data-tab');
+      
+      // Update form default division to active division
+      if (!itemIdInput.value) {
+        itemDivisionInput.value = activeDivision;
+      }
+      
+      tableTitle.textContent = `Daftar Item: ${divNames[activeDivision]}`;
+      renderTable();
+      updateSuggestions();
+    });
+  });
+
+  // Type Select changes (toggle url/cred groups)
+  itemTypeSelect.addEventListener('change', () => {
+    const type = itemTypeSelect.value;
+    if (type === 'link') {
+      document.getElementById('urlGroup').style.display = 'flex';
+      document.getElementById('credGroup').style.display = 'none';
+      itemUrlInput.setAttribute('required', 'true');
+      itemEmailInput.removeAttribute('required');
+      itemPassInput.removeAttribute('required');
+    } else {
+      document.getElementById('urlGroup').style.display = 'none';
+      document.getElementById('credGroup').style.display = 'block';
+      itemUrlInput.removeAttribute('required');
+      itemEmailInput.setAttribute('required', 'true');
+      itemPassInput.setAttribute('required', 'true');
+    }
+  });
+
+  // Search Input listener
+  tableSearchInput.addEventListener('input', renderTable);
+
+  // Form submit (Add or Edit)
+  itemForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const id = itemIdInput.value;
+    const body = {
+      division: itemDivisionInput.value,
+      type: itemTypeSelect.value,
+      title: itemTitleInput.value.trim(),
+      cat: itemCatInput.value.trim(),
+      note: itemNoteInput.value.trim()
+    };
+
+    if (body.type === 'link') {
+      body.url = itemUrlInput.value.trim();
+    } else {
+      body.email = itemEmailInput.value.trim();
+      body.pass = itemPassInput.value.trim();
+    }
+
+    const url = id ? `/api/items/${id}` : '/api/items';
+    const method = id ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Network response not ok');
+        return res.json();
+      })
+      .then(result => {
+        showToast(id ? 'Data berhasil diperbarui!' : 'Data baru berhasil ditambahkan!');
+        resetForm();
+        fetchData();
+      })
+      .catch(err => {
+        console.error('Error saving data:', err);
+        showToast('Gagal menyimpan data!');
+      });
+  });
+
+  // Cancel Edit
+  btnCancel.addEventListener('click', resetForm);
+
+  // Modal Cancel Delete
+  btnConfirmCancel.addEventListener('click', () => {
+    deleteModal.classList.remove('active');
+    deleteTargetId = null;
+  });
+
+  // Modal Confirm Delete
+  btnConfirmDelete.addEventListener('click', () => {
+    if (deleteTargetId) {
+      fetch(`/api/items/${deleteTargetId}`, {
+        method: 'DELETE'
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Delete request failed');
+          return res.json();
+        })
+        .then(() => {
+          showToast('Data berhasil dihapus!');
+          deleteModal.classList.remove('active');
+          deleteTargetId = null;
+          fetchData();
+        })
+        .catch(err => {
+          console.error('Error deleting data:', err);
+          showToast('Gagal menghapus data!');
+          deleteModal.classList.remove('active');
+          deleteTargetId = null;
+        });
+    }
+  });
+}
+
+// Render dynamic items into table
+function renderTable() {
+  const query = tableSearchInput.value.trim().toLowerCase();
+  const divisionItems = allItems.filter(item => item.division === activeDivision);
+  
+  const filtered = divisionItems.filter(item => {
+    const haystack = (item.title + " " + item.cat + " " + (item.note || "") + " " + (item.email || "")).toLowerCase();
+    return haystack.includes(query);
+  });
+
+  tableBody.innerHTML = '';
+  
+  if (filtered.length === 0) {
+    tableEmptyState.style.display = 'block';
+    return;
+  } else {
+    tableEmptyState.style.display = 'none';
+  }
+
+  filtered.forEach(item => {
+    const tr = document.createElement('tr');
+    
+    let detailHtml = '';
+    if (item.type === 'link') {
+      detailHtml = `
+        <div style="font-weight: 600; color: var(--navy-deep);">${item.title}</div>
+        <div style="font-size: 12px; color: #8A93A3; word-break: break-all; margin-top: 4px;">
+          Link: <a href="${item.url}" target="_blank" style="color: var(--gold); text-decoration: none;">${item.url}</a>
+        </div>
+      `;
+    } else {
+      detailHtml = `
+        <div style="font-weight: 600; color: var(--navy-deep);">${item.title}</div>
+        <div style="font-size: 12px; color: #5C6472; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
+          Email: <b>${item.email}</b><br>
+          Sandi: <b>${item.pass}</b>
+        </div>
+      `;
+    }
+
+    if (item.note) {
+      detailHtml += `<div style="font-size: 12px; color: #8A93A3; font-style: italic; margin-top: 4px;">Note: ${item.note}</div>`;
+    }
+
+    tr.innerHTML = `
+      <td><span class="cat-tag">${item.cat}</span></td>
+      <td>${detailHtml}</td>
+      <td>
+        <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${item.type === 'link' ? 'var(--navy)' : 'var(--gold)'}; background: ${item.type === 'link' ? '#E6EEF8' : '#FEF5E7'}; padding: 4px 8px; border-radius: 6px;">
+          ${item.type === 'link' ? '🔗 Link' : '🔑 Kredensial'}
+        </span>
+      </td>
+      <td style="text-align: right; white-space: nowrap;">
+        <button class="btn-action btn-edit" data-id="${item.id}">Edit</button>
+        <button class="btn-action btn-delete" data-id="${item.id}" data-title="${item.title}">Hapus</button>
+      </td>
+    `;
+
+    tableBody.appendChild(tr);
+  });
+
+  // Attach dynamic actions to buttons
+  tableBody.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.onclick = () => editItem(btn.getAttribute('data-id'));
+  });
+
+  tableBody.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      const title = btn.getAttribute('data-title');
+      openDeleteModal(id, title);
+    };
+  });
+}
+
+// Update category datalist suggestions
+function updateSuggestions() {
+  const currentDivItems = allItems.filter(item => item.division === activeDivision);
+  const categories = [...new Set(currentDivItems.map(item => item.cat))];
+  
+  categorySuggestions.innerHTML = '';
+  categories.forEach(cat => {
+    const option = document.createElement('option');
+    option.value = cat;
+    categorySuggestions.appendChild(option);
+  });
+}
+
+// Load item data into form for editing
+function editItem(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+
+  formTitle.textContent = 'Edit Item';
+  itemIdInput.value = item.id;
+  itemDivisionInput.value = item.division;
+  itemTypeSelect.value = item.type;
+  itemTitleInput.value = item.title;
+  itemCatInput.value = item.cat;
+  itemNoteInput.value = item.note || '';
+
+  // Trigger change handler manually to show proper groups
+  itemTypeSelect.dispatchEvent(new Event('change'));
+
+  if (item.type === 'link') {
+    itemUrlInput.value = item.url || '';
+  } else {
+    itemEmailInput.value = item.email || '';
+    itemPassInput.value = item.pass || '';
+  }
+
+  btnSubmit.textContent = 'Perbarui';
+  btnCancel.style.display = 'inline-block';
+  
+  // Scroll to form on mobile view
+  itemForm.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Open Delete Confirmation Modal
+function openDeleteModal(id, title) {
+  deleteTargetId = id;
+  deleteItemTitleSpan.textContent = title;
+  deleteModal.classList.add('active');
+}
+
+// Reset Form State
+function resetForm() {
+  formTitle.textContent = 'Tambah Item Baru';
+  itemIdInput.value = '';
+  itemForm.reset();
+  
+  // Set default division to current active division
+  itemDivisionInput.value = activeDivision;
+  
+  // Reset type select state
+  itemTypeSelect.value = 'link';
+  itemTypeSelect.dispatchEvent(new Event('change'));
+  
+  btnSubmit.textContent = 'Simpan';
+  btnCancel.style.display = 'none';
+}
+</script>
+</body>
+</html>
