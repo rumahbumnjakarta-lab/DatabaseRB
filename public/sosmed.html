@@ -6,6 +6,7 @@
 <title>Social Media — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Database link dan akses operasional divisi Social Media Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 </head>
 <body>
 
@@ -15,18 +16,24 @@
   <a href="business-development.html">Business Dev</a>
   <a href="sosmed.html" class="active">Sosmed</a>
   <a href="design.html">Design</a>
-  <a href="admin.html">Admin</a>
   <a href="event.html">Event</a>
+  <a href="admin.html">Administrasi</a>
+  <a href="email.html">Akun Email</a>
+  <a href="/manage.html" style="margin-left: auto; color: var(--gold-bright); font-weight: 700;">⚙ Kelola Data</a>
 </nav>
 
 <div class="hero">
-  <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta" class="hero-logo-small">
-  <div class="eyebrow">Rumah BUMN Jakarta &middot; Social Media</div>
-  <h1>Database Social Media</h1>
-  <p>Konten kalender, akses akun sosial media, analytics, template posting, dan data engagement divisi Sosmed.</p>
-  <div class="stat-row">
-    <div class="stat"><b id="stat-total">0</b><span>Total Item</span></div>
-    <div class="stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta" class="hero-logo-small">
+    <div class="eyebrow">Rumah BUMN Jakarta &middot; Social Media</div>
+    <h1>Database Social Media</h1>
+    <p>Konten kalender, akses akun sosial media, analytics, template posting, dan data engagement divisi Sosmed.</p>
+    <div class="stat-row">
+      <div class="stat"><b id="stat-total">0</b><span>Total Item</span></div>
+      <div class="stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+    </div>
   </div>
 </div>
 
@@ -40,7 +47,10 @@
 
 <div class="wrap">
   <div class="grid" id="grid"></div>
-  <div class="empty" id="emptyState" style="display:none;">Tidak ada hasil ditemukan.</div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <p>Tidak ada hasil ditemukan.</p>
+  </div>
 </div>
 
 <footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>

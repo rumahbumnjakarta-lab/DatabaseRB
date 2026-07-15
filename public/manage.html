@@ -4,783 +4,1226 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pengelola Hub Database — Rumah BUMN Jakarta</title>
+<meta name="description" content="Dashboard admin untuk mengelola link operasional dan kredensial divisi Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
 <style>
-  /* Extra Dashboard Styles */
-  .btn-manage-back {
-    background: transparent;
-    color: var(--gold-bright);
-    border: 1px solid var(--gold);
-    border-radius: 12px;
-    padding: 8px 16px;
-    text-decoration: none;
-    font-size: 13.5px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-  }
-  .btn-manage-back:hover {
-    background: var(--gold);
-    color: var(--navy-deep);
-  }
-  .manage-layout {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 28px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px 70px;
-  }
-  .sidebar-form {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 8px 24px -12px rgba(15,44,76,0.15);
-    height: fit-content;
-    position: sticky;
-    top: 24px;
-  }
-  .sidebar-form h2 {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--navy-deep);
-    margin: 0 0 18px;
-    font-weight: 600;
-  }
-  .form-group {
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .form-group label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #5C6472;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .form-group input, .form-group select, .form-group textarea {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--paper);
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--gold);
-  }
-  .form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  .form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .btn-submit {
-    flex: 1;
-    background: var(--navy);
-    color: #fff;
-    font-weight: 600;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .btn-submit:hover { opacity: 0.9; }
-  .btn-cancel {
-    background: #EDE7D8;
-    color: var(--navy);
-    font-weight: 600;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .btn-cancel:hover { opacity: 0.9; }
+/* =============================================
+   MANAGE PAGE — FULL DASHBOARD REDESIGN
+   ============================================= */
 
-  /* Manage Table & Content Area */
-  .content-area {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .manage-table-card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 8px 24px -12px rgba(15,44,76,0.15);
-  }
-  .table-header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .table-header h2 {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--navy-deep);
-    margin: 0;
-  }
-  .table-search {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 300px;
-    width: 100%;
-  }
-  .table-search input {
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 13.5px;
-    width: 100%;
-    color: var(--ink);
-  }
-  .table-wrapper {
-    overflow-x: auto;
-  }
-  table.manage-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 14px;
-  }
-  table.manage-table th {
-    background: rgba(15, 44, 76, 0.03);
-    padding: 14px 20px;
-    font-weight: 600;
-    color: var(--navy-deep);
-    border-bottom: 1px solid var(--line);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  table.manage-table td {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-  }
-  table.manage-table tr:last-child td {
-    border-bottom: none;
-  }
-  table.manage-table tr:hover td {
-    background: rgba(15, 44, 76, 0.01);
-  }
-  .btn-action {
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: opacity 0.15s;
-  }
-  .btn-action:hover { opacity: 0.8; }
-  .btn-edit { background: var(--gold-bright); color: var(--navy-deep); }
-  .btn-delete { background: var(--red-warn); color: #fff; }
+body { background: var(--bg); color: var(--text-primary); transition: background 0.3s ease, color 0.3s ease; }
 
-  /* Modal styling */
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(10, 30, 54, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .modal-box {
-    background: #fff;
-    border-radius: 20px;
-    max-width: 440px;
-    width: 90%;
-    padding: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    transform: translateY(20px);
-    transition: transform 0.25s ease;
-  }
-  .modal-overlay.active .modal-box {
-    transform: translateY(0);
-  }
-  .modal-box h3 {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--navy-deep);
-    margin: 0 0 10px;
-  }
-  .modal-box p {
-    font-size: 14px;
-    color: #5C6472;
-    line-height: 1.6;
-    margin: 0 0 20px;
-  }
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
+/* ─── Topbar ─── */
+.manage-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  height: 52px;
+  border-bottom: 1px solid var(--topbar-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.manage-topbar::-webkit-scrollbar { display: none; }
+.manage-topbar .home-link {
+  font-size: 18px;
+  color: var(--gold);
+  text-decoration: none;
+  padding: 0 16px 0 0;
+  margin-right: 12px;
+  border-right: 1px solid var(--border-mid);
+  line-height: 52px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.manage-topbar a.tab-link {
+  color: var(--topbar-link);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0 14px;
+  line-height: 52px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+.manage-topbar a.tab-link:hover { color: var(--topbar-hover); }
+.manage-topbar a.tab-link.active {
+  color: var(--topbar-active-color);
+  border-bottom-color: var(--topbar-active-color);
+}
 
-  /* Toast Notification */
-  .toast-container {
-    position: fixed;
-    top: 24px; right: 24px;
-    z-index: 1100;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .toast {
-    background: var(--navy-deep);
-    color: #fff;
-    padding: 14px 20px;
-    border-radius: 12px;
-    border-left: 4px solid var(--gold);
-    font-size: 13.5px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transform: translateX(120%);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .toast.show {
-    transform: translateX(0);
-  }
+/* ─── Dashboard Header ─── */
+.dash-header {
+  background: linear-gradient(135deg, var(--navy-deep) 0%, #1a3a5c 100%);
+  padding: 36px 32px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.dash-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(200,154,58,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.dash-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.dash-header-text .eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #E0B655;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+.dash-header-text h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+.dash-header-text p {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  margin: 0;
+}
+.dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-view-hub {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-view-hub:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.btn-add-new {
+  background: var(--gold);
+  color: #0E1620;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(200,154,58,0.35);
+}
+.btn-add-new:hover { background: #E0B655; transform: translateY(-1px); }
 
-  @media (max-width: 900px) {
-    .manage-layout {
-      grid-template-columns: 1fr;
-    }
-    .sidebar-form {
-      position: static;
-    }
-  }
+/* ─── Stats Row ─── */
+.dash-stats {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.3s, border-color 0.3s;
+  cursor: default;
+}
+.stat-card:hover { box-shadow: 0 6px 20px var(--card-shadow); transform: translateY(-2px); }
+.stat-card-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.stat-card-text b {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  font-family: 'Fraunces', serif;
+}
+.stat-card-text span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Main Content Area ─── */
+.dash-content {
+  max-width: 1280px;
+  margin: 24px auto 60px;
+  padding: 0 32px;
+}
+
+/* ─── Division Selector Tabs ─── */
+.div-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.div-pill {
+  padding: 8px 16px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border-mid);
+  background: var(--bg-card);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.div-pill:hover { border-color: var(--gold); color: var(--gold); }
+.div-pill.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0E1620;
+  box-shadow: 0 3px 10px rgba(200,154,58,0.25);
+}
+.div-pill .pill-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+.div-pill.active .pill-dot { opacity: 1; }
+
+/* ─── Table Card ─── */
+.table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--card-shadow);
+  transition: background 0.3s, border-color 0.3s;
+}
+.table-card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.table-card-header h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+.table-count-badge {
+  background: var(--bg-card2);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.table-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  padding: 7px 13px;
+  min-width: 220px;
+  transition: background 0.3s, border-color 0.3s;
+}
+.table-search-wrap svg { flex-shrink: 0; color: var(--text-muted); }
+.table-search-wrap input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ─── Data Table ─── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.data-table thead th {
+  background: var(--bg-surface);
+  padding: 11px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.3s, border-color 0.3s;
+}
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--bg-surface); }
+.data-table td { padding: 14px 20px; vertical-align: middle; }
+
+.td-cat .cat-pill {
+  display: inline-block;
+  background: var(--cat-tag-bg);
+  color: var(--cat-tag-color);
+  border: 1px solid var(--cat-tag-border);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+.td-title .item-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13.5px;
+}
+.td-title .item-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+}
+.td-title .item-sub a {
+  color: var(--gold);
+  text-decoration: none;
+}
+.td-title .item-sub a:hover { text-decoration: underline; }
+.td-title .item-note {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.type-badge.link { background: #EBF3FF; color: #2563EB; }
+.type-badge.cred { background: #FFF3E0; color: #B45309; }
+.td-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.btn-row-action {
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.btn-edit-row { background: rgba(37, 99, 235, 0.12); color: #2563EB; }
+.btn-edit-row:hover { background: #2563EB; color: #fff; }
+.btn-delete-row { background: rgba(220, 38, 38, 0.12); color: #DC2626; }
+.btn-delete-row:hover { background: #DC2626; color: #fff; }
+
+/* Empty state */
+.table-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.table-empty svg { margin-bottom: 12px; opacity: 0.4; }
+.table-empty p { font-size: 14px; margin: 0; }
+
+/* ─── Slide-in Drawer ─── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,22,32,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 400px;
+  max-width: 92vw;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  z-index: 501;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+}
+.drawer-overlay.open .drawer {
+  transform: translateX(0);
+}
+.drawer-header {
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.drawer-header h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 700;
+}
+.btn-close-drawer {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.btn-close-drawer:hover { background: var(--border-mid); color: var(--text-primary); }
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-card);
+}
+.drawer-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ─── Form Styles ─── */
+.form-field {
+  margin-bottom: 18px;
+}
+.form-field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 7px;
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
+  box-sizing: border-box;
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(200,154,58,0.12);
+  background: var(--bg-card);
+}
+.form-field textarea { resize: vertical; min-height: 80px; }
+.form-field .hint { font-size: 11.5px; color: var(--text-muted); margin-top: 5px; }
+
+/* Type Toggle */
+.type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.type-toggle-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-mid);
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.type-toggle-btn.active {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #0E1620;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(200,154,58,0.25);
+}
+.form-section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0 18px;
+}
+
+/* ─── Drawer Action Buttons ─── */
+.btn-drawer-save {
+  flex: 1;
+  background: var(--gold);
+  color: #0E1620;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-drawer-save:hover { background: #E0B655; }
+.btn-drawer-cancel {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-drawer-cancel:hover { background: var(--border-mid); color: var(--text-primary); }
+
+/* ─── Delete Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,22,32,0.6);
+  backdrop-filter: blur(5px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  max-width: 420px;
+  width: 92%;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  transform: scale(0.92) translateY(16px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+}
+.modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+.modal-icon {
+  width: 52px; height: 52px;
+  background: #FEE2E2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+.modal-box h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+.modal-box p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+.modal-box p strong { color: var(--text-primary); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-modal-cancel {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-modal-cancel:hover { background: var(--border-mid); }
+.btn-modal-delete {
+  background: #DC2626;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-modal-delete:hover { background: #B91C1C; }
+
+/* ─── Toast ─── */
+.toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card2);
+  color: var(--text-primary);
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border-mid);
+  border-left: 4px solid var(--gold);
+  font-size: 13.5px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast .toast-icon {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #0E1620;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.toast.error { border-left-color: var(--red-warn); }
+.toast.error .toast-icon { background: var(--red-warn); color: #fff; }
+
+/* ─── Loading skeleton ─── */
+.skeleton-row td { padding: 16px 20px; }
+.skeleton-bar {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--border-mid) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .dash-header { padding: 24px 20px 28px; }
+  .dash-stats { padding: 16px 20px 0; }
+  .dash-content { padding: 16px 20px; margin: 16px auto 40px; }
+  .table-card-header { flex-direction: column; align-items: flex-start; }
+  .table-search-wrap { width: 100%; }
+  .drawer { width: 100%; max-width: 100%; }
+}
 </style>
 </head>
 <body>
 
-<!-- Division Navigation Bar -->
-<nav class="div-topbar">
-  <a href="/index.html" class="home-link" title="Kembali ke Beranda">⌂ Home</a>
-  <a href="#" data-tab="bd" class="active">Business Dev</a>
-  <a href="#" data-tab="sosmed">Sosmed</a>
-  <a href="#" data-tab="design">Design</a>
-  <a href="#" data-tab="admin">Admin</a>
-  <a href="#" data-tab="event">Event</a>
+<!-- ─── Topbar Navigation ─── -->
+<nav class="manage-topbar" id="manageTopbar">
+  <a href="/index.html" class="home-link" title="Kembali ke Beranda">⌂</a>
+  <a href="#" class="tab-link active" data-tab="bd" id="tab-bd">Business Dev</a>
+  <a href="#" class="tab-link" data-tab="sosmed" id="tab-sosmed">Sosmed</a>
+  <a href="#" class="tab-link" data-tab="design" id="tab-design">Design</a>
+  <a href="#" class="tab-link" data-tab="event" id="tab-event">Event</a>
+  <a href="#" class="tab-link" data-tab="admin" id="tab-admin">Administrasi</a>
+  <a href="#" class="tab-link" data-tab="email" id="tab-email">Akun Email</a>
 </nav>
 
-<div class="hero">
-  <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta" class="hero-logo-small">
-  <div class="eyebrow">Pengelola Hub Database</div>
-  <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
-    <div>
-      <h1>Pengelolaan Data &amp; Link</h1>
-      <p>Tambahkan, edit, atau hapus link operasional dan kredensial divisi Rumah BUMN Jakarta secara real-time.</p>
+<!-- ─── Dashboard Header ─── -->
+<div class="dash-header">
+  <div class="dash-header-inner">
+    <div class="dash-header-text">
+      <div class="eyebrow">Rumah BUMN Jakarta &middot; Admin Dashboard</div>
+      <h1>Pengelolaan Data & Link</h1>
+      <p>Tambah, edit, atau hapus link operasional dan kredensial semua divisi secara real-time.</p>
     </div>
-    <a href="/index.html" class="btn-manage-back">Lihat Website Hub &rarr;</a>
+    <div class="dash-header-actions">
+      <a href="/index.html" class="btn-view-hub">⌂ Lihat Hub</a>
+      <button class="btn-add-new" id="btnOpenDrawer" onclick="openDrawer()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tambah Item Baru
+      </button>
+    </div>
   </div>
 </div>
 
-<div class="controls" style="margin-bottom: 24px;">
-  <!-- Space buffer matching theme -->
+<!-- ─── Stat Cards ─── -->
+<div class="dash-stats" id="dashStats">
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#EBF3FF;">📋</div>
+    <div class="stat-card-text"><b id="statTotal">–</b><span>Total Item</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#F0FDF4;">🏷</div>
+    <div class="stat-card-text"><b id="statCat">–</b><span>Kategori</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#FFF7ED;">🔗</div>
+    <div class="stat-card-text"><b id="statLinks">–</b><span>Link</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-icon" style="background:#FFF3E0;">🔑</div>
+    <div class="stat-card-text"><b id="statCreds">–</b><span>Kredensial</span></div>
+  </div>
 </div>
 
-<div class="manage-layout">
-  
-  <!-- Sidebar Form: Add/Edit Item -->
-  <aside class="sidebar-form">
-    <h2 id="formTitle">Tambah Item Baru</h2>
-    <form id="itemForm">
-      <input type="hidden" id="itemId" value="">
-      
-      <div class="form-group">
-        <label for="itemDivision">Divisi</label>
-        <select id="itemDivision" required>
-          <option value="bd">Business Development</option>
-          <option value="sosmed">Social Media</option>
-          <option value="design">Design</option>
-          <option value="admin">Admin</option>
-          <option value="event">Event</option>
-        </select>
-      </div>
+<!-- ─── Main Content ─── -->
+<div class="dash-content">
 
-      <div class="form-group">
-        <label for="itemType">Tipe Item</label>
-        <select id="itemType" required>
-          <option value="link">Link Dokumen / Spreadsheet</option>
-          <option value="cred">Kredensial (Email &amp; Password)</option>
-        </select>
-      </div>
+  <!-- Division Pills -->
+  <div class="div-selector" id="divSelector">
+    <div class="div-pill active" data-tab="bd" onclick="switchDivision('bd', this)"><span class="pill-dot"></span> Business Dev</div>
+    <div class="div-pill" data-tab="sosmed" onclick="switchDivision('sosmed', this)"><span class="pill-dot"></span> Sosmed</div>
+    <div class="div-pill" data-tab="design" onclick="switchDivision('design', this)"><span class="pill-dot"></span> Design</div>
+    <div class="div-pill" data-tab="event" onclick="switchDivision('event', this)"><span class="pill-dot"></span> Event</div>
+    <div class="div-pill" data-tab="admin" onclick="switchDivision('admin', this)"><span class="pill-dot"></span> Administrasi</div>
+    <div class="div-pill" data-tab="email" onclick="switchDivision('email', this)"><span class="pill-dot"></span> Akun Email</div>
+  </div>
 
-      <div class="form-group">
-        <label for="itemTitle">Judul Item</label>
-        <input type="text" id="itemTitle" placeholder="Contoh: Canva Workspace Utama" required>
-      </div>
-
-      <div class="form-group">
-        <label for="itemCat">Kategori</label>
-        <input type="text" id="itemCat" list="categorySuggestions" placeholder="Contoh: Canva, Surat, Akademik" required>
-        <datalist id="categorySuggestions"></datalist>
-      </div>
-
-      <!-- Conditional URL field for Link Type -->
-      <div class="form-group" id="urlGroup">
-        <label for="itemUrl">URL Link</label>
-        <input type="text" id="itemUrl" placeholder="https://docs.google.com/..." value="#">
-      </div>
-
-      <!-- Conditional Credential fields for Cred Type -->
-      <div id="credGroup" style="display: none;">
-        <div class="form-group">
-          <label for="itemEmail">Alamat Email</label>
-          <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
-        </div>
-        <div class="form-group">
-          <label for="itemPass">Password</label>
-          <input type="text" id="itemPass" placeholder="Password akun">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="itemNote">Catatan / Deskripsi</label>
-        <textarea id="itemNote" placeholder="Catatan singkat mengenai kegunaan item ini..."></textarea>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn-submit" id="btnSubmit">Simpan</button>
-        <button type="button" class="btn-cancel" id="btnCancel" style="display: none;">Batal</button>
-      </div>
-    </form>
-  </aside>
-
-  <!-- Content Area: Item List Table -->
-  <main class="content-area">
-    <div class="manage-table-card">
-      <div class="table-header">
-        <h2 id="tableTitle">Daftar Item: Business Development</h2>
-        <div class="table-search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="tableSearchInput" placeholder="Cari item di divisi ini...">
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table class="manage-table">
-          <thead>
-            <tr>
-              <th>Kategori</th>
-              <th>Judul / Informasi</th>
-              <th>Detail Tipe</th>
-              <th style="width: 140px; text-align: right;">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <!-- Dynamic items loaded here -->
-          </tbody>
-        </table>
-        <div class="empty" id="tableEmptyState" style="display: none;">Tidak ada data ditemukan.</div>
+  <!-- Data Table Card -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h2 id="tableTitle">Business Development</h2>
+      <span class="table-count-badge" id="tableCount">0 item</span>
+      <div class="table-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="tableSearch" placeholder="Cari item..." oninput="renderTable()">
       </div>
     </div>
-  </main>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:120px">Kategori</th>
+            <th>Judul & Detail</th>
+            <th style="width:110px">Tipe</th>
+            <th style="width:130px; text-align:right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- JS rendered -->
+        </tbody>
+      </table>
+      <div id="tableEmpty" class="table-empty" style="display:none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Tidak ada item ditemukan.</p>
+      </div>
+    </div>
+  </div>
 
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- ─── Slide-in Drawer ─── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="handleOverlayClick(event)">
+  <div class="drawer" id="formDrawer">
+    <div class="drawer-header">
+      <h3 id="drawerTitle">Tambah Item Baru</h3>
+      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <form id="itemForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="itemId">
+
+        <!-- Divisi -->
+        <div class="form-field">
+          <label for="itemDivision">Divisi</label>
+          <select id="itemDivision" required>
+            <option value="bd">Business Development</option>
+            <option value="sosmed">Social Media</option>
+            <option value="design">Design</option>
+            <option value="event">Event</option>
+            <option value="admin">Administrasi</option>
+            <option value="email">Akun Email</option>
+          </select>
+        </div>
+
+        <!-- Tipe Item (Toggle Button) -->
+        <div class="form-field">
+          <label>Tipe Item</label>
+          <div class="type-toggle">
+            <button type="button" class="type-toggle-btn active" id="typeBtnLink" onclick="setType('link')">
+              🔗 Link / Dokumen
+            </button>
+            <button type="button" class="type-toggle-btn" id="typeBtnCred" onclick="setType('cred')">
+              🔑 Kredensial
+            </button>
+          </div>
+        </div>
+        <input type="hidden" id="itemType" value="link">
+
+        <div class="form-section-divider"></div>
+
+        <!-- Judul -->
+        <div class="form-field">
+          <label for="itemTitle">Judul Item <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemTitle" placeholder="Contoh: Canva Workspace Utama" required>
+        </div>
+
+        <!-- Kategori -->
+        <div class="form-field">
+          <label for="itemCat">Kategori <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemCat" list="categorySuggestions" placeholder="Contoh: Canva, Surat, Akademik" required>
+          <datalist id="categorySuggestions"></datalist>
+          <div class="hint">Pilih dari daftar atau ketik kategori baru.</div>
+        </div>
+
+        <!-- URL Group (for link type) -->
+        <div id="urlGroup" class="form-field">
+          <label for="itemUrl">URL Link <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemUrl" placeholder="https://docs.google.com/...">
+        </div>
+
+        <!-- Cred Group (for cred type) -->
+        <div id="credGroup" style="display:none;">
+          <div class="form-field">
+            <label for="itemEmail">Alamat Email <span style="color:#DC2626">*</span></label>
+            <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
+          </div>
+          <div class="form-field">
+            <label for="itemPass">Password <span style="color:#DC2626">*</span></label>
+            <input type="text" id="itemPass" placeholder="Password akun">
+          </div>
+        </div>
+
+        <!-- Catatan -->
+        <div class="form-field">
+          <label for="itemNote">Catatan (opsional)</label>
+          <textarea id="itemNote" placeholder="Keterangan singkat mengenai kegunaan item ini..."></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-drawer-cancel" onclick="closeDrawer()">Batal</button>
+      <button class="btn-drawer-save" onclick="document.getElementById('itemForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
+        <span id="btnSaveLabel">💾 Simpan Item</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Delete Confirmation Modal ─── -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
-    <h3>Konfirmasi Hapus</h3>
-    <p>Apakah Anda yakin ingin menghapus item "<span id="deleteItemTitle"></span>"? Tindakan ini tidak dapat dibatalkan.</p>
+    <div class="modal-icon">🗑️</div>
+    <h3>Hapus Item?</h3>
+    <p>Anda akan menghapus item <strong id="deleteItemName"></strong>. Tindakan ini tidak dapat dibatalkan.</p>
     <div class="modal-actions">
-      <button class="btn btn-copy" id="btnConfirmCancel">Batal</button>
-      <button class="btn btn-open" id="btnConfirmDelete" style="background: var(--red-warn);">Hapus</button>
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+      <button class="btn-modal-delete" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
     </div>
   </div>
 </div>
 
-<!-- Toast Notifications Container -->
+<!-- ─── Toast Container ─── -->
 <div class="toast-container" id="toastContainer"></div>
 
 <footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
 
 <script>
-// State Management
+// ─── State ───
 let allItems = [];
 let activeDivision = 'bd';
 let deleteTargetId = null;
 
-// DOM Elements
-const tabs = document.querySelectorAll('nav.div-topbar a[data-tab]');
-const tableBody = document.getElementById('tableBody');
-const tableTitle = document.getElementById('tableTitle');
-const tableEmptyState = document.getElementById('tableEmptyState');
-const tableSearchInput = document.getElementById('tableSearchInput');
-const categorySuggestions = document.getElementById('categorySuggestions');
-
-// Form elements
-const itemForm = document.getElementById('itemForm');
-const itemIdInput = document.getElementById('itemId');
-const itemDivisionInput = document.getElementById('itemDivision');
-const itemTypeSelect = document.getElementById('itemType');
-const itemTitleInput = document.getElementById('itemTitle');
-const itemCatInput = document.getElementById('itemCat');
-const itemUrlInput = document.getElementById('itemUrl');
-const itemEmailInput = document.getElementById('itemEmail');
-const itemPassInput = document.getElementById('itemPass');
-const itemNoteInput = document.getElementById('itemNote');
-const formTitle = document.getElementById('formTitle');
-const btnSubmit = document.getElementById('btnSubmit');
-const btnCancel = document.getElementById('btnCancel');
-
-// Modal elements
-const deleteModal = document.getElementById('deleteModal');
-const deleteItemTitleSpan = document.getElementById('deleteItemTitle');
-const btnConfirmDelete = document.getElementById('btnConfirmDelete');
-const btnConfirmCancel = document.getElementById('btnConfirmCancel');
-
-// Division translations
 const divNames = {
-  'bd': 'Business Development',
-  'sosmed': 'Social Media',
-  'design': 'Design',
-  'admin': 'Admin',
-  'event': 'Event'
+  bd: 'Business Development',
+  sosmed: 'Social Media',
+  design: 'Design',
+  event: 'Event',
+  admin: 'Administrasi',
+  email: 'Akun Email'
 };
 
-// Initialize
+// ─── Init ───
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
-  setupEventListeners();
+  // Sync topbar tabs
+  document.querySelectorAll('.manage-topbar .tab-link').forEach(tab => {
+    tab.addEventListener('click', e => {
+      e.preventDefault();
+      switchDivision(tab.dataset.tab);
+    });
+  });
 });
 
-// Toast Helper
-function showToast(message) {
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `<span>✓</span> <span>${message}</span>`;
-  container.appendChild(toast);
-  
-  // Trigger entry animation
-  setTimeout(() => toast.classList.add('show'), 50);
-  
-  // Remove after 3 seconds
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// Fetch all data from API
+// ─── Fetch Data ───
 function fetchData() {
+  showSkeleton();
   fetch('/api/items')
-    .then(res => res.json())
+    .then(r => r.json())
     .then(data => {
       allItems = data;
+      renderStats();
       renderTable();
       updateSuggestions();
     })
-    .catch(err => {
-      console.error('Error fetching data:', err);
-      showToast('Gagal memuat data dari server!');
-    });
+    .catch(() => showToast('Gagal memuat data server!', true));
 }
 
-// Event Listeners setup
-function setupEventListeners() {
-  // Tab changes
-  tabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      e.preventDefault();
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      activeDivision = tab.getAttribute('data-tab');
-      
-      // Update form default division to active division
-      if (!itemIdInput.value) {
-        itemDivisionInput.value = activeDivision;
-      }
-      
-      tableTitle.textContent = `Daftar Item: ${divNames[activeDivision]}`;
-      renderTable();
-      updateSuggestions();
-    });
+// ─── Switch Division ───
+function switchDivision(div, pillEl) {
+  activeDivision = div;
+
+  // Sync topbar
+  document.querySelectorAll('.manage-topbar .tab-link').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === div);
+  });
+  // Sync pills
+  document.querySelectorAll('.div-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === div);
   });
 
-  // Type Select changes (toggle url/cred groups)
-  itemTypeSelect.addEventListener('change', () => {
-    const type = itemTypeSelect.value;
-    if (type === 'link') {
-      document.getElementById('urlGroup').style.display = 'flex';
-      document.getElementById('credGroup').style.display = 'none';
-      itemUrlInput.setAttribute('required', 'true');
-      itemEmailInput.removeAttribute('required');
-      itemPassInput.removeAttribute('required');
-    } else {
-      document.getElementById('urlGroup').style.display = 'none';
-      document.getElementById('credGroup').style.display = 'block';
-      itemUrlInput.removeAttribute('required');
-      itemEmailInput.setAttribute('required', 'true');
-      itemPassInput.setAttribute('required', 'true');
-    }
-  });
-
-  // Search Input listener
-  tableSearchInput.addEventListener('input', renderTable);
-
-  // Form submit (Add or Edit)
-  itemForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const id = itemIdInput.value;
-    const body = {
-      division: itemDivisionInput.value,
-      type: itemTypeSelect.value,
-      title: itemTitleInput.value.trim(),
-      cat: itemCatInput.value.trim(),
-      note: itemNoteInput.value.trim()
-    };
-
-    if (body.type === 'link') {
-      body.url = itemUrlInput.value.trim();
-    } else {
-      body.email = itemEmailInput.value.trim();
-      body.pass = itemPassInput.value.trim();
-    }
-
-    const url = id ? `/api/items/${id}` : '/api/items';
-    const method = id ? 'PUT' : 'POST';
-
-    fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Network response not ok');
-        return res.json();
-      })
-      .then(result => {
-        showToast(id ? 'Data berhasil diperbarui!' : 'Data baru berhasil ditambahkan!');
-        resetForm();
-        fetchData();
-      })
-      .catch(err => {
-        console.error('Error saving data:', err);
-        showToast('Gagal menyimpan data!');
-      });
-  });
-
-  // Cancel Edit
-  btnCancel.addEventListener('click', resetForm);
-
-  // Modal Cancel Delete
-  btnConfirmCancel.addEventListener('click', () => {
-    deleteModal.classList.remove('active');
-    deleteTargetId = null;
-  });
-
-  // Modal Confirm Delete
-  btnConfirmDelete.addEventListener('click', () => {
-    if (deleteTargetId) {
-      fetch(`/api/items/${deleteTargetId}`, {
-        method: 'DELETE'
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Delete request failed');
-          return res.json();
-        })
-        .then(() => {
-          showToast('Data berhasil dihapus!');
-          deleteModal.classList.remove('active');
-          deleteTargetId = null;
-          fetchData();
-        })
-        .catch(err => {
-          console.error('Error deleting data:', err);
-          showToast('Gagal menghapus data!');
-          deleteModal.classList.remove('active');
-          deleteTargetId = null;
-        });
-    }
-  });
-}
-
-// Render dynamic items into table
-function renderTable() {
-  const query = tableSearchInput.value.trim().toLowerCase();
-  const divisionItems = allItems.filter(item => item.division === activeDivision);
-  
-  const filtered = divisionItems.filter(item => {
-    const haystack = (item.title + " " + item.cat + " " + (item.note || "") + " " + (item.email || "")).toLowerCase();
-    return haystack.includes(query);
-  });
-
-  tableBody.innerHTML = '';
-  
-  if (filtered.length === 0) {
-    tableEmptyState.style.display = 'block';
-    return;
-  } else {
-    tableEmptyState.style.display = 'none';
+  document.getElementById('tableTitle').textContent = divNames[div];
+  document.getElementById('tableSearch').value = '';
+  // Keep form division in sync if creating new
+  if (!document.getElementById('itemId').value) {
+    document.getElementById('itemDivision').value = div;
   }
 
-  filtered.forEach(item => {
-    const tr = document.createElement('tr');
-    
-    let detailHtml = '';
-    if (item.type === 'link') {
-      detailHtml = `
-        <div style="font-weight: 600; color: var(--navy-deep);">${item.title}</div>
-        <div style="font-size: 12px; color: #8A93A3; word-break: break-all; margin-top: 4px;">
-          Link: <a href="${item.url}" target="_blank" style="color: var(--gold); text-decoration: none;">${item.url}</a>
-        </div>
-      `;
-    } else {
-      detailHtml = `
-        <div style="font-weight: 600; color: var(--navy-deep);">${item.title}</div>
-        <div style="font-size: 12px; color: #5C6472; margin-top: 4px; font-family: 'JetBrains Mono', monospace;">
-          Email: <b>${item.email}</b><br>
-          Sandi: <b>${item.pass}</b>
-        </div>
-      `;
-    }
+  renderStats();
+  renderTable();
+  updateSuggestions();
+}
 
-    if (item.note) {
-      detailHtml += `<div style="font-size: 12px; color: #8A93A3; font-style: italic; margin-top: 4px;">Note: ${item.note}</div>`;
-    }
+// ─── Render Stats ───
+function renderStats() {
+  const items = allItems.filter(i => i.division === activeDivision);
+  const cats = new Set(items.map(i => i.cat));
+  const links = items.filter(i => i.type === 'link').length;
+  const creds = items.filter(i => i.type === 'cred').length;
+  animateNumber('statTotal', items.length);
+  animateNumber('statCat', cats.size);
+  animateNumber('statLinks', links);
+  animateNumber('statCreds', creds);
+}
 
-    tr.innerHTML = `
-      <td><span class="cat-tag">${item.cat}</span></td>
-      <td>${detailHtml}</td>
-      <td>
-        <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: ${item.type === 'link' ? 'var(--navy)' : 'var(--gold)'}; background: ${item.type === 'link' ? '#E6EEF8' : '#FEF5E7'}; padding: 4px 8px; border-radius: 6px;">
-          ${item.type === 'link' ? '🔗 Link' : '🔑 Kredensial'}
-        </span>
-      </td>
-      <td style="text-align: right; white-space: nowrap;">
-        <button class="btn-action btn-edit" data-id="${item.id}">Edit</button>
-        <button class="btn-action btn-delete" data-id="${item.id}" data-title="${item.title}">Hapus</button>
-      </td>
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) return;
+  const step = target > current ? 1 : -1;
+  let val = current;
+  const interval = setInterval(() => {
+    val += step;
+    el.textContent = val;
+    if (val === target) clearInterval(interval);
+  }, 30);
+}
+
+// ─── Skeleton loader ───
+function showSkeleton() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = Array(4).fill(`
+    <tr class="skeleton-row">
+      <td><div class="skeleton-bar" style="width:70px"></div></td>
+      <td><div class="skeleton-bar" style="width:180px;margin-bottom:6px"></div><div class="skeleton-bar" style="width:120px;height:10px"></div></td>
+      <td><div class="skeleton-bar" style="width:60px"></div></td>
+      <td><div class="skeleton-bar" style="width:100px;margin-left:auto"></div></td>
+    </tr>
+  `).join('');
+}
+
+// ─── Render Table ───
+function renderTable() {
+  const query = (document.getElementById('tableSearch').value || '').trim().toLowerCase();
+  const items = allItems
+    .filter(i => i.division === activeDivision)
+    .filter(i => {
+      const hay = [i.title, i.cat, i.note || '', i.email || '', i.url || ''].join(' ').toLowerCase();
+      return hay.includes(query);
+    });
+
+  document.getElementById('tableCount').textContent = `${items.length} item`;
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('tableEmpty');
+
+  if (items.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = items.map(item => {
+    const isLink = item.type === 'link';
+    const subHtml = isLink
+      ? `<div class="item-sub"><a href="${item.url}" target="_blank" title="${item.url}">${truncate(item.url, 55)}</a></div>`
+      : `<div class="item-sub">✉ ${item.email || '—'} &nbsp;·&nbsp; 🔐 ${item.pass || '—'}</div>`;
+    const noteHtml = item.note ? `<div class="item-note">${item.note}</div>` : '';
+    const typeBadge = isLink
+      ? `<span class="type-badge link">🔗 Link</span>`
+      : `<span class="type-badge cred">🔑 Kredensial</span>`;
+
+    return `
+      <tr>
+        <td class="td-cat"><span class="cat-pill">${escHtml(item.cat)}</span></td>
+        <td class="td-title">
+          <div class="item-title">${escHtml(item.title)}</div>
+          ${subHtml}
+          ${noteHtml}
+        </td>
+        <td>${typeBadge}</td>
+        <td class="td-actions">
+          <button class="btn-row-action btn-edit-row" onclick="editItem('${item.id}')">✏ Edit</button>
+          <button class="btn-row-action btn-delete-row" onclick="openDeleteModal('${item.id}', '${escHtml(item.title)}')">✕</button>
+        </td>
+      </tr>
     `;
-
-    tableBody.appendChild(tr);
-  });
-
-  // Attach dynamic actions to buttons
-  tableBody.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.onclick = () => editItem(btn.getAttribute('data-id'));
-  });
-
-  tableBody.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.getAttribute('data-id');
-      const title = btn.getAttribute('data-title');
-      openDeleteModal(id, title);
-    };
-  });
+  }).join('');
 }
 
-// Update category datalist suggestions
+// ─── Update datalist suggestions ───
 function updateSuggestions() {
-  const currentDivItems = allItems.filter(item => item.division === activeDivision);
-  const categories = [...new Set(currentDivItems.map(item => item.cat))];
-  
-  categorySuggestions.innerHTML = '';
-  categories.forEach(cat => {
-    const option = document.createElement('option');
-    option.value = cat;
-    categorySuggestions.appendChild(option);
-  });
+  const items = allItems.filter(i => i.division === activeDivision);
+  const cats = [...new Set(items.map(i => i.cat))];
+  const dl = document.getElementById('categorySuggestions');
+  dl.innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('');
 }
 
-// Load item data into form for editing
+// ─── Type Toggle ───
+function setType(type) {
+  document.getElementById('itemType').value = type;
+  document.getElementById('typeBtnLink').classList.toggle('active', type === 'link');
+  document.getElementById('typeBtnCred').classList.toggle('active', type === 'cred');
+  document.getElementById('urlGroup').style.display = type === 'link' ? '' : 'none';
+  document.getElementById('credGroup').style.display = type === 'cred' ? '' : 'none';
+}
+
+// ─── Drawer ───
+function openDrawer(prefillDiv) {
+  if (prefillDiv) document.getElementById('itemDivision').value = prefillDiv;
+  else document.getElementById('itemDivision').value = activeDivision;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawerTitle').textContent = 'Tambah Item Baru';
+  document.getElementById('btnSaveLabel').textContent = '💾 Simpan Item';
+  setTimeout(() => document.getElementById('itemTitle').focus(), 350);
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  setTimeout(resetForm, 300);
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('drawerOverlay')) closeDrawer();
+}
+
+// ─── Form Submit ───
+function handleFormSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('itemId').value;
+  const type = document.getElementById('itemType').value;
+
+  const body = {
+    division: document.getElementById('itemDivision').value,
+    type,
+    title: document.getElementById('itemTitle').value.trim(),
+    cat: document.getElementById('itemCat').value.trim(),
+    note: document.getElementById('itemNote').value.trim()
+  };
+  if (type === 'link') body.url = document.getElementById('itemUrl').value.trim();
+  else {
+    body.email = document.getElementById('itemEmail').value.trim();
+    body.pass  = document.getElementById('itemPass').value.trim();
+  }
+
+  const url    = id ? `/api/items/${id}` : '/api/items';
+  const method = id ? 'PUT' : 'POST';
+
+  const saveBtn = document.getElementById('btnSaveLabel');
+  saveBtn.textContent = '⏳ Menyimpan...';
+
+  fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(() => {
+      showToast(id ? 'Item berhasil diperbarui!' : 'Item baru berhasil ditambahkan!');
+      closeDrawer();
+      fetchData();
+    })
+    .catch(() => {
+      showToast('Gagal menyimpan data!', true);
+      saveBtn.textContent = id ? '💾 Perbarui Item' : '💾 Simpan Item';
+    });
+}
+
+// ─── Edit Item ───
 function editItem(id) {
   const item = allItems.find(i => i.id === id);
   if (!item) return;
 
-  formTitle.textContent = 'Edit Item';
-  itemIdInput.value = item.id;
-  itemDivisionInput.value = item.division;
-  itemTypeSelect.value = item.type;
-  itemTitleInput.value = item.title;
-  itemCatInput.value = item.cat;
-  itemNoteInput.value = item.note || '';
-
-  // Trigger change handler manually to show proper groups
-  itemTypeSelect.dispatchEvent(new Event('change'));
-
-  if (item.type === 'link') {
-    itemUrlInput.value = item.url || '';
-  } else {
-    itemEmailInput.value = item.email || '';
-    itemPassInput.value = item.pass || '';
+  document.getElementById('itemId').value = item.id;
+  document.getElementById('itemDivision').value = item.division;
+  document.getElementById('itemTitle').value = item.title;
+  document.getElementById('itemCat').value = item.cat;
+  document.getElementById('itemNote').value = item.note || '';
+  setType(item.type);
+  if (item.type === 'link') document.getElementById('itemUrl').value = item.url || '';
+  else {
+    document.getElementById('itemEmail').value = item.email || '';
+    document.getElementById('itemPass').value  = item.pass  || '';
   }
 
-  btnSubmit.textContent = 'Perbarui';
-  btnCancel.style.display = 'inline-block';
-  
-  // Scroll to form on mobile view
-  itemForm.scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('drawerTitle').textContent = 'Edit Item';
+  document.getElementById('btnSaveLabel').textContent = '💾 Perbarui Item';
+  document.getElementById('drawerOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('itemTitle').focus(), 350);
 }
 
-// Open Delete Confirmation Modal
+// ─── Reset Form ───
+function resetForm() {
+  document.getElementById('itemId').value = '';
+  document.getElementById('itemForm').reset();
+  document.getElementById('itemDivision').value = activeDivision;
+  setType('link');
+}
+
+// ─── Delete ───
 function openDeleteModal(id, title) {
   deleteTargetId = id;
-  deleteItemTitleSpan.textContent = title;
-  deleteModal.classList.add('active');
+  document.getElementById('deleteItemName').textContent = '"' + title + '"';
+  document.getElementById('deleteModal').classList.add('open');
 }
 
-// Reset Form State
-function resetForm() {
-  formTitle.textContent = 'Tambah Item Baru';
-  itemIdInput.value = '';
-  itemForm.reset();
-  
-  // Set default division to current active division
-  itemDivisionInput.value = activeDivision;
-  
-  // Reset type select state
-  itemTypeSelect.value = 'link';
-  itemTypeSelect.dispatchEvent(new Event('change'));
-  
-  btnSubmit.textContent = 'Simpan';
-  btnCancel.style.display = 'none';
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+  deleteTargetId = null;
+}
+
+function confirmDelete() {
+  if (!deleteTargetId) return;
+  const btn = document.getElementById('btnConfirmDelete');
+  btn.textContent = 'Menghapus...';
+  btn.disabled = true;
+
+  fetch(`/api/items/${deleteTargetId}`, { method: 'DELETE' })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(() => {
+      showToast('Item berhasil dihapus!');
+      closeDeleteModal();
+      fetchData();
+    })
+    .catch(() => showToast('Gagal menghapus item!', true))
+    .finally(() => { btn.textContent = 'Ya, Hapus'; btn.disabled = false; });
+}
+
+// ─── Toast ───
+function showToast(msg, isError = false) {
+  const container = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.innerHTML = `<div class="toast-icon">${isError ? '✕' : '✓'}</div><span>${msg}</span>`;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 400);
+  }, 3200);
+}
+
+// ─── Helpers ───
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function truncate(s, n) {
+  return s && s.length > n ? s.slice(0, n) + '…' : s;
 }
 </script>
 </body>
