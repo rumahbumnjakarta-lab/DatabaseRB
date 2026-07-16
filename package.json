@@ -8,6 +8,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.6",
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "uuid": "^9.0.1"
   },

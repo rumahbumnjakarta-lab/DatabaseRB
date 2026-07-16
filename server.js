@@ -1,78 +1,95 @@
+require('dotenv').config();
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data', 'items.json');
+
+// Inisialisasi Supabase
+let supabaseUrl = process.env.SUPABASE_URL;
+let supabaseKey = process.env.SUPABASE_KEY;
+
+const isPlaceholderUrl = !supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL') || !supabaseUrl.startsWith('http');
+
+if (isPlaceholderUrl) {
+  console.error('\n========================================================================');
+  console.error('⚠️  PERINGATAN: SUPABASE_URL belum dikonfigurasi secara benar di file .env');
+  console.error('Silakan buka file .env dan masukkan URL proyek Supabase Anda.');
+  console.error('Contoh: SUPABASE_URL=https://xxxxxxxxxxxxxxxxxxxx.supabase.co');
+  console.error('========================================================================\n');
+  // Gunakan URL placeholder yang valid agar server tidak crash saat inisialisasi awal
+  supabaseUrl = 'https://placeholder-project-id.supabase.co';
+}
+
+if (!supabaseKey || supabaseKey.includes('YOUR_SUPABASE_ANON_KEY')) {
+  console.error('\n========================================================================');
+  console.error('⚠️  PERINGATAN: SUPABASE_KEY belum dikonfigurasi secara benar di file .env');
+  console.error('Silakan buka file .env dan masukkan Anon Key proyek Supabase Anda.');
+  console.error('========================================================================\n');
+  supabaseKey = 'placeholder-key';
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Helper to read data
-function readData() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) {
-      // Create directories and empty array if file does not exist
-      fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-      fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2), 'utf8');
-      return [];
-    }
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(data || '[]');
-  } catch (err) {
-    console.error('Error reading data:', err);
-    return [];
-  }
-}
-
-// Helper to write data
-function writeData(data) {
-  try {
-    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
-    return true;
-  } catch (err) {
-    console.error('Error writing data:', err);
-    return false;
-  }
-}
-
-// GET /api/items - Retrieve all items or items by division
-app.get('/api/items', (req, res) => {
+// GET /api/items - Mengambil semua item atau item per divisi
+app.get('/api/items', async (req, res) => {
   const { division } = req.query;
-  const items = readData();
-  if (division) {
-    const filtered = items.filter(item => item.division === division);
-    return res.json(filtered);
+  try {
+    let query = supabase.from('items').select('*').order('created_at', { ascending: true });
+    
+    if (division) {
+      query = query.eq('division', division);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    res.json(data || []);
+  } catch (err) {
+    console.error('Error fetching data:', err);
+    res.status(500).json({ error: 'Gagal mengambil data dari database' });
   }
-  res.json(items);
 });
 
-// GET /api/items/:id - Retrieve a single item
-app.get('/api/items/:id', (req, res) => {
-  const items = readData();
-  const item = items.find(i => i.id === req.params.id);
-  if (!item) {
-    return res.status(404).json({ error: 'Item not found' });
+// GET /api/items/:id - Mengambil satu item berdasarkan ID
+app.get('/api/items/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Item tidak ditemukan' });
+      }
+      throw error;
+    }
+    
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching item:', err);
+    res.status(500).json({ error: 'Gagal mengambil data item' });
   }
-  res.json(item);
 });
 
-// POST /api/items - Add a new item
-app.post('/api/items', (req, res) => {
+// POST /api/items - Menambahkan item baru
+app.post('/api/items', async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
 
   if (!division || !cat || !title || !type) {
     return res.status(400).json({ error: 'Missing required fields (division, cat, title, type)' });
   }
 
-  const items = readData();
   const newItem = {
-    id: uuidv4(),
     division,
     cat,
     title,
@@ -82,82 +99,102 @@ app.post('/api/items', (req, res) => {
 
   if (type === 'link') {
     newItem.url = url || '#';
+    newItem.email = null;
+    newItem.pass = null;
   } else if (type === 'cred') {
     newItem.email = email || '';
     newItem.pass = pass || '';
+    newItem.url = null;
   }
 
-  items.push(newItem);
-  if (writeData(items)) {
-    res.status(201).json(newItem);
-  } else {
-    res.status(500).json({ error: 'Failed to write to database' });
+  try {
+    const { data, error } = await supabase
+      .from('items')
+      .insert([newItem])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error inserting item:', err);
+    res.status(500).json({ error: 'Gagal menyimpan data ke database' });
   }
 });
 
-// PUT /api/items/:id - Update an existing item
-app.put('/api/items/:id', (req, res) => {
+// PUT /api/items/:id - Memperbarui item yang sudah ada
+app.put('/api/items/:id', async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
   const { id } = req.params;
 
-  const items = readData();
-  const idx = items.findIndex(i => i.id === id);
+  try {
+    // Ambil item lama untuk validasi tipe
+    const { data: currentItem, error: getError } = await supabase
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (idx === -1) {
-    return res.status(404).json({ error: 'Item not found' });
-  }
+    if (getError || !currentItem) {
+      return res.status(404).json({ error: 'Item tidak ditemukan' });
+    }
 
-  // Update properties if they are provided
-  if (division) items[idx].division = division;
-  if (cat) items[idx].cat = cat;
-  if (title) items[idx].title = title;
-  if (type) items[idx].type = type;
-  if (note !== undefined) items[idx].note = note;
+    const updates = {};
+    if (division) updates.division = division;
+    if (cat) updates.cat = cat;
+    if (title) updates.title = title;
+    if (type) updates.type = type;
+    if (note !== undefined) updates.note = note;
 
-  // Adapt properties depending on type
-  const currentType = type || items[idx].type;
-  if (currentType === 'link') {
-    if (url !== undefined) items[idx].url = url;
-    // Clean cred fields
-    delete items[idx].email;
-    delete items[idx].pass;
-  } else if (currentType === 'cred') {
-    if (email !== undefined) items[idx].email = email;
-    if (pass !== undefined) items[idx].pass = pass;
-    // Clean url field
-    delete items[idx].url;
-  }
+    const currentType = type || currentItem.type;
+    if (currentType === 'link') {
+      if (url !== undefined) updates.url = url;
+      updates.email = null;
+      updates.pass = null;
+    } else if (currentType === 'cred') {
+      if (email !== undefined) updates.email = email;
+      if (pass !== undefined) updates.pass = pass;
+      updates.url = null;
+    }
 
-  if (writeData(items)) {
-    res.json(items[idx]);
-  } else {
-    res.status(500).json({ error: 'Failed to update database' });
+    const { data, error } = await supabase
+      .from('items')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error('Error updating item:', err);
+    res.status(500).json({ error: 'Gagal memperbarui data di database' });
   }
 });
 
-// DELETE /api/items/:id - Delete an item
-app.delete('/api/items/:id', (req, res) => {
+// DELETE /api/items/:id - Menghapus item
+app.delete('/api/items/:id', async (req, res) => {
   const { id } = req.params;
-  const items = readData();
-  const filtered = items.filter(i => i.id !== id);
+  try {
+    const { error } = await supabase
+      .from('items')
+      .delete()
+      .eq('id', id);
 
-  if (items.length === filtered.length) {
-    return res.status(404).json({ error: 'Item not found' });
-  }
-
-  if (writeData(filtered)) {
+    if (error) throw error;
     res.json({ message: 'Item deleted successfully' });
-  } else {
-    res.status(500).json({ error: 'Failed to write changes to database' });
+  } catch (err) {
+    console.error('Error deleting item:', err);
+    res.status(500).json({ error: 'Gagal menghapus data dari database' });
   }
 });
 
-// Serve manage.html dashboard on specific route (or default static behavior)
+// Route khusus untuk dashboard manage
 app.get('/manage', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'manage.html'));
 });
 
-// Start Server
+// Menjalankan Server
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
