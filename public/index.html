@@ -3,436 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Database Rumah BUMN Jakarta — Operational Hub</title>
-<meta name="description" content="Pusat database operasional seluruh divisi Rumah BUMN Jakarta. Akses dokumen, link, dan data per divisi.">
+<title>Dashboard — Database Rumah BUMN Jakarta</title>
+<meta name="description" content="Pusat database operasional seluruh divisi Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
-<script src="theme.js"></script>
-<style>
-/* ─── Hub Gate (Full Screen Login) ─── */
-.hub-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background-image: url('FOTO/login2.png');
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 0 170px;
-}
-.hub-gate::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 18, 30, 0.3);
-  z-index: 1;
-}
-.hub-gate-panel {
-  position: relative;
-  z-index: 2;
-  width: 520px;
-  max-width: 90vw;
-  background: rgba(19, 28, 42, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-  animation: fadeUpGate 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes fadeUpGate {
-  from { opacity: 0; transform: translateY(40px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.hub-gate-panel h2 {
-  font-family: 'Fraunces', serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 10px;
-  text-align: left;
-}
-.hub-gate-panel p {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
-  line-height: 1.6;
-  margin: 0 0 32px;
-  text-align: left;
-}
-.gate-input.error {
-  border-color: rgba(239, 68, 68, 0.6) !important;
-  animation: shake 0.35s ease;
-}
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%      { transform: translateX(-8px); }
-  40%      { transform: translateX(8px); }
-  60%      { transform: translateX(-5px); }
-  80%      { transform: translateX(5px); }
-}
-@media (max-width: 600px) {
-  .hub-gate {
-    padding: 20px;
-    justify-content: center;
-  }
-  .hub-gate-panel {
-    width: 100%;
-    background: rgba(19, 28, 42, 0.95);
-    padding: 30px 20px;
-  }
-}
-.gate-btn {
-  width: 100%;
-  background: var(--gold);
-  color: #0E1620;
-  border: none;
-  border-radius: 12px;
-  padding: 13px;
-  font-size: 14.5px;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.gate-btn:hover:not(:disabled) {
-  background: var(--gold-bright);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(200,154,58,0.4);
-}
-.gate-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-     HUB GATEWAY (Password protected)
-     ═══════════════════════════════════════════ -->
-<div class="hub-gate" id="hubGate">
-  <div class="hub-gate-panel">
-    
-    <div class="landing-badge" style="margin-bottom: 16px; align-self: flex-start;">
-      <span class="badge-dot"></span>
-      Internal Access Only
-    </div>
+<!-- Auth Loading -->
+<div id="authLoading">
+  <div style="text-align:center;">
+    <div class="loading-spinner"></div>
+    <p style="color:var(--text-muted);font-family:Inter,sans-serif;font-size:13px;">Memeriksa sesi...</p>
+  </div>
+</div>
 
-    <h2>Database Operational Hub</h2>
-    <p>Selamat datang di Pusat Database Operasional Rumah BUMN Jakarta. Masukkan kata sandi akses untuk melanjutkan.</p>
+<div class="app-shell">
+  <!-- Sidebar injected here -->
+  <div id="sidebarContainer"></div>
 
-    <div class="gate-input-wrap" style="position: relative; width: 100%; margin-bottom: 14px;">
-      <input
-        type="password"
-        id="hubGateInput"
-        class="gate-input"
-        placeholder="Masukkan kata sandi..."
-        autocomplete="off"
-        maxlength="50"
-        style="width: 100%; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 13px 44px 13px 16px; font-size: 15px; font-family: 'JetBrains Mono', monospace; color: #fff; outline: none; letter-spacing: 0.06em; box-sizing: border-box;"
-      >
-      <button class="gate-toggle-pw" type="button" id="hubGateToggle" title="Tampilkan/Sembunyikan" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); padding: 4px; transition: color 0.15s;">
-        <svg width="16" height="16" id="hubEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+  <!-- Main content -->
+  <main class="app-main">
+    <!-- Topbar -->
+    <div class="app-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
+      <div class="topbar-title">
+        Dashboard
+        <small>Pusat operasional Rumah BUMN Jakarta</small>
+      </div>
     </div>
 
-    <div class="gate-error" id="hubGateError" style="font-size: 12.5px; color: #EF4444; margin: -4px 0 12px; display: none; align-items: center; gap: 5px; justify-content: center;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span id="hubGateErrorText">Kata sandi salah. Coba lagi.</span>
+    <!-- Page Content -->
+    <div id="appContent" class="app-content" style="display:none;">
+
+      <!-- Welcome Banner -->
+      <div style="background:linear-gradient(135deg,rgba(8,87,195,0.18),rgba(48,127,226,0.08));border:1px solid rgba(48,127,226,0.2);border-radius:18px;padding:26px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;">
+        <img src="FOTO/LOGO.png" alt="Logo" style="width:52px;height:52px;border-radius:12px;object-fit:cover;" onerror="this.style.display='none'">
+        <div>
+          <div id="welcomeMsg" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--text-primary);">Selamat Datang! 👋</div>
+          <div id="welcomeSub" style="font-size:13px;color:var(--text-secondary);margin-top:3px;">Rumah BUMN Jakarta · Database Internal Hub</div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-card-icon">📁</div>
+          <div class="stat-card-value" id="statTotal">—</div>
+          <div class="stat-card-label">Total Item</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🔗</div>
+          <div class="stat-card-value" id="statLinks">—</div>
+          <div class="stat-card-label">Link Aktif</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🔑</div>
+          <div class="stat-card-value" id="statCreds">—</div>
+          <div class="stat-card-label">Kredensial</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon">🏢</div>
+          <div class="stat-card-value">5</div>
+          <div class="stat-card-label">Divisi Aktif</div>
+        </div>
+      </div>
+
+      <!-- Fitur Absensi -->
+      <div class="division-section-title">📍 Absensi Digital</div>
+      <div class="division-cards-grid" style="margin-bottom: 24px;">
+        <a href="/absen.html" class="div-card" style="border-color: rgba(48,127,226,0.3); background: linear-gradient(135deg, rgba(8,87,195,0.12), rgba(48,127,226,0.05));">
+          <div class="div-card-icon" style="background: rgba(48,127,226,0.2); color: #71c5e8;">📍</div>
+          <div class="div-card-name">Absen Saya</div>
+          <div class="div-card-count">Check-in &amp; Check-out + Selfie GPS</div>
+          <div class="div-card-arrow" style="color: var(--blue-light);">Masuk Halaman Absen <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+        <a href="/rekap-absen.html" class="div-card staff-only-card" id="rekapAbsenCard" style="display:none; border-color: rgba(5,150,105,0.3); background: linear-gradient(135deg, rgba(5,150,105,0.12), rgba(16,185,129,0.05));">
+          <div class="div-card-icon" style="background: rgba(5,150,105,0.2); color: #34d399;">📊</div>
+          <div class="div-card-name">Rekap Absensi (Staff)</div>
+          <div class="div-card-count">Pantau kehadiran real-time + peta</div>
+          <div class="div-card-arrow" style="color: #34d399;">Buka Rekap <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+      </div>
+
+      <!-- Divisi Internship -->
+      <div class="division-section-title">🎓 Divisi Internship</div>
+      <div class="division-cards-grid">
+        <a href="/business-development.html" class="div-card">
+          <div class="div-card-icon color-bd">📊</div>
+          <div class="div-card-name">Business Development</div>
+          <div class="div-card-count" id="cnt-bd">Memuat...</div>
+          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+        <a href="/sosmed.html" class="div-card">
+          <div class="div-card-icon color-sosmed">📱</div>
+          <div class="div-card-name">Social Media</div>
+          <div class="div-card-count" id="cnt-sosmed">Memuat...</div>
+          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+        <a href="/design.html" class="div-card">
+          <div class="div-card-icon color-design">🎨</div>
+          <div class="div-card-name">Design</div>
+          <div class="div-card-count" id="cnt-design">Memuat...</div>
+          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+        <a href="/event.html" class="div-card">
+          <div class="div-card-icon color-event">🎪</div>
+          <div class="div-card-name">Event</div>
+          <div class="div-card-count" id="cnt-event">Memuat...</div>
+          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+        <a href="/admin.html" class="div-card">
+          <div class="div-card-icon color-admin">📋</div>
+          <div class="div-card-name">Admin</div>
+          <div class="div-card-count" id="cnt-admin">Memuat...</div>
+          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        </a>
+      </div>
+
+      <!-- Staff-only section -->
+      <div id="staffSection" style="display:none;">
+        <div class="division-section-title">👥 Staff &amp; Internal</div>
+        <div class="division-cards-grid">
+          <a href="/administrasi.html" class="div-card">
+            <div class="div-card-icon color-admin">📋</div>
+            <div class="div-card-name">Administrasi</div>
+            <div class="div-card-count" id="cnt-administrasi">Memuat...</div>
+            <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          </a>
+          <a href="/email.html" class="div-card">
+            <div class="div-card-icon color-email">📧</div>
+            <div class="div-card-name">Akun Email</div>
+            <div class="div-card-count" id="cnt-email">Memuat...</div>
+            <div class="div-card-arrow">Buka Menu <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          </a>
+          <a href="/manage.html" class="div-card">
+            <div class="div-card-icon color-bd">⚙</div>
+            <div class="div-card-name">Kelola Data</div>
+            <div class="div-card-count">Tambah, edit, hapus item</div>
+            <div class="div-card-arrow">Buka Panel <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          </a>
+        </div>
+      </div>
+
+
+      <footer style="margin-top:40px;">Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
     </div>
-
-    <button class="gate-btn" id="hubGateBtn" onclick="checkHubPassword()">
-      🔓 Buka Akses Hub
-    </button>
-
-    <div class="gate-attempts" id="hubGateAttempts" style="font-size: 11.5px; color: rgba(255,255,255,0.25); margin-top: 14px;"></div>
-  </div>
+  </main>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     LANDING CONTENT (Hidden until unlocked)
-     ═══════════════════════════════════════════ -->
-<div class="landing-content" id="landingContent" style="display: none;">
-
-  <!-- ─── Hero ─── -->
-  <div class="landing-hero" id="landingHero">
-    <div class="landing-hero-bg" id="heroBg"></div>
-    <div class="landing-hero-overlay"></div>
-
-    <!-- Header Actions -->
-    <button class="manage-btn-ghost header-logout-btn" onclick="logoutHub()">
-      🔒 Log Out
-    </button>
-    <a href="/manage.html" class="manage-btn-ghost header-manage-btn">
-      ⚙ Kelola Data
-    </a>
-
-    <div class="landing-hero-content">
-      <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta" class="hero-logo">
-
-      <div class="landing-eyebrow">Database Internal · Seluruh Divisi</div>
-
-      <h1>Database<br><em>Operational Hub</em></h1>
-
-      <p>Pusat database operasional seluruh divisi Rumah BUMN Jakarta. Akses dokumen, link, form, dan data penting kapan saja.</p>
-
-      <div class="landing-hero-actions">
-        <a href="#divisions" class="manage-btn" id="btnExplore">
-          Jelajahi Divisi
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        </a>
-      </div>
-    </div>
-
-    <div class="scroll-hint">
-      <div class="scroll-hint-line"></div>
-      Scroll
-    </div>
-  </div>
-
-  <!-- ─── Division Cards Section ─── -->
-  <div class="division-section" id="divisions">
-    <div class="division-section-header">
-      <div>
-        <h2>Divisi Internship &amp; Staff</h2>
-        <p>Klik kartu untuk mengakses database operasional yang bersangkutan</p>
-      </div>
-      <a href="/manage.html" style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.4); text-decoration:none; display:flex; align-items:center; gap:6px; transition:color 0.18s;" onmouseover="this.style.color='#E0B655'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">
-        ⚙ Kelola Hub →
-      </a>
-    </div>
-
-    <div class="division-nav">
-      <!-- Division Group: Internship -->
-      <div class="division-group-title">🎓 Divisi Internship</div>
-      <div class="division-grid" style="margin-bottom: 40px;">
-
-        <!-- Business Development -->
-        <a href="business-development.html" class="division-card" data-div="bd" id="nav-bd">
-          <div class="div-icon">📊</div>
-          <h2>Business Development</h2>
-          <span class="div-enter">Masuk Divisi →</span>
-        </a>
-
-        <!-- Social Media -->
-        <a href="sosmed.html" class="division-card" data-div="sosmed" id="nav-sosmed">
-          <div class="div-icon">📱</div>
-          <h2>Social Media</h2>
-          <span class="div-enter">Masuk Divisi →</span>
-        </a>
-
-        <!-- Design -->
-        <a href="design.html" class="division-card" data-div="design" id="nav-design">
-          <div class="div-icon">🎨</div>
-          <h2>Design</h2>
-          <span class="div-enter">Masuk Divisi →</span>
-        </a>
-
-        <!-- Event -->
-        <a href="event.html" class="division-card" data-div="event" id="nav-event">
-          <div class="div-icon">🎪</div>
-          <h2>Event</h2>
-          <span class="div-enter">Masuk Divisi →</span>
-        </a>
-
-        <!-- Admin Internship (Protected) -->
-        <a href="admin.html" class="division-card" data-div="admin" id="nav-admin-intern">
-          <div class="div-icon">📋</div>
-          <h2>Admin Internship 🔒</h2>
-          <span class="div-enter">Masuk Divisi →</span>
-        </a>
-
-      </div>
-
-      <!-- Division Group: Staff -->
-      <div class="division-group-title">👥 Staff &amp; Internal</div>
-      <div class="division-grid">
-
-        <!-- Staff Administrasi (Protected) -->
-        <a href="admin.html" class="division-card" data-div="admin" id="nav-admin-staff">
-          <div class="div-icon">📋</div>
-          <h2>Staff Administrasi 🔒</h2>
-          <span class="div-enter">Masuk Menu →</span>
-        </a>
-
-        <!-- Akun Email (Protected) -->
-        <a href="email.html" class="division-card" data-div="email" id="nav-email">
-          <div class="div-icon">📧</div>
-          <h2>Akun Email 🔒</h2>
-          <span class="div-enter">Masuk Menu →</span>
-        </a>
-
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia
-    &middot;
-    <a href="/email.html" title="Akun Email (Terlindungi)" style="opacity:0.4;">🔒 Akun Email</a>
-    &middot;
-    <span style="cursor:pointer; color:var(--red-warn); opacity:0.6; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" onclick="logoutHub()">🔒 Log Out</span>
-  </footer>
-
-</div>
-
+<script src="shared.js"></script>
 <script>
-// ─── Scroll blur on hero background ───
-const heroBg = document.getElementById('heroBg');
-window.addEventListener('scroll', () => {
-  if (!heroBg) return;
-  const scrollY = window.scrollY;
-  const maxBlur = 14;
-  const blur = Math.min(scrollY / 14, maxBlur);
-  const brightness = Math.max(1 - scrollY / 600, 0.5);
-  heroBg.style.filter = `blur(${blur}px) brightness(${brightness})`;
-}, { passive: true });
+initAppShell('dashboard', function(user) {
+  // Welcome message
+  const name = user.name ? user.name.split(' ')[0] : 'Pengguna';
+  document.getElementById('welcomeMsg').textContent = `Selamat Datang, ${name}! 👋`;
+  document.getElementById('welcomeSub').textContent = `Anda masuk sebagai ${user.role === 'staff' ? 'Staff' : 'Internship'} · ${user.email}`;
 
-// ─── Smooth scroll for "Jelajahi Divisi" button ───
-document.getElementById('btnExplore').addEventListener('click', e => {
-  e.preventDefault();
-  document.getElementById('divisions').scrollIntoView({ behavior: 'smooth' });
-});
-
-// ─── Counter Animation Helper ───
-function animNum(id, target) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  let start = 0;
-  const step = Math.ceil(target / 28);
-  const timer = setInterval(() => {
-    start = Math.min(start + step, target);
-    el.textContent = start;
-    if (start >= target) clearInterval(timer);
-  }, 28);
-}
-
-// ─── Card hover ripple (tilt effect) ───
-document.querySelectorAll('.division-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const rotX = ((y - cy) / cy) * -6;
-    const rotY = ((x - cx) / cx) * 6;
-    card.style.transform = `translateY(-8px) perspective(600px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-  });
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = '';
-    card.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
-    setTimeout(() => card.style.transition = '', 500);
-  });
-});
-
-// ─── Hub Password Protection ───
-const ACCESS_PASSWORD = '12345678';
-const SESSION_KEY = 'hub_access_granted';
-const MAX_ATTEMPTS = 5;
-
-let attempts = 0;
-let showingPw = false;
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem(SESSION_KEY) === 'true') {
-    unlockHub();
-  } else {
-    document.getElementById('hubGateInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkHubPassword();
-    });
-    
-    document.getElementById('hubGateToggle').addEventListener('click', () => {
-      const input = document.getElementById('hubGateInput');
-      showingPw = !showingPw;
-      input.type = showingPw ? 'text' : 'password';
-      document.getElementById('hubEyeIcon').innerHTML = showingPw
-        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
-        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/>`;
-    });
-    
-    setTimeout(() => {
-      const input = document.getElementById('hubGateInput');
-      if (input) input.focus();
-    }, 300);
+  // Show staff section & cards
+  if (user.role === 'staff') {
+    document.getElementById('staffSection').style.display = 'block';
+    const rekapCard = document.getElementById('rekapAbsenCard');
+    if (rekapCard) rekapCard.style.display = 'flex';
   }
-});
 
-function checkHubPassword() {
-  if (attempts >= MAX_ATTEMPTS) return;
-
-  const input = document.getElementById('hubGateInput');
-  const val = input.value;
-
-  if (val === ACCESS_PASSWORD) {
-    sessionStorage.setItem(SESSION_KEY, 'true');
-    const btn = document.getElementById('hubGateBtn');
-    btn.innerHTML = '✓ Akses Diberikan!';
-    btn.style.background = '#22C55E';
-    btn.disabled = true;
-    setTimeout(unlockHub, 600);
-  } else {
-    attempts++;
-    const remaining = MAX_ATTEMPTS - attempts;
-    input.classList.add('error');
-    setTimeout(() => input.classList.remove('error'), 500);
-
-    const errEl = document.getElementById('hubGateError');
-    const errTxt = document.getElementById('hubGateErrorText');
-    errEl.style.display = 'flex';
-
-    if (remaining <= 0) {
-      errTxt.textContent = 'Terlalu banyak percobaan salah. Akses diblokir.';
-      document.getElementById('hubGateBtn').disabled = true;
-      document.getElementById('hubGateInput').disabled = true;
-    } else {
-      errTxt.textContent = `Kata sandi salah. Sisa percobaan: ${remaining}`;
-    }
-    document.getElementById('hubGateAttempts').textContent =
-      remaining > 0 ? `${remaining} percobaan tersisa` : 'Akses terblokir';
-    input.select();
-  }
-}
-
-function unlockHub() {
-  const gate = document.getElementById('hubGate');
-  const content = document.getElementById('landingContent');
-  
-  if (gate) {
-    gate.style.transition = 'opacity 0.4s ease';
-    gate.style.opacity = '0';
+  // Load stats per division
+  const divs = ['bd', 'sosmed', 'design', 'event', 'admin'];
+  if (user.role === 'staff') {
+    divs.push('email');
+    divs.push('administrasi');
   }
   
-  setTimeout(() => {
-    if (gate) gate.style.display = 'none';
-    if (content) content.style.display = 'block';
-    loadHubData();
-  }, 380);
-}
+  let totalItems = 0, totalLinks = 0, totalCreds = 0;
 
-function loadHubData() {
-  fetch('/api/items')
-    .then(r => r.json())
-    .then(items => {
-      animNum('gs-total', items.length);
-      animNum('gs-links', items.filter(i => i.type === 'link').length);
-    })
-    .catch(() => {});
-}
-
-function logoutHub() {
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
+  
+  divs.forEach(div => {
+    fetch(`/api/items?division=${div}`)
+      .then(r => r.json())
+      .then(items => {
+        const el = document.getElementById(`cnt-${div}`);
+        if (el) el.textContent = `${items.length} item tersedia`;
+        totalItems += items.length;
+        totalLinks += items.filter(i => i.type === 'link').length;
+        totalCreds += items.filter(i => i.type === 'cred').length;
+        animateCount(document.getElementById('statTotal'), totalItems);
+        animateCount(document.getElementById('statLinks'), totalLinks);
+        animateCount(document.getElementById('statCreds'), totalCreds);
+      })
+      .catch(() => {
+        const el = document.getElementById(`cnt-${div}`);
+        if (el) el.textContent = '— item';
+      });
+  });
+});
 </script>
 </body>
 </html>

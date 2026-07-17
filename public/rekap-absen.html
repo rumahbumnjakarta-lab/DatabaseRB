@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0d1421">
+<title>Rekap Absensi — Rumah BUMN Jakarta</title>
+<meta name="description" content="Dashboard rekap absensi seluruh anggota Rumah BUMN Jakarta.">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="style.css">
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+.rekap-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 0 80px;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.filter-bar input[type="date"] {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 14px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.filter-bar input[type="date"]:focus { border-color: var(--blue-mid); }
+.filter-bar select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 14px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  outline: none;
+  cursor: pointer;
+}
+.filter-bar select option { background: var(--bg-card); }
+
+/* Summary cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+.summary-card-val {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  color: var(--text-primary);
+}
+.summary-card-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Rekap table card */
+.rekap-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.rekap-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rekap-card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+
+/* Attendance record rows */
+.attendance-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+.attendance-row:last-child { border-bottom: none; }
+.attendance-row:hover { background: rgba(255,255,255,0.02); }
+
+.att-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff;
+  flex-shrink: 0; overflow: hidden;
+  position: relative;
+}
+.att-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.att-avatar-badge {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.att-avatar-badge.clock_in { background: #059669; }
+.att-avatar-badge.clock_out { background: #dc2626; }
+
+.att-info { flex: 1; min-width: 0; }
+.att-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.att-email { font-size: 12px; color: var(--text-muted); }
+.att-meta {
+  font-size: 12px; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap;
+}
+.att-meta svg { flex-shrink: 0; }
+
+.att-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.att-time { font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+.att-type {
+  font-size: 10.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+}
+.att-type.clock_in { background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+.att-type.clock_out { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+.att-photo {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.att-photo:hover { transform: scale(1.05); }
+
+.att-map-link {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11.5px; color: var(--blue-mid);
+  text-decoration: none;
+  padding: 4px 8px;
+  background: var(--blue-subtle);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.att-map-link:hover { background: rgba(48,127,226,0.15); }
+
+.role-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 1px 7px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.role-badge.staff { background: rgba(5,150,105,0.15); color: #34d399; }
+.role-badge.internship { background: rgba(48,127,226,0.15); color: #71c5e8; }
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Detail Modal */
+.detail-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(6px);
+}
+.detail-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  animation: formPop 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes formPop { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
+.detail-photo { width: 100%; height: 200px; object-fit: cover; background: var(--bg-app); }
+.detail-body { padding: 20px; }
+.detail-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.detail-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+#detailMap { height: 160px; border-radius: 10px; overflow: hidden; }
+.detail-close {
+  width: 100%; padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 14px;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.detail-close:hover { background: rgba(255,255,255,0.09); }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div class="app-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Rekap Absensi <small>🔒 Staff Only · Data real-time</small></div>
+      <div class="topbar-actions">
+        <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.2);font-weight:700;">● LIVE</span>
+      </div>
+    </div>
+    <div id="appContent" class="app-content" style="display:none;">
+      <div class="rekap-container">
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <input type="date" id="filterDate" onchange="loadData()">
+          <select id="filterRole" onchange="loadData()">
+            <option value="">Semua Role</option>
+            <option value="staff">Staff</option>
+            <option value="internship">Internship</option>
+          </select>
+          <button class="manage-btn" onclick="loadData()" style="padding:9px 16px;font-size:13px;">🔄 Refresh</button>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+          <div class="summary-card">
+            <div class="summary-card-val" id="sumTotal">—</div>
+            <div class="summary-card-label">Total Absensi</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-card-val" id="sumPeople">—</div>
+            <div class="summary-card-label">Anggota Absen</div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="rekap-card">
+          <div class="rekap-card-header">
+            <span class="rekap-card-title" id="rekapTitle">Absensi Hari Ini</span>
+            <span style="font-size:12px;color:var(--text-muted);" id="rekapSub">Auto-refresh tiap 30 detik</span>
+          </div>
+          <div id="rekapList"><div class="empty-state">Memuat data...</div></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Detail Modal -->
+<div class="detail-modal" id="detailModal" style="display:none;" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-box" id="detailBox"></div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+let detailMap = null;
+
+initAppShell('rekap-absen', function(user) {
+  // Set today as default date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('filterDate').value = today;
+
+  loadData();
+  setInterval(loadData, 30000); // Realtime poll
+}, true); // Staff only
+
+async function loadData() {
+  const date = document.getElementById('filterDate').value;
+  const role = document.getElementById('filterRole').value;
+
+  const params = new URLSearchParams();
+  if (date) params.set('date', date);
+
+
+  try {
+    const res = await fetch(`/api/absen?${params}`);
+    let data = await res.json();
+
+    // Client-side filter
+    if (role) data = data.filter(r => r.user_role === role);
+
+    renderSummary(data);
+    renderList(data);
+
+    const dateLabel = date ? new Date(date + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : 'Semua Waktu';
+    document.getElementById('rekapTitle').textContent = `Absensi — ${dateLabel}`;
+  } catch (e) {
+    document.getElementById('rekapList').innerHTML = '<div class="empty-state">❌ Gagal memuat data.</div>';
+  }
+}
+
+function renderSummary(data) {
+  document.getElementById('sumTotal').textContent = data.length;
+  document.getElementById('sumPeople').textContent = new Set(data.map(r => r.user_id)).size;
+}
+
+
+function renderList(data) {
+  const list = document.getElementById('rekapList');
+  if (!data.length) {
+    list.innerHTML = '<div class="empty-state">📭 Tidak ada data absensi untuk filter ini.</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(r => {
+    const initial = (r.user_name || r.user_email || '?').charAt(0).toUpperCase();
+    const time = new Date(r.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const mapsUrl = r.latitude ? `https://www.google.com/maps?q=${r.latitude},${r.longitude}` : '#';
+    const roleClass = r.user_role === 'staff' ? 'staff' : 'internship';
+
+    return `<div class="attendance-row" onclick="showDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+      <div class="att-avatar">
+        ${r.photo_url && r.photo_url.startsWith('http') ? `<img src="${r.photo_url}" alt="" onerror="this.style.display='none'">` : initial}
+        <span class="att-avatar-badge ${r.type}">
+          ${r.type === 'clock_in' ? '✓' : '✗'}
+        </span>
+      </div>
+      <div class="att-info">
+        <div class="att-name">${escHtml(r.user_name || r.user_email)}</div>
+        <div class="att-email"><span class="role-badge ${roleClass}">${r.user_role || '—'}</span> · ${escHtml(r.user_email)}</div>
+        <div class="att-meta">
+          ${r.address ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>${escHtml(r.address.substring(0,50))}` : ''}
+        </div>
+      </div>
+      <div class="att-right">
+        <span class="att-time">${time}</span>
+        <span class="att-type ${r.type}">${r.type === 'clock_in' ? 'Clock In' : 'Clock Out'}</span>
+        ${r.latitude ? `<a class="att-map-link" href="${mapsUrl}" target="_blank" onclick="event.stopPropagation()">🗺️ Maps</a>` : ''}
+      </div>
+      ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="att-photo" src="${r.photo_url}" alt="Selfie" onclick="event.stopPropagation();showLightbox('${r.photo_url}')">` : ''}
+    </div>`;
+  }).join('');
+}
+
+function showDetail(r) {
+  const modal = document.getElementById('detailModal');
+  const box = document.getElementById('detailBox');
+  const time = new Date(r.timestamp).toLocaleString('id-ID');
+  const mapsUrl = r.latitude ? `https://www.google.com/maps?q=${r.latitude},${r.longitude}` : '#';
+
+  box.innerHTML = `
+    ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="detail-photo" src="${r.photo_url}" alt="Selfie">` : '<div style="height:100px;background:var(--bg-app);display:flex;align-items:center;justify-content:center;font-size:40px;">📷</div>'}
+    <div class="detail-body">
+      <div class="detail-name">${escHtml(r.user_name || r.user_email)}</div>
+      <div class="detail-meta">
+        ${r.type === 'clock_in' ? '✅ Clock In' : '🏁 Clock Out'} · ${time}<br>
+        📍 ${escHtml(r.address || 'Lokasi tercatat')}
+      </div>
+      ${r.latitude ? `<div id="detailMap"></div>
+      <a href="${mapsUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:8px;background:var(--blue-subtle);border:1px solid var(--border-mid);border-radius:8px;font-size:13px;color:var(--blue-mid);text-decoration:none;font-weight:600;">
+        🗺️ Buka di Google Maps
+      </a>` : ''}
+      <button class="detail-close" onclick="closeDetail()">Tutup</button>
+    </div>`;
+
+  modal.style.display = 'flex';
+
+  if (r.latitude) {
+    setTimeout(() => {
+      if (detailMap) { detailMap.remove(); detailMap = null; }
+      detailMap = L.map('detailMap', { zoomControl: false, attributionControl: false }).setView([r.latitude, r.longitude], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+      L.marker([r.latitude, r.longitude]).addTo(detailMap);
+    }, 100);
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').style.display = 'none';
+  if (detailMap) { detailMap.remove(); detailMap = null; }
+}
+
+function showLightbox(src) {
+  const lb = document.createElement('div');
+  lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  lb.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;border-radius:12px;">`;
+  lb.onclick = () => lb.remove();
+  document.body.appendChild(lb);
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

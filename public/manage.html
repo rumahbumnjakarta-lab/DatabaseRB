@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pengelola Hub Database — Rumah BUMN Jakarta</title>
+<title>Kelola Data — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Dashboard admin untuk mengelola link operasional dan kredensial divisi Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<script src="theme.js"></script>
+
 <style>
 /* =============================================
    MANAGE PAGE — FULL DASHBOARD REDESIGN
@@ -75,7 +75,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   position: absolute;
   top: -60px; right: -80px;
   width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(200,154,58,0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(48,127,226,0.15) 0%, transparent 70%);
   pointer-events: none;
 }
 .dash-header-inner {
@@ -92,7 +92,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #E0B655;
+  color: var(--gold-bright);
   opacity: 0.9;
   margin-bottom: 6px;
 }
@@ -139,9 +139,9 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   align-items: center;
   gap: 7px;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(200,154,58,0.35);
+  box-shadow: 0 4px 12px rgba(48,127,226,0.35);
 }
-.btn-add-new:hover { background: #E0B655; transform: translateY(-1px); }
+.btn-add-new:hover { background: var(--gold-bright); transform: translateY(-1px); }
 
 /* ─── Stats Row ─── */
 .dash-stats {
@@ -220,7 +220,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   background: var(--gold);
   border-color: var(--gold);
   color: #0E1620;
-  box-shadow: 0 3px 10px rgba(200,154,58,0.25);
+  box-shadow: 0 3px 10px rgba(48,127,226,0.25);
 }
 .div-pill .pill-dot {
   width: 7px; height: 7px;
@@ -495,7 +495,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 .form-field select:focus,
 .form-field textarea:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(200,154,58,0.12);
+  box-shadow: 0 0 0 3px rgba(48,127,226,0.12);
   background: var(--bg-card);
 }
 .form-field textarea { resize: vertical; min-height: 80px; }
@@ -529,7 +529,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   background: var(--gold);
   color: #0E1620;
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(200,154,58,0.25);
+  box-shadow: 0 3px 10px rgba(48,127,226,0.25);
 }
 .form-section-divider {
   height: 1px;
@@ -551,7 +551,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   transition: all 0.2s;
   font-family: 'Inter', sans-serif;
 }
-.btn-drawer-save:hover { background: #E0B655; }
+.btn-drawer-save:hover { background: var(--gold-bright); }
 .btn-drawer-cancel {
   background: var(--bg-surface);
   color: var(--text-secondary);
@@ -713,34 +713,41 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 </head>
 <body>
 
-<!-- ─── Topbar Navigation ─── -->
-<nav class="manage-topbar" id="manageTopbar">
-  <a href="/index.html" class="home-link" title="Kembali ke Beranda">⌂</a>
-  <a href="#" class="tab-link active" data-tab="bd" id="tab-bd">Business Dev</a>
-  <a href="#" class="tab-link" data-tab="sosmed" id="tab-sosmed">Sosmed</a>
-  <a href="#" class="tab-link" data-tab="design" id="tab-design">Design</a>
-  <a href="#" class="tab-link" data-tab="event" id="tab-event">Event</a>
-  <a href="#" class="tab-link" data-tab="admin" id="tab-admin">Administrasi</a>
-  <a href="#" class="tab-link" data-tab="email" id="tab-email">Akun Email</a>
-</nav>
+<div class="app-shell">
+  <!-- Sidebar injected here -->
+  <div id="sidebarContainer"></div>
 
-<!-- ─── Dashboard Header ─── -->
-<div class="dash-header">
-  <div class="dash-header-inner">
-    <div class="dash-header-text">
-      <div class="eyebrow">Rumah BUMN Jakarta &middot; Admin Dashboard</div>
-      <h1>Pengelolaan Data & Link</h1>
-      <p>Tambah, edit, atau hapus link operasional dan kredensial semua divisi secara real-time.</p>
+  <main class="app-main">
+    <!-- Auth loading (inside main so sidebar renders) -->
+    <div id="authLoading">
+      <div style="text-align:center;">
+        <div class="loading-spinner"></div>
+        <p style="color:var(--text-muted);font-family:Inter,sans-serif;font-size:13px;">Memeriksa izin akses...</p>
+      </div>
     </div>
-    <div class="dash-header-actions">
-      <a href="/index.html" class="btn-view-hub">⌂ Lihat Hub</a>
-      <button class="btn-add-new" id="btnOpenDrawer" onclick="openDrawer()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Tambah Item Baru
+
+    <!-- Topbar -->
+    <div class="app-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div style="display:flex;gap:0;align-items:center;flex:1;overflow-x:auto;scrollbar-width:none;">
+        <a href="#" class="tab-link active" data-tab="bd" id="tab-bd" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Business Dev</a>
+        <a href="#" class="tab-link" data-tab="sosmed" id="tab-sosmed" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Sosmed</a>
+        <a href="#" class="tab-link" data-tab="design" id="tab-design" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Design</a>
+        <a href="#" class="tab-link" data-tab="event" id="tab-event" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Event</a>
+        <a href="#" class="tab-link" data-tab="admin" id="tab-admin" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Administrasi</a>
+        <a href="#" class="tab-link" data-tab="email" id="tab-email" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Akun Email</a>
+      </div>
+      <button class="manage-btn" id="btnOpenDrawer" onclick="openDrawer()" style="flex-shrink:0;padding:8px 14px;font-size:12.5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Tambah Item
       </button>
     </div>
-  </div>
-</div>
+
+    <!-- Page content -->
+    <div id="appContent" style="display:none;">
+
 
 <!-- ─── Stat Cards ─── -->
 <div class="dash-stats" id="dashStats">
@@ -932,17 +939,17 @@ const divNames = {
   email: 'Akun Email'
 };
 
-// ─── Init ───
-document.addEventListener('DOMContentLoaded', () => {
+// ─── Init (called by initAppShell after auth) ───
+function initManagePage() {
   fetchData();
   // Sync topbar tabs
-  document.querySelectorAll('.manage-topbar .tab-link').forEach(tab => {
+  document.querySelectorAll('.tab-link').forEach(tab => {
     tab.addEventListener('click', e => {
       e.preventDefault();
       switchDivision(tab.dataset.tab);
     });
   });
-});
+}
 
 // ─── Fetch Data ───
 function fetchData() {
@@ -963,7 +970,7 @@ function switchDivision(div, pillEl) {
   activeDivision = div;
 
   // Sync topbar
-  document.querySelectorAll('.manage-topbar .tab-link').forEach(t => {
+  document.querySelectorAll('.tab-link').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === div);
   });
   // Sync pills
@@ -1226,5 +1233,19 @@ function truncate(s, n) {
   return s && s.length > n ? s.slice(0, n) + '…' : s;
 }
 </script>
+
+<script src="shared.js"></script>
+<script>
+// ─── Staff-only Auth Guard via shared.js ───
+initAppShell('manage', function(user) {
+  // Show content
+  const appContent = document.getElementById('appContent');
+  if (appContent) appContent.style.display = 'block';
+  // Init the manage page (tabs, data, etc.)
+  initManagePage();
+}, true); // true = staffOnly
+</script>
+</main>
+</div><!-- .app-shell -->
 </body>
 </html>

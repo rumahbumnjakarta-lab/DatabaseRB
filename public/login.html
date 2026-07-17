@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Database Rumah BUMN Jakarta</title>
+<meta name="description" content="Masuk ke Database Operational Hub Rumah BUMN Jakarta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background: #080f1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ─── Animated Background ─── */
+  .bg-image {
+    position: fixed;
+    inset: 0;
+    background-image: url('FOTO/login2.png');
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    filter: brightness(0.35) blur(2px);
+    transform: scale(1.05);
+  }
+
+  .bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-orb-1 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(8,87,195,0.25) 0%, transparent 70%);
+    top: -100px; left: -100px;
+    animation: floatOrb1 10s ease-in-out infinite;
+  }
+  .bg-orb-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(48,127,226,0.18) 0%, transparent 70%);
+    bottom: -80px; right: -80px;
+    animation: floatOrb2 13s ease-in-out infinite;
+  }
+  @keyframes floatOrb1 {
+    0%,100% { transform: translate(0,0); }
+    50% { transform: translate(60px, 40px); }
+  }
+  @keyframes floatOrb2 {
+    0%,100% { transform: translate(0,0); }
+    50% { transform: translate(-40px, -50px); }
+  }
+
+  /* ─── Grid pattern overlay ─── */
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(48,127,226,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(48,127,226,0.04) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* ─── Login Card ─── */
+  .login-card {
+    position: relative;
+    z-index: 10;
+    width: 440px;
+    max-width: 92vw;
+    background: rgba(12, 20, 33, 0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(48,127,226,0.18);
+    border-radius: 28px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.04) inset;
+    animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(50px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ─── Headers ─── */
+  .logo-wrap { text-align: center; margin-bottom: 24px; }
+  .logo-wrap img {
+    height: 56px; width: auto; border-radius: 12px;
+    filter: drop-shadow(0 4px 16px rgba(48,127,226,0.35));
+  }
+
+  .badge-wrap { text-align: center; margin-bottom: 20px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(48,127,226,0.12);
+    border: 1px solid rgba(48,127,226,0.25);
+    border-radius: 50px; padding: 5px 14px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #71c5e8;
+  }
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #71c5e8; animation: blink 2s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(0.7);} }
+
+  h1 {
+    font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700;
+    color: #fff; margin-bottom: 8px; line-height: 1.2; text-align: center;
+  }
+  .subtitle {
+    font-size: 13.5px; color: rgba(255,255,255,0.45); line-height: 1.6;
+    text-align: center; margin-bottom: 30px;
+  }
+
+  /* ─── Tabs ─── */
+  .auth-tabs {
+    display: flex; gap: 8px; margin-bottom: 24px;
+    background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px;
+  }
+  .auth-tab {
+    flex: 1; text-align: center; padding: 10px;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+    cursor: pointer; border-radius: 8px; transition: all 0.2s ease;
+  }
+  .auth-tab.active { background: rgba(48,127,226,0.2); color: #71c5e8; }
+  .auth-tab:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.05); }
+
+  /* ─── Forms ─── */
+  .auth-form { display: none; flex-direction: column; gap: 16px; }
+  .auth-form.active { display: flex; }
+
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-group label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
+  .input-group input {
+    width: 100%; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 12px 14px; font-size: 14px; color: #fff; outline: none; transition: all 0.2s;
+  }
+  .input-group input:focus { border-color: #307fe2; background: rgba(48,127,226,0.05); }
+  
+  .btn-submit {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; margin-top: 8px;
+    background: linear-gradient(135deg, #0857c3, #307fe2);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 14.5px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(8,87,195,0.4);
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(8,87,195,0.6); }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ─── Notifications ─── */
+  .notif-box {
+    display: none; width: 100%; padding: 12px 16px; margin-bottom: 20px;
+    border-radius: 10px; font-size: 13px; text-align: left;
+    align-items: flex-start; gap: 10px; line-height: 1.5;
+  }
+  .notif-box.show { display: flex; }
+  .notif-error { background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.25); color: #f87171; }
+  .notif-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
+
+  .login-note {
+    margin-top: 24px; font-size: 11.5px; color: rgba(255,255,255,0.3);
+    line-height: 1.5; text-align: center;
+  }
+  .login-note strong { color: rgba(255,255,255,0.5); }
+
+  @media (max-width: 480px) {
+    .login-card { padding: 36px 24px; }
+    h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-image"></div>
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="login-card">
+  <div class="logo-wrap">
+    <img src="FOTO/LOGO.png" alt="Logo Rumah BUMN Jakarta">
+  </div>
+
+  <div class="badge-wrap">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Internal Access Only
+    </div>
+  </div>
+
+  <h1>Database Hub</h1>
+  <p class="subtitle">Sistem database operasional internal. Gunakan email domain <strong>@intern.rbjakarta.com</strong> atau <strong>@staff.rbjakarta.com</strong> untuk masuk.</p>
+
+  <!-- Notifikasi -->
+  <div class="notif-box" id="notifBox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="notifText"></span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="auth-tabs">
+    <div class="auth-tab active" onclick="switchTab('login')">Masuk</div>
+    <div class="auth-tab" onclick="switchTab('register')">Daftar Baru</div>
+  </div>
+
+  <!-- Form Login -->
+  <form id="loginForm" class="auth-form active">
+    <div class="input-group">
+      <label for="loginEmail">Email Perusahaan</label>
+      <input type="email" id="loginEmail" placeholder="nama@staff.rbjakarta.com" required>
+    </div>
+    <div class="input-group">
+      <label for="loginPassword">Kata Sandi</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn-submit" id="btnLoginBtn">Masuk ke Sistem</button>
+  </form>
+
+  <!-- Form Register -->
+  <form id="registerForm" class="auth-form">
+    <div class="input-group">
+      <label for="regName">Nama Lengkap</label>
+      <input type="text" id="regName" placeholder="Contoh: John Doe" required>
+    </div>
+    <div class="input-group">
+      <label for="regEmail">Email Perusahaan</label>
+      <input type="email" id="regEmail" placeholder="nama@intern.rbjakarta.com" required>
+    </div>
+    <div class="input-group">
+      <label for="regPassword">Kata Sandi Baru</label>
+      <input type="password" id="regPassword" placeholder="Minimal 6 karakter" required minlength="6">
+    </div>
+    <button type="submit" class="btn-submit" id="btnRegBtn">Buat Akun</button>
+  </form>
+
+  <p class="login-note">
+    Akses dan peran Anda (Internship atau Staff) akan ditentukan <strong>otomatis</strong> berdasarkan domain email yang digunakan.
+  </p>
+</div>
+
+<script>
+  // Cek sesi, jika sudah login redirect
+  fetch('/api/me')
+    .then(r => r.json())
+    .then(data => { if (data.loggedIn) window.location.href = '/index.html'; })
+    .catch(() => {});
+
+  // URL Params untuk error handling
+  const urlParams = new URLSearchParams(window.location.search);
+  const err = urlParams.get('error');
+  if (err === 'unauthorized') {
+    showNotif('Sesi Anda telah berakhir. Silakan login kembali.', 'error');
+  }
+
+  // Fungsi Tab
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(el => el.classList.remove('active'));
+    hideNotif();
+    
+    if(tab === 'login') {
+      document.querySelector('.auth-tabs div:nth-child(1)').classList.add('active');
+      document.getElementById('loginForm').classList.add('active');
+    } else {
+      document.querySelector('.auth-tabs div:nth-child(2)').classList.add('active');
+      document.getElementById('registerForm').classList.add('active');
+    }
+  }
+
+  function showNotif(msg, type) {
+    const box = document.getElementById('notifBox');
+    box.className = 'notif-box show ' + (type === 'error' ? 'notif-error' : 'notif-success');
+    document.getElementById('notifText').textContent = msg;
+    box.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+  function hideNotif() {
+    document.getElementById('notifBox').className = 'notif-box';
+  }
+
+  // Handle Login
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideNotif();
+    const btn = document.getElementById('btnLoginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Memeriksa...';
+
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        showNotif(data.error || 'Gagal masuk.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Masuk ke Sistem';
+      } else {
+        window.location.href = data.redirect || '/index.html';
+      }
+    } catch (err) {
+      showNotif('Koneksi terputus. Coba lagi.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Masuk ke Sistem';
+    }
+  });
+
+  // Handle Register
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideNotif();
+    const btn = document.getElementById('btnRegBtn');
+    btn.disabled = true;
+    btn.textContent = 'Memproses...';
+
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    try {
+      const res = await fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        showNotif(data.error || 'Gagal mendaftar.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Buat Akun';
+      } else {
+        showNotif(data.message + ' Silakan login.', 'success');
+        document.getElementById('registerForm').reset();
+        setTimeout(() => switchTab('login'), 2000);
+      }
+    } catch (err) {
+      showNotif('Koneksi terputus. Coba lagi.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Buat Akun';
+    }
+  });
+</script>
+
+</body>
+</html>

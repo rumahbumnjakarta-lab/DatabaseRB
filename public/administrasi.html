@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Akun Email — Database Rumah BUMN Jakarta</title>
-<meta name="description" content="Akses kredensial akun email operasional Rumah BUMN Jakarta — Staff Only.">
+<title>Administrasi — Database Rumah BUMN Jakarta</title>
+<meta name="description" content="Database administrasi operasional Rumah BUMN Jakarta — Staff Only.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,39 +16,24 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div class="topbar-title">
-        Akun Email
-        <small>
-          <span style="display:inline-flex;align-items:center;gap:5px;">
-            <span style="background:rgba(239,68,68,0.15);color:#f87171;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;border:1px solid rgba(239,68,68,0.25);">🔒 Staff Only</span>
-            Kredensial email operasional
-          </span>
-        </small>
-      </div>
+      <div class="topbar-title">Administrasi <small>Database dokumen &amp; data operasional staff</small></div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
       <div class="division-header">
-        <div class="division-header-icon" style="background:rgba(239,68,68,0.1);">📧</div>
+        <div class="division-header-icon" style="background:rgba(5,150,105,0.1);">📋</div>
         <div class="division-header-text">
-          <h1>Akun Email Operasional</h1>
-          <p>Kredensial email resmi Rumah BUMN Jakarta. Halaman ini hanya dapat diakses oleh Staff.</p>
+          <h1>Administrasi (Staff)</h1>
+          <p>Dokumen administrasi, surat-menyurat, absensi, inventaris, dan data operasional divisi Staff.</p>
         </div>
         <div class="division-stats">
-          <div class="division-stat"><b id="stat-total">0</b><span>Total Akun</span></div>
+          <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
           <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
         </div>
       </div>
-
-      <!-- Warning Banner -->
-      <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#f87171;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>Halaman ini berisi informasi sensitif. Jaga kerahasiaan data ini dan jangan berbagi kepada pihak tidak berwenang.</span>
-      </div>
-
       <div class="controls">
         <div class="search-bar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInput" type="text" placeholder="Cari akun email...">
+          <input id="searchInput" type="text" placeholder="Cari dokumen, surat, atau kata kunci...">
         </div>
         <div class="chips" id="chipRow"></div>
       </div>
@@ -66,9 +51,9 @@
 
 <script src="shared.js"></script>
 <script>
-// Email page: Staff only
-initAppShell('email', function(user) {
-  fetch('/api/items?division=email')
+// Administrasi page: accessible by Staff only
+initAppShell('administrasi', function(user) {
+  fetch('/api/items?division=administrasi')
     .then(r => r.json())
     .then(items => initDivisionPage(items))
     .catch(() => initDivisionPage([]));

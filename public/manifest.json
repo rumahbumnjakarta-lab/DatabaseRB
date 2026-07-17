@@ -1,0 +1,21 @@
+{
+  "short_name": "Database RB",
+  "name": "Database Rumah BUMN Jakarta",
+  "icons": [
+    {
+      "src": "/FOTO/LOGO.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/FOTO/LOGO.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/absen.html",
+  "background_color": "#0d1421",
+  "theme_color": "#0d1421",
+  "display": "standalone",
+  "orientation": "portrait"
+}
