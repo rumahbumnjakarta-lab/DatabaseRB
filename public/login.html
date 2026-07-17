@@ -286,6 +286,11 @@
     }
   }
 
+  function isValidCompanyEmail(email) {
+    const clean = email.toLowerCase().trim();
+    return clean.endsWith('@intern.rbjakarta.com') || clean.endsWith('@staff.rbjakarta.com');
+  }
+
   function showNotif(msg, type) {
     const box = document.getElementById('notifBox');
     box.className = 'notif-box show ' + (type === 'error' ? 'notif-error' : 'notif-success');
@@ -337,9 +342,30 @@
     btn.disabled = true;
     btn.textContent = 'Memproses...';
 
-    const name = document.getElementById('regName').value;
-    const email = document.getElementById('regEmail').value;
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
+
+    if (!name) {
+      showNotif('Nama lengkap wajib diisi.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Buat Akun';
+      return;
+    }
+
+    if (!isValidCompanyEmail(email)) {
+      showNotif('Email harus berakhiran @intern.rbjakarta.com atau @staff.rbjakarta.com.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Buat Akun';
+      return;
+    }
+
+    if (password.length < 6) {
+      showNotif('Kata sandi minimal 6 karakter.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Buat Akun';
+      return;
+    }
 
     try {
       const res = await fetch('/auth/register', {
@@ -347,7 +373,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (_) {
+        throw new Error('invalid_json');
+      }
       
       if (!res.ok) {
         showNotif(data.error || 'Gagal mendaftar.', 'error');
@@ -359,7 +390,9 @@
         setTimeout(() => switchTab('login'), 2000);
       }
     } catch (err) {
-      showNotif('Koneksi terputus. Coba lagi.', 'error');
+      showNotif(err.message === 'invalid_json'
+        ? 'Server tidak merespons dengan benar. Pastikan server sudah dijalankan ulang.'
+        : 'Koneksi terputus. Coba lagi.', 'error');
       btn.disabled = false;
       btn.textContent = 'Buat Akun';
     }

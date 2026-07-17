@@ -9,20 +9,58 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Supabase Init ───────────────────────────────────────────────────────────
-let supabaseUrl = process.env.SUPABASE_URL;
-let supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
-const isPlaceholderUrl = !supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE') || !supabaseUrl.startsWith('http');
-if (isPlaceholderUrl) {
-  console.warn('⚠️  PERINGATAN: SUPABASE_URL belum dikonfigurasi di file .env');
-  supabaseUrl = 'https://placeholder-project-id.supabase.co';
-}
-if (!supabaseKey || supabaseKey.includes('YOUR_SUPABASE')) {
-  console.warn('⚠️  PERINGATAN: SUPABASE_KEY belum dikonfigurasi di file .env');
-  supabaseKey = 'placeholder-key';
+const isInvalidUrl = !supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE') || !supabaseUrl.startsWith('http');
+const isInvalidKey = !supabaseKey || supabaseKey.includes('YOUR_SUPABASE');
+
+if (isInvalidUrl || isInvalidKey) {
+  console.error('\n========================================================================');
+  console.error('ERROR: SUPABASE_URL dan SUPABASE_KEY wajib dikonfigurasi di file .env');
+  console.error('Buka Supabase Dashboard → Settings → API, lalu salin URL dan API key.');
+  console.error('========================================================================\n');
+  process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+function mapDbError(err, fallback) {
+  if (!err) return fallback;
+  const code = err.code || '';
+  const message = (err.message || '').toLowerCase();
+
+  if (code === '23505' || message.includes('duplicate') || message.includes('unique')) {
+    return 'Email sudah terdaftar.';
+  }
+  if (code === '42P01' || message.includes('does not exist')) {
+    return 'Tabel users belum dibuat di Supabase. Hubungi administrator.';
+  }
+  if (code === '42501' || message.includes('permission denied') || message.includes('row-level security')) {
+    return 'Akses database ditolak. Tambahkan SUPABASE_SERVICE_ROLE_KEY di .env atau perbaiki RLS policy tabel users.';
+  }
+  if (message.includes('fetch failed') || message.includes('network') || message.includes('enotfound')) {
+    return 'Koneksi ke database gagal. Periksa internet dan konfigurasi Supabase.';
+  }
+
+  return fallback;
+}
+
+async function verifySupabaseConnection() {
+  const { error } = await supabase.from('users').select('id').limit(1);
+  if (error) {
+    console.error('⚠️  Supabase gagal diakses:', error.message);
+    if (error.code === '42P01') {
+      console.error('   → Buat tabel "users" di Supabase terlebih dahulu.');
+    }
+    if (error.code === '42501') {
+      console.error('   → Nonaktifkan RLS di tabel users, atau set SUPABASE_SERVICE_ROLE_KEY di .env.');
+    }
+    return false;
+  }
+  console.log('✅ Supabase terhubung.');
+  return true;
+}
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '20mb' }));
@@ -61,8 +99,14 @@ function requireStaff(req, res, next) {
 
 app.post('/auth/register', async (req, res) => {
   const { email, name, password } = req.body;
-  if (!email || !password || !name) {
+  const cleanName = (name || '').trim();
+
+  if (!email || !password || !cleanName) {
     return res.status(400).json({ error: 'Semua kolom wajib diisi.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Kata sandi minimal 6 karakter.' });
   }
 
   const cleanEmail = email.toLowerCase().trim();
@@ -79,35 +123,42 @@ app.post('/auth/register', async (req, res) => {
 
   try {
     // Cek apakah email sudah terdaftar
-    const { data: existingUser, error: checkError } = await supabase.from('users').select('id').eq('email', cleanEmail).maybeSingle();
-    
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
     if (checkError) {
       console.error('Error checking user:', checkError);
-      throw checkError;
+      const message = mapDbError(checkError, 'Gagal memeriksa email.');
+      return res.status(500).json({ error: message });
     }
 
     if (existingUser) {
       return res.status(400).json({ error: 'Email sudah terdaftar.' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    const password_hash = await bcrypt.hash(password, 10);
 
-    // Insert user baru
-    const { data: newUser, error } = await supabase.from('users').insert([{
+    const { error } = await supabase.from('users').insert({
       email: cleanEmail,
-      name: name,
-      role: role,
-      password_hash: password_hash
-    }]).select().single();
+      name: cleanName,
+      role,
+      password_hash
+    });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Registration insert error:', error);
+      const message = mapDbError(error, 'Gagal melakukan registrasi.');
+      const status = error.code === '23505' ? 400 : 500;
+      return res.status(status).json({ error: message });
+    }
 
     res.status(201).json({ message: 'Registrasi berhasil. Silakan login.' });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: 'Gagal melakukan registrasi.' });
+    res.status(500).json({ error: mapDbError(err, 'Gagal melakukan registrasi.') });
   }
 });
 
@@ -450,7 +501,9 @@ app.get('/api/absen', requireAuth, requireStaff, async (req, res) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
-  console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
+verifySupabaseConnection().finally(() => {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
+    console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
+  });
 });
