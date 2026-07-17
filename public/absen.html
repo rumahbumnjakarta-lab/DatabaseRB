@@ -449,10 +449,6 @@
             <button class="btn-camera" onclick="startCamera()" id="btnStartCam">📷 Buka Kamera</button>
             <button class="btn-camera primary" onclick="takeSelfie()" id="btnSnap" style="display:none;">📸 Ambil Foto</button>
             <button class="btn-camera" onclick="retakeSelfie()" id="btnRetake" style="display:none;">🔄 Ulangi</button>
-            <label class="btn-camera" style="cursor:pointer;" id="btnUpload">
-              🖼️ Upload
-              <input type="file" accept="image/*" capture="user" style="display:none;" onchange="handleUpload(this)">
-            </label>
           </div>
         </div>
 
@@ -607,7 +603,6 @@ function startCamera() {
   const placeholder = document.getElementById('cameraPlaceholder');
   const btnStart = document.getElementById('btnStartCam');
   const btnSnap = document.getElementById('btnSnap');
-  const btnUpload = document.getElementById('btnUpload');
 
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
     .then(stream => {
@@ -617,10 +612,9 @@ function startCamera() {
       placeholder.style.display = 'none';
       btnStart.style.display = 'none';
       btnSnap.style.display = 'flex';
-      btnUpload.style.display = 'none';
     })
     .catch(() => {
-      alert('Tidak dapat membuka kamera. Coba gunakan tombol Upload sebagai alternatif.');
+      alert('Tidak dapat membuka kamera. Pastikan izin akses kamera diberikan pada browser Anda.');
     });
 }
 
@@ -652,7 +646,6 @@ function retakeSelfie() {
   const placeholder = document.getElementById('cameraPlaceholder');
   const btnStart = document.getElementById('btnStartCam');
   const btnRetake = document.getElementById('btnRetake');
-  const btnUpload = document.getElementById('btnUpload');
 
   selfieBase64 = null;
   preview.style.display = 'none';
@@ -660,35 +653,17 @@ function retakeSelfie() {
   placeholder.style.display = 'flex';
   btnStart.style.display = 'flex';
   btnRetake.style.display = 'none';
-  btnUpload.style.display = 'flex';
-}
-
-function handleUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    selfieBase64 = e.target.result;
-    const preview = document.getElementById('selfiePreview');
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const btnRetake = document.getElementById('btnRetake');
-    const btnStart = document.getElementById('btnStartCam');
-    const btnUpload = document.getElementById('btnUpload');
-
-    preview.src = selfieBase64;
-    preview.style.display = 'block';
-    placeholder.style.display = 'none';
-    btnStart.style.display = 'none';
-    btnRetake.style.display = 'flex';
-    btnUpload.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
 }
 
 // ─── Submit Absen ───
 async function submitAbsen(type) {
   if (!gpsData.lat || !gpsData.lng) {
-    showToastMsg('⚠️ GPS belum terdeteksi. Tunggu sebentar lagi.', true);
+    showToastMsg('⚠️ GPS belum terdeteksi. Mohon aktifkan & izinkan akses lokasi.', true);
+    return;
+  }
+  
+  if (!selfieBase64) {
+    showToastMsg('⚠️ Foto selfie wajib diambil sebelum absen.', true);
     return;
   }
 
