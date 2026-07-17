@@ -501,9 +501,16 @@ app.get('/api/absen', requireAuth, requireStaff, async (req, res) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-verifySupabaseConnection().finally(() => {
-  app.listen(PORT, () => {
-    console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
-    console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
+if (process.env.VERCEL) {
+  // Untuk Vercel: Export app sebagai serverless function (tidak menggunakan app.listen)
+  verifySupabaseConnection().catch(console.error);
+  module.exports = app;
+} else {
+  // Untuk Localhost: Gunakan app.listen
+  verifySupabaseConnection().finally(() => {
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
+      console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
+    });
   });
-});
+}
