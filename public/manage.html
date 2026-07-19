@@ -284,34 +284,37 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   font-family: 'Inter', sans-serif;
 }
 
-/* ─── Data Table ─── */
-.data-table {
+/* ─── Data List (Div-based Table) ─── */
+.data-list {
   width: 100%;
-  border-collapse: collapse;
   font-size: 13.5px;
 }
-.data-table thead th {
+.data-list-header {
+  display: grid;
+  grid-template-columns: 120px 1fr 120px 150px;
+  gap: 16px;
   background: var(--bg-surface);
-  padding: 11px 20px;
+  padding: 12px 20px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
-  text-align: left;
-  white-space: nowrap;
-  transition: background 0.3s, border-color 0.3s;
 }
-.data-table tbody tr {
+.data-list-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 120px 150px;
+  gap: 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  align-items: center;
   transition: background 0.15s;
 }
-.data-table tbody tr:last-child { border-bottom: none; }
-.data-table tbody tr:hover { background: var(--bg-surface); }
-.data-table td { padding: 14px 20px; vertical-align: middle; }
+.data-list-row:last-child { border-bottom: none; }
+.data-list-row:hover { background: var(--bg-surface); }
 
-.td-cat .cat-pill {
+.col-cat .cat-pill {
   display: inline-block;
   background: var(--cat-tag-bg);
   color: var(--cat-tag-color);
@@ -322,24 +325,24 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   border-radius: 20px;
   letter-spacing: 0.02em;
 }
-.td-title .item-title {
+.col-title .item-title {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 13.5px;
 }
-.td-title .item-sub {
+.col-title .item-sub {
   font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 3px;
+  margin-top: 4px;
   font-family: 'JetBrains Mono', monospace;
   word-break: break-all;
 }
-.td-title .item-sub a {
+.col-title .item-sub a {
   color: var(--gold);
   text-decoration: none;
 }
-.td-title .item-sub a:hover { text-decoration: underline; }
-.td-title .item-note {
+.col-title .item-sub a:hover { text-decoration: underline; }
+.col-title .item-note {
   font-size: 11.5px;
   color: var(--text-muted);
   margin-top: 4px;
@@ -356,9 +359,11 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 }
 .type-badge.link { background: #EBF3FF; color: #2563EB; }
 .type-badge.cred { background: #FFF3E0; color: #B45309; }
-.td-actions {
-  text-align: right;
-  white-space: nowrap;
+
+.col-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
 .btn-row-action {
   border: none;
@@ -367,9 +372,9 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
-  margin-left: 6px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   transition: all 0.15s;
 }
@@ -687,7 +692,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 .toast.error .toast-icon { background: var(--red-warn); color: #fff; }
 
 /* ─── Loading skeleton ─── */
-.skeleton-row td { padding: 16px 20px; }
+.skeleton-row { padding: 16px 20px; }
 .skeleton-bar {
   height: 14px;
   border-radius: 6px;
@@ -719,44 +724,42 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   .app-topbar .manage-btn { display: none !important; }
 
   /* Mobile Table to Card Layout */
-  .data-table, .data-table tbody, .data-table tr, .data-table td {
-    display: block;
-    width: 100%;
+  .data-list-header { display: none; }
+  .data-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px;
   }
-  .data-table thead { display: none; }
-  .data-table tbody tr {
+  .data-list-row {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 16px;
     border: 1px solid var(--border-mid);
     border-radius: 14px;
     padding: 16px;
     position: relative;
     background: var(--bg-surface);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    gap: 8px;
   }
-  .data-table td {
-    padding: 0;
-    border: none;
-    text-align: left;
+  .col-cat {
+    margin-bottom: 4px;
   }
-  .data-table .td-cat {
+  .col-title {
     margin-bottom: 8px;
   }
-  .data-table .td-title {
-    margin-bottom: 12px;
-  }
-  .data-table td:nth-child(3) {
+  .col-type {
     position: absolute;
     top: 16px;
     right: 16px;
   }
-  .data-table .td-actions {
-    text-align: right;
+  .col-actions {
     padding-top: 12px;
     border-top: 1px dashed var(--border-mid);
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+    width: 100%;
+    justify-content: space-between;
   }
-  .btn-row-action { margin-left: 0; flex: 1; text-align: center; }
+  .btn-row-action { flex: 1; }
 }
 </style>
 </head>
@@ -861,20 +864,18 @@ body { background: var(--bg); color: var(--text-primary); transition: background
       </div>
     </div>
 
-    <div style="overflow-x: auto;">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th style="width:120px">Kategori</th>
-            <th>Judul & Detail</th>
-            <th style="width:110px">Tipe</th>
-            <th style="width:130px; text-align:right">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
+    <div>
+      <div class="data-list">
+        <div class="data-list-header">
+          <div>Kategori</div>
+          <div>Judul & Detail</div>
+          <div>Tipe</div>
+          <div style="text-align:right">Aksi</div>
+        </div>
+        <div id="tableBody">
           <!-- JS rendered -->
-        </tbody>
-      </table>
+        </div>
+      </div>
       <div id="tableEmpty" class="table-empty" style="display:none;">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <p>Tidak ada item ditemukan.</p>
@@ -1155,19 +1156,19 @@ function renderTable() {
       : `<span class="type-badge cred">🔑 Kredensial</span>`;
 
     return `
-      <tr>
-        <td class="td-cat"><span class="cat-pill">${escHtml(item.cat)}</span></td>
-        <td class="td-title">
+      <div class="data-list-row">
+        <div class="col-cat"><span class="cat-pill">${escHtml(item.cat)}</span></div>
+        <div class="col-title">
           <div class="item-title">${escHtml(item.title)}</div>
           ${subHtml}
           ${noteHtml}
-        </td>
-        <td>${typeBadge}</td>
-        <td class="td-actions">
+        </div>
+        <div class="col-type">${typeBadge}</div>
+        <div class="col-actions">
           <button class="btn-row-action btn-edit-row" onclick="editItem('${item.id}')">✏ Edit</button>
           <button class="btn-row-action btn-delete-row" onclick="openDeleteModal('${item.id}', '${escHtml(item.title)}')">✕</button>
-        </td>
-      </tr>
+        </div>
+      </div>
     `;
   }).join('');
 }
