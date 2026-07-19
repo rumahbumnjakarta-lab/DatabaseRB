@@ -127,6 +127,24 @@ function toggleSidebar() {
   if (overlay) overlay.classList.toggle('open');
 }
 
+// ─── Frontend Idle Logout Timer (10 Mins) ───
+let idleTimeout = null;
+const IDLE_LIMIT = 10 * 60 * 1000; // 10 minutes
+
+function resetIdleTimer() {
+  if (idleTimeout) clearTimeout(idleTimeout);
+  idleTimeout = setTimeout(() => {
+    // Session expired due to inactivity
+    window.location.href = '/login.html?error=session_expired';
+  }, IDLE_LIMIT);
+}
+
+// Attach idle listeners globally
+['click', 'touchstart', 'scroll', 'keypress', 'mousemove'].forEach(evt => {
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
+resetIdleTimer();
+
 // ─── Logout ───
 function doLogout() {
   window.location.href = '/auth/logout';
@@ -477,48 +495,33 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-// ─── SPA PJAX Router ───
-// Override setInterval to auto-clear on page change
-const originalSetInterval = window.setInterval;
-window.activeIntervals = [];
-window.setInterval = function(fn, t) {
-  const id = originalSetInterval(fn, t);
-  window.activeIntervals.push(id);
-  return id;
-};
-
-function clearPageState() {
-  // Clear intervals
-  window.activeIntervals.forEach(id => clearInterval(id));
-  window.activeIntervals = [];
-  
-  // Stop camera if active (from absen.html)
-  if (window.cameraStream) {
-    window.cameraStream.getTracks().forEach(t => t.stop());
-    window.cameraStream = null;
-  }
-}
-
+// ─── SPA Visual Transition (Fake SPA) ───
 document.addEventListener('click', e => {
   const a = e.target.closest('a');
   if (a && a.href && a.href.startsWith(window.location.origin)) {
-    // Exclude external links, new tabs, or logout
+    // Exclude external links, new tabs, logout, downloads, or anchor links
     if (a.target === '_blank' || a.href.includes('logout') || a.hasAttribute('download')) return;
+    if (a.getAttribute('href') && a.getAttribute('href').startsWith('#')) return;
     
     // Allow modifier keys for new tab
     if (e.ctrlKey || e.metaKey || e.shiftKey) return;
     
     e.preventDefault();
     if (window.innerWidth <= 768) toggleSidebar(); // auto-close sidebar on mobile
-    navigateTo(a.href, true);
+    
+    showFakePjaxProgress();
+    
+    const main = document.querySelector('.app-main');
+    if (main) main.classList.add('fade-out-pjax');
+
+    // Normal navigation after short delay for animation
+    setTimeout(() => {
+      window.location.href = a.href;
+    }, 150);
   }
 });
 
-window.addEventListener('popstate', () => {
-  navigateTo(window.location.href, false);
-});
-
-function showPjaxProgress() {
+function showFakePjaxProgress() {
   let bar = document.getElementById('pjax-progress');
   if (!bar) {
     bar = document.createElement('div');
@@ -530,101 +533,6 @@ function showPjaxProgress() {
   bar.style.opacity = '1';
   setTimeout(() => {
     bar.style.transition = 'width 0.4s ease, opacity 0.3s ease';
-    bar.style.width = '40%';
+    bar.style.width = '60%';
   }, 10);
-}
-
-function hidePjaxProgress() {
-  const bar = document.getElementById('pjax-progress');
-  if (bar) {
-    bar.style.width = '100%';
-    setTimeout(() => { bar.style.opacity = '0'; }, 300);
-    setTimeout(() => { bar.style.width = '0'; }, 600);
-  }
-}
-
-async function navigateTo(url, pushState = true) {
-  showPjaxProgress();
-  try {
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('Fetch failed');
-    const html = await r.text();
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Clear old state (intervals, camera, etc)
-    clearPageState();
-    
-    // Update title
-    document.title = doc.title;
-
-    // --- Sync Head Elements (CSS and External Scripts) ---
-    // 1. Remove all page-specific inline styles (those without an ID)
-    document.head.querySelectorAll('style:not([id])').forEach(s => s.remove());
-    
-    // 2. Inject new page-specific inline styles
-    doc.querySelectorAll('style:not([id])').forEach(s => {
-      const newStyle = document.createElement('style');
-      newStyle.textContent = s.textContent;
-      document.head.appendChild(newStyle);
-    });
-
-    // 3. Sync external CSS links
-    doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-      const href = link.getAttribute('href');
-      if (href && !document.querySelector(`link[href="${href}"]`)) {
-        const newLink = document.createElement('link');
-        newLink.rel = 'stylesheet';
-        newLink.href = link.href;
-        document.head.appendChild(newLink);
-      }
-    });
-
-    // 4. Sync external Scripts (e.g., Leaflet) sequentially
-    const extScripts = Array.from(doc.querySelectorAll('script[src]'))
-      .filter(s => {
-        const src = s.getAttribute('src');
-        return src && !document.querySelector(`script[src="${src}"]`);
-      });
-      
-    const loadScript = (src) => new Promise(res => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = res;
-      s.onerror = res;
-      document.head.appendChild(s);
-    });
-    
-    for (const s of extScripts) {
-      await loadScript(s.src);
-    }
-    // -----------------------------------------------------
-    
-    // Replace content
-    const currentMain = document.querySelector('.app-main');
-    const newMain = doc.querySelector('.app-main');
-    if (currentMain && newMain) {
-      currentMain.innerHTML = newMain.innerHTML;
-    }
-    
-    // Execute page scripts
-    const scripts = doc.querySelectorAll('script:not([src])');
-    scripts.forEach(script => {
-      if (script.textContent.includes('initAppShell') || script.textContent.includes('currentUser')) {
-        const newScript = document.createElement('script');
-        newScript.textContent = script.textContent;
-        document.body.appendChild(newScript);
-        document.body.removeChild(newScript); // Clean up
-      }
-    });
-    
-    if (pushState) history.pushState({}, '', url);
-    window.scrollTo(0, 0);
-    hidePjaxProgress();
-    
-  } catch (err) {
-    console.error('PJAX Error:', err);
-    window.location.href = url; // Fallback
-  }
 }

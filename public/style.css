@@ -1033,9 +1033,16 @@ footer {
 .fade-in-pjax {
   animation: pjaxFadeIn 0.3s ease forwards;
 }
+.fade-out-pjax {
+  animation: pjaxFadeOut 0.2s ease forwards;
+}
 
 @keyframes pjaxFadeIn {
-  from { opacity: 0.6; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pjaxFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-5px); }
+}

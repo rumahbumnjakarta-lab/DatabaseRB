@@ -70,8 +70,19 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(session({
   name: 'session',
   keys: [process.env.SESSION_SECRET || 'rumahbumn-super-secret-session-key-2024'],
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 hari
+  maxAge: 10 * 60 * 1000 // 10 menit otomatis logout jika tidak diperpanjang
 }));
+
+// ─── Perpanjang Sesi (Auto-Rolling) ───────────────────────────────────────────
+app.use((req, res, next) => {
+  if (req.session && req.session.user) {
+    // Abaikan rute polling background agar tidak memperpanjang sesi secara tidak sengaja
+    if (!req.path.includes('/api/absen/today') && !req.path.includes('/api/absen?date')) {
+      req.session.lastActive = Date.now();
+    }
+  }
+  next();
+});
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {

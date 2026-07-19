@@ -327,7 +327,7 @@ var searchInput = document.getElementById('searchInput');
 var emptyState = document.getElementById('emptyState');
 
 var categories = ["Semua", ...new Set(items.map(i=>i.cat))];
-let activeCat = "Semua";
+var activeCat = "Semua";
 
 document.getElementById('stat-total').textContent = items.length;
 document.getElementById('stat-cat').textContent = categories.length - 1;
