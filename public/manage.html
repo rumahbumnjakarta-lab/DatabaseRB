@@ -284,104 +284,96 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   font-family: 'Inter', sans-serif;
 }
 
-/* ─── Data List (Div-based Table) ─── */
-.data-list {
-  width: 100%;
-  font-size: 13.5px;
-}
-.data-list-header {
+/* ─── Item Grid (Minimalist Cards) ─── */
+.item-grid {
   display: grid;
-  grid-template-columns: 120px 1fr 120px 150px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
-  background: var(--bg-surface);
-  padding: 12px 20px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  padding: 8px 16px 24px;
 }
-.data-list-row {
-  display: grid;
-  grid-template-columns: 120px 1fr 120px 150px;
-  gap: 16px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  align-items: center;
-  transition: background 0.15s;
+.item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-mid);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
-.data-list-row:last-child { border-bottom: none; }
-.data-list-row:hover { background: var(--bg-surface); }
-
-.col-cat .cat-pill {
+.item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--card-shadow);
+}
+.card-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.item-card .cat-pill {
   display: inline-block;
   background: var(--cat-tag-bg);
   color: var(--cat-tag-color);
   border: 1px solid var(--cat-tag-border);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.02em;
-}
-.col-title .item-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 13.5px;
-}
-.col-title .item-sub {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-  font-family: 'JetBrains Mono', monospace;
-  word-break: break-all;
-}
-.col-title .item-sub a {
-  color: var(--gold);
-  text-decoration: none;
-}
-.col-title .item-sub a:hover { text-decoration: underline; }
-.col-title .item-note {
-  font-size: 11.5px;
-  color: var(--text-muted);
-  margin-top: 4px;
-  font-style: italic;
-}
-.type-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.item-card .type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 .type-badge.link { background: #EBF3FF; color: #2563EB; }
 .type-badge.cred { background: #FFF3E0; color: #B45309; }
 
-.col-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
+.item-card .item-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.3;
 }
-.btn-row-action {
+.item-card .item-note {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-mid);
+}
+.btn-card-action {
+  flex: 1;
   border: none;
   cursor: pointer;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 8px 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  transition: all 0.15s;
+  gap: 6px;
+  transition: all 0.2s;
 }
-.btn-edit-row { background: rgba(37, 99, 235, 0.12); color: #2563EB; }
-.btn-edit-row:hover { background: #2563EB; color: #fff; }
-.btn-delete-row { background: rgba(220, 38, 38, 0.12); color: #DC2626; }
-.btn-delete-row:hover { background: #DC2626; color: #fff; }
+.btn-card-edit { background: rgba(37, 99, 235, 0.1); color: #2563EB; }
+.btn-card-edit:hover { background: #2563EB; color: #fff; }
+.btn-card-delete { background: rgba(220, 38, 38, 0.1); color: #DC2626; }
+.btn-card-delete:hover { background: #DC2626; color: #fff; }
 
 /* Empty state */
 .table-empty {
@@ -723,43 +715,11 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   /* Hide Topbar action buttons on mobile to save space */
   .app-topbar .manage-btn { display: none !important; }
 
-  /* Mobile Table to Card Layout */
-  .data-list-header { display: none; }
-  .data-list {
-    display: flex;
-    flex-direction: column;
-    padding: 0 16px;
-  }
-  .data-list-row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 16px;
-    border: 1px solid var(--border-mid);
-    border-radius: 14px;
+  /* Grid adjustments for mobile */
+  .item-grid {
+    grid-template-columns: 1fr;
     padding: 16px;
-    position: relative;
-    background: var(--bg-surface);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-    gap: 8px;
   }
-  .col-cat {
-    margin-bottom: 4px;
-  }
-  .col-title {
-    margin-bottom: 8px;
-  }
-  .col-type {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-  }
-  .col-actions {
-    padding-top: 12px;
-    border-top: 1px dashed var(--border-mid);
-    width: 100%;
-    justify-content: space-between;
-  }
-  .btn-row-action { flex: 1; }
 }
 </style>
 </head>
@@ -865,16 +825,8 @@ body { background: var(--bg); color: var(--text-primary); transition: background
     </div>
 
     <div>
-      <div class="data-list">
-        <div class="data-list-header">
-          <div>Kategori</div>
-          <div>Judul & Detail</div>
-          <div>Tipe</div>
-          <div style="text-align:right">Aksi</div>
-        </div>
-        <div id="tableBody">
-          <!-- JS rendered -->
-        </div>
+      <div id="tableBody" class="item-grid">
+        <!-- JS rendered cards -->
       </div>
       <div id="tableEmpty" class="table-empty" style="display:none;">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1147,25 +1099,31 @@ function renderTable() {
 
   tbody.innerHTML = items.map(item => {
     let noteHtml = item.note 
-      ? `<div class="item-note">${escHtml(item.note)}</div>` 
+      ? `<p class="item-note">${escHtml(item.note)}</p>` 
       : '';
       
     // Tipe
     const typeBadge = item.type === 'link' 
       ? `<span class="type-badge link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link</span>` 
-      : `<span class="type-badge cred">🔑 Kredensial</span>`;
+      : `<span class="type-badge cred"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Kredensial</span>`;
 
     return `
-      <div class="data-list-row">
-        <div class="col-cat"><span class="cat-pill">${escHtml(item.cat)}</span></div>
-        <div class="col-title">
+      <div class="item-card" data-aos="fade-up">
+        <div class="card-header-top">
+          <span class="cat-pill">${escHtml(item.cat)}</span>
+          ${typeBadge}
+        </div>
+        <div>
           <div class="item-title">${escHtml(item.title)}</div>
           ${noteHtml}
         </div>
-        <div class="col-type">${typeBadge}</div>
-        <div class="col-actions">
-          <button class="btn-row-action btn-edit-row" onclick="editItem('${item.id}')">✏ Edit</button>
-          <button class="btn-row-action btn-delete-row" onclick="openDeleteModal('${item.id}', '${escHtml(item.title)}')">✕</button>
+        <div class="card-actions">
+          <button class="btn-card-action btn-card-edit" onclick="editItem('${item.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
+          </button>
+          <button class="btn-card-action btn-card-delete" onclick="openDeleteModal('${item.id}', '${escHtml(item.title)}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Hapus
+          </button>
         </div>
       </div>
     `;
