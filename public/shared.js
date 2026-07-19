@@ -279,7 +279,17 @@ function initAppShell(activePage, onSuccess, staffOnly) {
         setTimeout(renderIcons, 100);
       }
     })
-    .catch(() => { window.location.href = '/login.html'; });
+    .catch((err) => { 
+      console.error('Error in initAppShell:', err);
+      // Only redirect if it is clearly a network error and not a code exception
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        window.location.href = '/login.html';
+      } else {
+        // If it's a code error, don't kick the user out, let the error be logged.
+        // We also show a toast so the user knows something went wrong.
+        showSwalToast('Terjadi kesalahan pada sistem', 'error');
+      }
+    });
 }
 
 // ─── SVG Icons ───
