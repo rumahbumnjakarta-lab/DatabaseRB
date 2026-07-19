@@ -69,8 +69,8 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 // Session (Stateless Cookie-based Session for Serverless / Vercel compatibility)
 app.use(session({
   name: 'session',
-  keys: [process.env.SESSION_SECRET || 'rumahbumn-super-secret-session-key-2024'],
-  maxAge: 10 * 60 * 1000 // 10 menit otomatis logout jika tidak diperpanjang
+  keys: [process.env.SESSION_SECRET || 'rumahbumn-super-secret-session-key-2024']
+  // maxAge tidak diset, sehingga session akan hilang otomatis saat tab/browser ditutup (Session Cookie)
 }));
 
 // ─── Perpanjang Sesi (Auto-Rolling) ───────────────────────────────────────────

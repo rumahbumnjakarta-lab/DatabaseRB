@@ -19,10 +19,17 @@
   --bg-card-hover: #f8fbfe;
   --bg-input:      #ffffff;
 
-  /* Blues */
+  /* Blues & Navy */
   --blue-dark:   #0857c3;
   --blue-mid:    #307fe2;
   --blue-light:  #71c5e8;
+  --blue-glow:   rgba(48,127,226,0.12);
+  --blue-subtle: rgba(48,127,226,0.06);
+  --navy-deep:   #0f172a;
+
+  /* Accent Colors */
+  --gold:        #f59e0b;
+  --gold-bright: #fbbf24;
   --blue-glow:   rgba(48,127,226,0.12);
   --blue-subtle: rgba(48,127,226,0.06);
 
