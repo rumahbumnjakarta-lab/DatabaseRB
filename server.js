@@ -297,7 +297,13 @@ app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/luci
 app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist')));
 app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules/sweetalert2/dist')));
 app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // ─── Protected HTML Pages ─────────────────────────────────────────────────────
 app.get('/manage', requireAuth, requireStaff, (req, res) => {

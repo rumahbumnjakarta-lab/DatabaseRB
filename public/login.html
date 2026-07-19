@@ -306,6 +306,7 @@
         btn.disabled = false;
         btn.textContent = 'Masuk ke Sistem';
       } else {
+        sessionStorage.setItem('app_session', 'active');
         window.location.href = data.redirect || '/index.html';
       }
     } catch (err) {

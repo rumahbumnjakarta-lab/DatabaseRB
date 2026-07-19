@@ -264,6 +264,17 @@ function initAppShell(activePage, onSuccess, staffOnly) {
     document.body.prepend(loader);
   }
 
+  // ─── Enforce Tab-based Session (Logout on Tab Close) ───
+  if (!sessionStorage.getItem('app_session')) {
+    // If there is no session in this tab, force backend logout and redirect
+    fetch('/auth/logout').then(() => {
+      window.location.href = '/login.html';
+    }).catch(() => {
+      window.location.href = '/login.html';
+    });
+    return;
+  }
+
   if (window.currentUserCache) {
     handleAuthSuccess(window.currentUserCache, activePage, onSuccess, staffOnly);
     return;
