@@ -230,7 +230,8 @@ function showSwalConfirm(title, text, confirmButtonText, onConfirm) {
 }
 
 // ─── Auth guard + render shell ───
-// activePage: dashboard, bd, sosmed, design, event, admin, email, manage
+window.currentUserCache = null;
+
 function initAppShell(activePage, onSuccess, staffOnly) {
   // Create loading screen if not exists
   if (!document.getElementById('authLoading')) {
@@ -245,51 +246,58 @@ function initAppShell(activePage, onSuccess, staffOnly) {
     document.body.prepend(loader);
   }
 
+  if (window.currentUserCache) {
+    handleAuthSuccess(window.currentUserCache, activePage, onSuccess, staffOnly);
+    return;
+  }
+
   fetch('/api/me')
     .then(r => r.json())
     .then(user => {
-      if (!user.loggedIn) { window.location.href = '/login.html'; return; }
-      if (staffOnly && user.role !== 'staff') { window.location.href = '/index.html?error=forbidden'; return; }
-
-      // Inject sidebar
-      const sidebarContainer = document.getElementById('sidebarContainer');
-      if (sidebarContainer) {
-        sidebarContainer.innerHTML = buildSidebar(user, activePage);
-      }
-
-      // Hide loading
-      const loading = document.getElementById('authLoading');
-      if (loading) loading.style.display = 'none';
-
-      // Show content
-      const content = document.getElementById('appContent');
-      if (content) content.style.display = 'block';
-
-      // Ensure vendor libraries are loaded & init animations
-      ensureVendorLibraries(() => {
-        renderIcons();
-        if (window.gsap && content) {
-          gsap.from('#appContent', { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' });
-        }
-      });
-
-      // Run page-specific callback
-      if (onSuccess) {
-        onSuccess(user);
-        setTimeout(renderIcons, 100);
-      }
+      window.currentUserCache = user;
+      handleAuthSuccess(user, activePage, onSuccess, staffOnly);
     })
     .catch((err) => { 
       console.error('Error in initAppShell:', err);
-      // Only redirect if it is clearly a network error and not a code exception
       if (err instanceof TypeError && err.message.includes('fetch')) {
-        window.location.href = '/login.html';
+        showSwalToast('Koneksi ke server terputus sementara.', 'error');
       } else {
-        // If it's a code error, don't kick the user out, let the error be logged.
-        // We also show a toast so the user knows something went wrong.
         showSwalToast('Terjadi kesalahan pada sistem', 'error');
       }
     });
+}
+
+function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
+  if (!user.loggedIn) { window.location.href = '/login.html'; return; }
+  if (staffOnly && user.role !== 'staff') { window.location.href = '/index.html?error=forbidden'; return; }
+
+  // Inject sidebar
+  const sidebarContainer = document.getElementById('sidebarContainer');
+  if (sidebarContainer) {
+    sidebarContainer.innerHTML = buildSidebar(user, activePage);
+  }
+
+  // Hide loading
+  const loading = document.getElementById('authLoading');
+  if (loading) loading.style.display = 'none';
+
+  // Show content
+  const content = document.getElementById('appContent');
+  if (content) {
+    content.style.display = 'block';
+    content.classList.add('fade-in-pjax');
+  }
+
+  // Ensure vendor libraries are loaded
+  ensureVendorLibraries(() => {
+    renderIcons();
+  });
+
+  // Run page-specific callback
+  if (onSuccess) {
+    onSuccess(user);
+    setTimeout(renderIcons, 100);
+  }
 }
 
 // ─── SVG Icons ───
@@ -467,4 +475,156 @@ function escHtml(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ─── SPA PJAX Router ───
+// Override setInterval to auto-clear on page change
+const originalSetInterval = window.setInterval;
+window.activeIntervals = [];
+window.setInterval = function(fn, t) {
+  const id = originalSetInterval(fn, t);
+  window.activeIntervals.push(id);
+  return id;
+};
+
+function clearPageState() {
+  // Clear intervals
+  window.activeIntervals.forEach(id => clearInterval(id));
+  window.activeIntervals = [];
+  
+  // Stop camera if active (from absen.html)
+  if (window.cameraStream) {
+    window.cameraStream.getTracks().forEach(t => t.stop());
+    window.cameraStream = null;
+  }
+}
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('a');
+  if (a && a.href && a.href.startsWith(window.location.origin)) {
+    // Exclude external links, new tabs, or logout
+    if (a.target === '_blank' || a.href.includes('logout') || a.hasAttribute('download')) return;
+    
+    // Allow modifier keys for new tab
+    if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+    
+    e.preventDefault();
+    if (window.innerWidth <= 768) toggleSidebar(); // auto-close sidebar on mobile
+    navigateTo(a.href, true);
+  }
+});
+
+window.addEventListener('popstate', () => {
+  navigateTo(window.location.href, false);
+});
+
+function showPjaxProgress() {
+  let bar = document.getElementById('pjax-progress');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'pjax-progress';
+    document.body.appendChild(bar);
+  }
+  bar.style.transition = 'none';
+  bar.style.width = '10%';
+  bar.style.opacity = '1';
+  setTimeout(() => {
+    bar.style.transition = 'width 0.4s ease, opacity 0.3s ease';
+    bar.style.width = '40%';
+  }, 10);
+}
+
+function hidePjaxProgress() {
+  const bar = document.getElementById('pjax-progress');
+  if (bar) {
+    bar.style.width = '100%';
+    setTimeout(() => { bar.style.opacity = '0'; }, 300);
+    setTimeout(() => { bar.style.width = '0'; }, 600);
+  }
+}
+
+async function navigateTo(url, pushState = true) {
+  showPjaxProgress();
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Fetch failed');
+    const html = await r.text();
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Clear old state (intervals, camera, etc)
+    clearPageState();
+    
+    // Update title
+    document.title = doc.title;
+
+    // --- Sync Head Elements (CSS and External Scripts) ---
+    // 1. Remove all page-specific inline styles (those without an ID)
+    document.head.querySelectorAll('style:not([id])').forEach(s => s.remove());
+    
+    // 2. Inject new page-specific inline styles
+    doc.querySelectorAll('style:not([id])').forEach(s => {
+      const newStyle = document.createElement('style');
+      newStyle.textContent = s.textContent;
+      document.head.appendChild(newStyle);
+    });
+
+    // 3. Sync external CSS links
+    doc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && !document.querySelector(`link[href="${href}"]`)) {
+        const newLink = document.createElement('link');
+        newLink.rel = 'stylesheet';
+        newLink.href = link.href;
+        document.head.appendChild(newLink);
+      }
+    });
+
+    // 4. Sync external Scripts (e.g., Leaflet) sequentially
+    const extScripts = Array.from(doc.querySelectorAll('script[src]'))
+      .filter(s => {
+        const src = s.getAttribute('src');
+        return src && !document.querySelector(`script[src="${src}"]`);
+      });
+      
+    const loadScript = (src) => new Promise(res => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = res;
+      s.onerror = res;
+      document.head.appendChild(s);
+    });
+    
+    for (const s of extScripts) {
+      await loadScript(s.src);
+    }
+    // -----------------------------------------------------
+    
+    // Replace content
+    const currentMain = document.querySelector('.app-main');
+    const newMain = doc.querySelector('.app-main');
+    if (currentMain && newMain) {
+      currentMain.innerHTML = newMain.innerHTML;
+    }
+    
+    // Execute page scripts
+    const scripts = doc.querySelectorAll('script:not([src])');
+    scripts.forEach(script => {
+      if (script.textContent.includes('initAppShell') || script.textContent.includes('currentUser')) {
+        const newScript = document.createElement('script');
+        newScript.textContent = script.textContent;
+        document.body.appendChild(newScript);
+        document.body.removeChild(newScript); // Clean up
+      }
+    });
+    
+    if (pushState) history.pushState({}, '', url);
+    window.scrollTo(0, 0);
+    hidePjaxProgress();
+    
+  } catch (err) {
+    console.error('PJAX Error:', err);
+    window.location.href = url; // Fallback
+  }
 }

@@ -305,7 +305,7 @@
 <footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
 
 <script>
-const items = [
+var items = [
   {cat:"Akademik", title:"SILABUS", type:"link", url:"https://docs.google.com/spreadsheets/d/11TTCvGgx60Bsd2Tu8Q2YTKcF6DiSJaLL74UDNSn7Fv8/edit?gid=1071766875#gid=1071766875", note:"Spreadsheet silabus."},
   {cat:"BRIncubator", title:"TOR BRIncubator", type:"link", url:"https://docs.google.com/document/d/1prj1QSM7_FAsURJjUdsXst2QSTgY4nE6gUvuozN8jwo/edit?usp=sharing", note:"Dokumen Term of Reference program BRIncubator."},
   {cat:"BRIncubator", title:"1 Day 1 UMKM", type:"link", url:"https://docs.google.com/spreadsheets/d/1MszyYNSWSWeaXahbz68c3-8UUxADDknmREpFsctI3Hk/edit?usp=drivesdk", note:"Spreadsheet program 1 Day 1 UMKM."},
@@ -321,12 +321,12 @@ const items = [
   {cat:"Akun Email", title:"Email Ijo", type:"cred", email:"rumahbumnjakapus@gmail.com", pass:"Rumahbumn123.", note:"Akun email operasional cabang Jakapus."},
 ];
 
-const grid = document.getElementById('grid');
-const chipRow = document.getElementById('chipRow');
-const searchInput = document.getElementById('searchInput');
-const emptyState = document.getElementById('emptyState');
+var grid = document.getElementById('grid');
+var chipRow = document.getElementById('chipRow');
+var searchInput = document.getElementById('searchInput');
+var emptyState = document.getElementById('emptyState');
 
-const categories = ["Semua", ...new Set(items.map(i=>i.cat))];
+var categories = ["Semua", ...new Set(items.map(i=>i.cat))];
 let activeCat = "Semua";
 
 document.getElementById('stat-total').textContent = items.length;

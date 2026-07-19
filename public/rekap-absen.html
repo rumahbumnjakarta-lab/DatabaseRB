@@ -283,7 +283,7 @@
 
 <script src="shared.js"></script>
 <script>
-let detailMap = null;
+var detailMap = null;
 
 initAppShell('rekap-absen', function(user) {
   // Set today as default date
@@ -388,6 +388,7 @@ function showDetail(r) {
   if (r.latitude) {
     setTimeout(() => {
       if (detailMap) { detailMap.remove(); detailMap = null; }
+      if(detailMap) { try{detailMap.remove()}catch(e){} }
       detailMap = L.map('detailMap', { zoomControl: false, attributionControl: false }).setView([r.latitude, r.longitude], 16);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
       L.marker([r.latitude, r.longitude]).addTo(detailMap);

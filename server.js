@@ -389,6 +389,25 @@ app.delete('/api/items/:id', requireAuth, requireStaff, async (req, res) => {
 
 // ─── Attendance / Absen API ───────────────────────────────────────────────────
 
+// --- Geofencing Target ---
+const TARGET_LAT = -6.185582350879704;
+const TARGET_LNG = 106.79652101747172;
+const MAX_RADIUS = 50; // meters
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // metres
+  const p1 = lat1 * Math.PI/180;
+  const p2 = lat2 * Math.PI/180;
+  const dp = (lat2-lat1) * Math.PI/180;
+  const dl = (lon2-lon1) * Math.PI/180;
+
+  const a = Math.sin(dp/2) * Math.sin(dp/2) +
+            Math.cos(p1) * Math.cos(p2) *
+            Math.sin(dl/2) * Math.sin(dl/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round(R * c);
+}
+
 // POST /api/absen — Submit absensi (semua user yang login)
 app.post('/api/absen', requireAuth, async (req, res) => {
   const { type, photo_base64, latitude, longitude, address } = req.body;
@@ -399,6 +418,12 @@ app.post('/api/absen', requireAuth, async (req, res) => {
   }
   if (!latitude || !longitude) {
     return res.status(400).json({ error: 'Data GPS diperlukan untuk absensi.' });
+  }
+
+  // Validasi Geofencing
+  const distance = calculateDistance(latitude, longitude, TARGET_LAT, TARGET_LNG);
+  if (distance > MAX_RADIUS) {
+    return res.status(403).json({ error: `Absensi ditolak: Anda berada ${distance} meter di luar area kantor (Maksimal ${MAX_RADIUS}m).` });
   }
 
   try {

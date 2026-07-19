@@ -388,9 +388,9 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="topbar-title">
-        Absensi
-        <small>Check-in &amp; Check-out harian</small>
-      </div>
+          Absensi
+          <small>Check-in &amp; Check-out harian</small>
+        </div>
       <div class="topbar-actions">
         <span class="live-badge"><span class="live-dot"></span>LIVE</span>
       </div>
@@ -477,12 +477,31 @@
 
 <script src="shared.js"></script>
 <script>
-let currentUser = null;
-let gpsData = { lat: null, lng: null, address: '—', accuracy: null };
-let selfieBase64 = null;
-let map = null;
-let myMarker = null;
-let cameraStream = null;
+var currentUser = null;
+
+// --- Geofencing Target ---
+var TARGET_LAT = -6.185582350879704;
+var TARGET_LNG = 106.79652101747172;
+var MAX_RADIUS = 50; // meters
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  var R = 6371e3;
+  var p1 = lat1 * Math.PI/180;
+  var p2 = lat2 * Math.PI/180;
+  var dp = (lat2-lat1) * Math.PI/180;
+  var dl = (lon2-lon1) * Math.PI/180;
+
+  var a = Math.sin(dp/2) * Math.sin(dp/2) +
+          Math.cos(p1) * Math.cos(p2) *
+          Math.sin(dl/2) * Math.sin(dl/2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round(R * c);
+}
+var gpsData = { lat: null, lng: null, address: '—', accuracy: null };
+var selfieBase64 = null;
+var map = null;
+var myMarker = null;
+var cameraStream = null;
 
 // ─── Init ───
 initAppShell('absen', function(user) {
@@ -524,6 +543,7 @@ function updateClock() {
 
 // ─── Map Init ───
 function initMap() {
+  if(map) { try{map.remove()}catch(e){} }
   map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-6.2088, 106.8456], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
@@ -551,7 +571,20 @@ function getLocation() {
       gpsData.lng = pos.coords.longitude;
       gpsData.accuracy = Math.round(pos.coords.accuracy);
 
-      statusEl.textContent = `✅ Lokasi terdeteksi (akurasi ±${gpsData.accuracy}m)`;
+      var distance = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
+      var btnIn = document.getElementById('btnClockIn');
+      var btnOut = document.getElementById('btnClockOut');
+
+      if (distance <= MAX_RADIUS) {
+        statusEl.innerHTML = `✅ <span style="color:#059669;font-weight:700;">Jarak: ${distance}m (Dalam Area)</span> — ±${gpsData.accuracy}m`;
+        if (btnIn) btnIn.disabled = false;
+        if (btnOut) btnOut.disabled = false;
+      } else {
+        statusEl.innerHTML = `⚠️ <span style="color:#dc2626;font-weight:700;">Jarak: ${distance}m (Di luar area - Maks ${MAX_RADIUS}m)</span>`;
+        if (btnIn) btnIn.disabled = true;
+        if (btnOut) btnOut.disabled = true;
+      }
+
       coordsEl.textContent = `${gpsData.lat.toFixed(6)}, ${gpsData.lng.toFixed(6)}`;
 
       // Update map
@@ -606,7 +639,7 @@ function startCamera() {
 
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
     .then(stream => {
-      cameraStream = stream;
+      window.cameraStream = stream;
       video.srcObject = stream;
       video.style.display = 'block';
       placeholder.style.display = 'none';
@@ -635,7 +668,7 @@ function takeSelfie() {
   video.style.display = 'none';
 
   // Stop camera stream
-  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+  if (window.cameraStream) cameraStream.getTracks().forEach(t => t.stop());
 
   btnSnap.style.display = 'none';
   btnRetake.style.display = 'flex';
@@ -659,6 +692,12 @@ function retakeSelfie() {
 async function submitAbsen(type) {
   if (!gpsData.lat || !gpsData.lng) {
     showToastMsg('⚠️ GPS belum terdeteksi. Mohon aktifkan & izinkan akses lokasi.', true);
+    return;
+  }
+  
+  var distance = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
+  if (distance > MAX_RADIUS) {
+    showToastMsg(`⚠️ Absensi ditolak: Jarak Anda ${distance}m (Maksimal ${MAX_RADIUS}m).`, true);
     return;
   }
   

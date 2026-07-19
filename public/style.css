@@ -1014,3 +1014,28 @@ footer {
   }
 }
 
+/* ═══════════════════════════════════════
+   SPA / PJAX TRANSITIONS
+═══════════════════════════════════════ */
+#pjax-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--blue-mid);
+  z-index: 9999;
+  width: 0;
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(48,127,226,0.5);
+  pointer-events: none;
+}
+
+.fade-in-pjax {
+  animation: pjaxFadeIn 0.3s ease forwards;
+}
+
+@keyframes pjaxFadeIn {
+  from { opacity: 0.6; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
