@@ -45,7 +45,7 @@
   margin-bottom: 4px;
 }
 .absen-greeting-name {
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
@@ -411,7 +411,7 @@
         <!-- Today Status -->
         <div class="absen-status-row">
           <div class="absen-status-card" id="statusClockIn" style="width: 100%; flex: none;">
-            <div class="absen-status-icon">📍</div>
+            <div class="absen-status-icon"><i data-lucide="clock" style="color:var(--blue-mid);width:22px;height:22px;"></i></div>
             <div class="absen-status-label">Status Absensi Hari Ini</div>
             <div class="absen-status-time" id="timeClockIn">Belum Absen</div>
           </div>
@@ -420,7 +420,7 @@
         <!-- GPS & Map -->
         <div class="gps-card">
           <div class="gps-header">
-            <div class="gps-icon">📍</div>
+            <div class="gps-icon"><i data-lucide="map-pin" style="color:var(--blue-mid);width:18px;height:18px;"></i></div>
             <div class="gps-info">
               <div class="gps-status" id="gpsStatus">Meminta akses lokasi...</div>
               <div class="gps-coords" id="gpsCoords">—</div>
@@ -433,12 +433,12 @@
         <!-- Camera / Selfie -->
         <div class="camera-card">
           <div class="camera-header">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <i data-lucide="camera" style="width:16px;height:16px;"></i>
             Foto Selfie
           </div>
           <div class="camera-preview-area">
             <div class="camera-placeholder" id="cameraPlaceholder">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <i data-lucide="camera" style="width:36px;height:36px;opacity:0.4;"></i>
               <p>Belum ada foto</p>
             </div>
             <video id="cameraVideo" autoplay playsinline muted></video>
@@ -446,16 +446,16 @@
             <img id="selfiePreview" alt="Selfie preview">
           </div>
           <div class="camera-actions">
-            <button class="btn-camera" onclick="startCamera()" id="btnStartCam">📷 Buka Kamera</button>
-            <button class="btn-camera primary" onclick="takeSelfie()" id="btnSnap" style="display:none;">📸 Ambil Foto</button>
-            <button class="btn-camera" onclick="retakeSelfie()" id="btnRetake" style="display:none;">🔄 Ulangi</button>
+            <button class="btn-camera" onclick="startCamera()" id="btnStartCam"><i data-lucide="camera" style="width:16px;height:16px;"></i> Buka Kamera</button>
+            <button class="btn-camera primary" onclick="takeSelfie()" id="btnSnap" style="display:none;"><i data-lucide="aperture" style="width:16px;height:16px;"></i> Ambil Foto</button>
+            <button class="btn-camera" onclick="retakeSelfie()" id="btnRetake" style="display:none;"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Ulangi</button>
           </div>
         </div>
 
         <!-- Absen Buttons -->
         <div class="absen-actions" style="display: block;">
           <button class="btn-absen btn-clock-in" id="btnClockIn" onclick="submitAbsen('clock_in')" style="width: 100%;">
-            <span class="btn-absen-icon">✅</span>
+            <span class="btn-absen-icon"><i data-lucide="check-circle-2" style="width:24px;height:24px;"></i></span>
             <span class="btn-absen-text">Absen Sekarang</span>
             <span class="btn-absen-sub">Kirim Foto &amp; Lokasi GPS</span>
           </button>
@@ -693,7 +693,7 @@ async function submitAbsen(type) {
 
     overlay.querySelector('.submit-box').innerHTML = `
       <div class="submit-success">${res.ok ? '✅' : '❌'}</div>
-      <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
+      <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
         ${res.ok ? 'Berhasil!' : 'Gagal!'}
       </div>
       <div class="submit-msg">${data.message || data.error}</div>`;
@@ -752,7 +752,7 @@ function renderLog(records) {
 
     return `<div class="log-item">
       <div class="log-avatar">
-        ${r.photo_url && r.photo_url.startsWith('http') ? `<img src="${r.photo_url}" alt="" onerror="this.style.display='none'">` : initial}
+        ${r.user_avatar && r.user_avatar.startsWith('http') ? `<img src="${r.user_avatar}" alt="" onerror="this.style.display='none'">` : initial}
       </div>
       <div class="log-info">
         <div class="log-name">${escHtml(r.user_name || r.user_email)}</div>
@@ -760,7 +760,7 @@ function renderLog(records) {
       </div>
       <span class="log-type-badge ${r.type}">${label}</span>
       ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="log-photo-thumb" src="${r.photo_url}" onclick="showLightbox('${r.photo_url}')" alt="Selfie">` : ''}
-      <a class="log-map-btn" href="${mapsUrl}" target="_blank" title="Lihat di Maps">🗺️</a>
+      <a class="log-map-btn" href="${mapsUrl}" target="_blank" title="Lihat di Maps"><i data-lucide="map-pin" style="width:16px;height:16px;color:var(--blue-mid);"></i></a>
     </div>`;
   }).join('');
 }

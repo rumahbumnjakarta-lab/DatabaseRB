@@ -11,21 +11,21 @@ function buildSidebar(user, activePage) {
   const initial = (user && user.name) ? user.name.charAt(0).toUpperCase() : '?';
 
   const navItems = [
-    { href: '/index.html', icon: '🏠', label: 'Dashboard', key: 'dashboard' },
+    { href: '/index.html', icon: 'layout-dashboard', label: 'Dashboard', key: 'dashboard' },
     { divider: true, label: 'Absensi' },
-    { href: '/absen.html', icon: '📍', label: 'Absen Saya', key: 'absen' },
-    { href: '/rekap-absen.html', icon: '📊', label: 'Rekap Absen', key: 'rekap-absen', staffOnly: true },
-    { href: '/settings.html', icon: '👤', label: 'Setelan Profil', key: 'settings' },
+    { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya', key: 'absen' },
+    { href: '/rekap-absen.html', icon: 'bar-chart-3', label: 'Rekap Absen', key: 'rekap-absen', staffOnly: true },
+    { href: '/settings.html', icon: 'user-cog', label: 'Setelan Profil', key: 'settings' },
     { divider: true, label: 'Divisi' },
-    { href: '/business-development.html', icon: '📊', label: 'Business Dev', key: 'bd' },
-    { href: '/sosmed.html', icon: '📱', label: 'Social Media', key: 'sosmed' },
-    { href: '/design.html', icon: '🎨', label: 'Design', key: 'design' },
-    { href: '/event.html', icon: '🎪', label: 'Event', key: 'event' },
-    { href: '/admin.html', icon: '📋', label: 'Admin', key: 'admin', internOnly: true },
-    { href: '/administrasi.html', icon: '📋', label: 'Administrasi', key: 'administrasi', staffOnly: true },
+    { href: '/business-development.html', icon: 'trending-up', label: 'Business Dev', key: 'bd' },
+    { href: '/sosmed.html', icon: 'share-2', label: 'Social Media', key: 'sosmed' },
+    { href: '/design.html', icon: 'palette', label: 'Design', key: 'design' },
+    { href: '/event.html', icon: 'calendar', label: 'Event', key: 'event' },
+    { href: '/admin.html', icon: 'file-text', label: 'Admin', key: 'admin', internOnly: true },
+    { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { divider: true, label: 'Staff Only', staffOnly: true },
-    { href: '/email.html', icon: '📧', label: 'Akun Email', key: 'email', staffOnly: true },
-    { href: '/manage.html', icon: '⚙', label: 'Kelola Data', key: 'manage', staffOnly: true },
+    { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
+    { href: '/manage.html', icon: 'settings', label: 'Kelola Data', key: 'manage', staffOnly: true },
   ];
 
   let navHTML = '';
@@ -40,7 +40,7 @@ function buildSidebar(user, activePage) {
     const isActive = item.key === activePage ? ' active' : '';
     navHTML += `
       <a href="${item.href}" class="sidebar-link${isActive}">
-        <span class="sidebar-icon">${item.icon}</span>
+        <span class="sidebar-icon"><i data-lucide="${item.icon}" style="width:17px;height:17px;"></i></span>
         ${item.label}
       </a>`;
   });
@@ -69,11 +69,7 @@ function buildSidebar(user, activePage) {
             <span class="sidebar-user-role ${roleClass}">${roleLabel}</span>
           </div>
           <button class="sidebar-logout-btn" onclick="doLogout()" title="Keluar">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+            <i data-lucide="log-out" style="width:16px;height:16px;"></i>
           </button>
         </div>
       </div>
@@ -84,24 +80,24 @@ function buildSidebar(user, activePage) {
     <!-- Mobile Bottom Navigation Bar -->
     <nav class="mobile-bottom-nav">
       <a href="/index.html" class="mobile-nav-item${activePage === 'dashboard' ? ' active' : ''}">
-        <span class="mobile-nav-icon">🏠</span>
+        <span class="mobile-nav-icon"><i data-lucide="layout-dashboard" style="width:20px;height:20px;"></i></span>
         <span>Beranda</span>
       </a>
       <a href="/absen.html" class="mobile-nav-item${activePage === 'absen' ? ' active' : ''}">
-        <span class="mobile-nav-icon">📍</span>
+        <span class="mobile-nav-icon"><i data-lucide="map-pin" style="width:20px;height:20px;"></i></span>
         <span>Absen</span>
       </a>
       ${isStaff ? `
       <a href="/rekap-absen.html" class="mobile-nav-item${activePage === 'rekap-absen' ? ' active' : ''}">
-        <span class="mobile-nav-icon">📊</span>
+        <span class="mobile-nav-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px;"></i></span>
         <span>Rekap</span>
       </a>` : `
       <a href="/admin.html" class="mobile-nav-item${activePage === 'admin' ? ' active' : ''}">
-        <span class="mobile-nav-icon">📋</span>
+        <span class="mobile-nav-icon"><i data-lucide="file-text" style="width:20px;height:20px;"></i></span>
         <span>Admin</span>
       </a>`}
       <button class="mobile-nav-item" onclick="toggleSidebar()">
-        <span class="mobile-nav-icon">☰</span>
+        <span class="mobile-nav-icon"><i data-lucide="menu" style="width:20px;height:20px;"></i></span>
         <span>Menu</span>
       </button>
     </nav>
@@ -113,11 +109,7 @@ function buildTopbar(title, subtitle) {
   return `
     <div class="app-topbar">
       <button class="sidebar-toggle" onclick="toggleSidebar()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
+        <i data-lucide="menu" style="width:20px;height:20px;"></i>
       </button>
       <div class="topbar-title">
         ${title}
@@ -138,6 +130,103 @@ function toggleSidebar() {
 // ─── Logout ───
 function doLogout() {
   window.location.href = '/auth/logout';
+}
+
+// ─── Ensure Libraries (Lucide, AOS, SweetAlert2, GSAP) are loaded ───
+function ensureVendorLibraries(callback) {
+  let loadedCount = 0;
+  const total = 4;
+
+  function checkDone() {
+    loadedCount++;
+    if (loadedCount >= total && callback) callback();
+  }
+
+  // 1. Lucide
+  if (window.lucide) { checkDone(); } else {
+    const s = document.createElement('script'); s.src = '/vendor/lucide/lucide.js';
+    s.onload = checkDone;
+    s.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/lucide@latest'; cdn.onload = checkDone; document.head.appendChild(cdn); };
+    document.head.appendChild(s);
+  }
+
+  // 2. AOS CSS & JS
+  if (!document.getElementById('aos-css')) {
+    const css = document.createElement('link'); css.id = 'aos-css'; css.rel = 'stylesheet'; css.href = '/vendor/aos/aos.css';
+    css.onerror = () => { css.href = 'https://unpkg.com/aos@2.3.1/dist/aos.css'; };
+    document.head.appendChild(css);
+  }
+  if (window.AOS) { checkDone(); } else {
+    const s = document.createElement('script'); s.src = '/vendor/aos/aos.js';
+    s.onload = () => { if (window.AOS) window.AOS.init({ duration: 600, once: true }); checkDone(); };
+    s.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/aos@2.3.1/dist/aos.js'; cdn.onload = () => { if (window.AOS) window.AOS.init({ duration: 600, once: true }); checkDone(); }; document.head.appendChild(cdn); };
+    document.head.appendChild(s);
+  }
+
+  // 3. SweetAlert2
+  if (window.Swal) { checkDone(); } else {
+    const s = document.createElement('script'); s.src = '/vendor/sweetalert2/sweetalert2.all.min.js';
+    s.onload = checkDone;
+    s.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11'; cdn.onload = checkDone; document.head.appendChild(cdn); };
+    document.head.appendChild(s);
+  }
+
+  // 4. GSAP
+  if (window.gsap) { checkDone(); } else {
+    const s = document.createElement('script'); s.src = '/vendor/gsap/gsap.min.js';
+    s.onload = checkDone;
+    s.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'; cdn.onload = checkDone; document.head.appendChild(cdn); };
+    document.head.appendChild(s);
+  }
+}
+
+function renderIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+  if (window.AOS && typeof window.AOS.refresh === 'function') {
+    window.AOS.refresh();
+  }
+}
+
+// ─── SweetAlert2 Helpers ───
+function showSwalToast(msg, icon = 'success') {
+  if (window.Swal) {
+    Swal.fire({
+      toast: true,
+      position: 'bottom-end',
+      icon: icon,
+      title: msg,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: '#0f172a',
+      color: '#fff'
+    });
+  } else {
+    alert(msg);
+  }
+}
+
+function showSwalConfirm(title, text, confirmButtonText, onConfirm) {
+  if (window.Swal) {
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#307fe2',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: confirmButtonText,
+      cancelButtonText: 'Batal',
+      background: '#0f172a',
+      color: '#fff'
+    }).then((result) => {
+      if (result.isConfirmed) onConfirm();
+    });
+  } else {
+    if (confirm(`${title}\n${text}`)) onConfirm();
+  }
 }
 
 // ─── Auth guard + render shell ───
@@ -176,8 +265,19 @@ function initAppShell(activePage, onSuccess, staffOnly) {
       const content = document.getElementById('appContent');
       if (content) content.style.display = 'block';
 
+      // Ensure vendor libraries are loaded & init animations
+      ensureVendorLibraries(() => {
+        renderIcons();
+        if (window.gsap && content) {
+          gsap.from('#appContent', { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' });
+        }
+      });
+
       // Run page-specific callback
-      if (onSuccess) onSuccess(user);
+      if (onSuccess) {
+        onSuccess(user);
+        setTimeout(renderIcons, 100);
+      }
     })
     .catch(() => { window.location.href = '/login.html'; });
 }
@@ -199,6 +299,7 @@ function copyToClipboard(text, btn) {
     const original = btn.innerHTML;
     btn.innerHTML = '✓ Tersalin';
     btn.classList.add('copied');
+    showSwalToast('Tersalin ke clipboard!', 'success');
     setTimeout(() => { btn.innerHTML = original; btn.classList.remove('copied'); }, 1600);
   }).catch(() => {});
 }
@@ -257,11 +358,19 @@ function initDivisionPage(items) {
 
     filtered.forEach((item, idx) => {
       const card = buildCard(item, idx);
-      card.style.animationDelay = `${idx * 0.04}s`;
-      card.style.animation = 'cardAppear 0.4s ease both';
+      card.setAttribute('data-aos', 'fade-up');
+      card.setAttribute('data-aos-delay', `${(idx % 6) * 40}`);
       grid.appendChild(card);
       attachCardEvents(card, item, idx);
     });
+
+    renderIcons();
+    if (window.gsap && filtered.length > 0) {
+      gsap.fromTo(grid.children, 
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, stagger: 0.03, duration: 0.3, ease: 'power2.out', clearProps: "opacity,transform" }
+      );
+    }
   }
 
   function buildCard(item, idx) {

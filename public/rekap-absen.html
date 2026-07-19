@@ -66,7 +66,7 @@
 .summary-card-val {
   font-size: 28px;
   font-weight: 700;
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   color: var(--text-primary);
 }
 .summary-card-label {
@@ -203,7 +203,7 @@
 @keyframes formPop { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
 .detail-photo { width: 100%; height: 200px; object-fit: cover; background: var(--bg-app); }
 .detail-body { padding: 20px; }
-.detail-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.detail-name { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .detail-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
 #detailMap { height: 160px; border-radius: 10px; overflow: hidden; }
 .detail-close {
@@ -247,7 +247,7 @@
             <option value="staff">Staff</option>
             <option value="internship">Internship</option>
           </select>
-          <button class="manage-btn" onclick="loadData()" style="padding:9px 16px;font-size:13px;">🔄 Refresh</button>
+          <button class="manage-btn" onclick="loadData()" style="padding:9px 16px;font-size:13px;"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh</button>
         </div>
 
         <!-- Summary -->
@@ -340,7 +340,7 @@ function renderList(data) {
 
     return `<div class="attendance-row" onclick="showDetail(${JSON.stringify(r).replace(/"/g,'&quot;')})">
       <div class="att-avatar">
-        ${r.photo_url && r.photo_url.startsWith('http') ? `<img src="${r.photo_url}" alt="" onerror="this.style.display='none'">` : initial}
+        ${r.user_avatar && r.user_avatar.startsWith('http') ? `<img src="${r.user_avatar}" alt="" onerror="this.style.display='none'">` : initial}
         <span class="att-avatar-badge ${r.type}">
           ${r.type === 'clock_in' ? '✓' : '✗'}
         </span>
@@ -355,7 +355,7 @@ function renderList(data) {
       <div class="att-right">
         <span class="att-time">${time}</span>
         <span class="att-type ${r.type}">${r.type === 'clock_in' ? 'Clock In' : 'Clock Out'}</span>
-        ${r.latitude ? `<a class="att-map-link" href="${mapsUrl}" target="_blank" onclick="event.stopPropagation()">🗺️ Maps</a>` : ''}
+        ${r.latitude ? `<a class="att-map-link" href="${mapsUrl}" target="_blank" onclick="event.stopPropagation()"><i data-lucide="map-pin" style="width:13px;height:13px;"></i> Maps</a>` : ''}
       </div>
       ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="att-photo" src="${r.photo_url}" alt="Selfie" onclick="event.stopPropagation();showLightbox('${r.photo_url}')">` : ''}
     </div>`;

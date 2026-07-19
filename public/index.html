@@ -6,6 +6,236 @@
 <title>Dashboard — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Pusat database operasional seluruh divisi Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
+<style>
+/* ─── Dashboard Redesign ─── */
+.dash-greeting {
+  margin-bottom: 8px;
+}
+.dash-greeting h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+.dash-greeting p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+.dash-greeting p .icon-inspire {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--blue-mid);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* ─── Stats Row ─── */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.3s, border-color 0.3s;
+  cursor: default;
+}
+.stat-card:hover { box-shadow: 0 6px 20px var(--card-shadow); transform: translateY(-2px); }
+.stat-card-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.stat-card-text b {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  font-family: 'Inter', sans-serif;
+}
+.stat-card-text span {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ─── Dashboard Card Grid ─── */
+.dash-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.22s ease;
+  cursor: pointer;
+  position: relative;
+  min-height: 170px;
+}
+.dash-card:hover {
+  border-color: var(--border-mid);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.dash-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.dash-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dash-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dash-card-actions .dot-menu {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 16px;
+  transition: background 0.15s;
+}
+.dash-card-actions .dot-menu:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.dash-card-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+.dash-card-body p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dash-card-meta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dash-card-meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dash-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.dash-card-meta-item svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.dash-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.dash-card-badge.badge-items {
+  background: rgba(48,127,226,0.08);
+  color: var(--blue-mid);
+}
+
+/* ─── Section Divider ─── */
+.dash-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin: 36px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .dash-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .dash-stats {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .dash-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-stats {
+    grid-template-columns: 1fr;
+  }
+  .dash-greeting h1 {
+    font-size: 24px;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -37,116 +267,221 @@
     <!-- Page Content -->
     <div id="appContent" class="app-content" style="display:none;">
 
-      <!-- Welcome Banner -->
-      <div style="background:linear-gradient(135deg,rgba(8,87,195,0.18),rgba(48,127,226,0.08));border:1px solid rgba(48,127,226,0.2);border-radius:18px;padding:26px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;">
-        <img src="FOTO/LOGO.png" alt="Logo" style="width:52px;height:52px;border-radius:12px;object-fit:cover;" onerror="this.style.display='none'">
-        <div>
-          <div id="welcomeMsg" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--text-primary);">Selamat Datang! 👋</div>
-          <div id="welcomeSub" style="font-size:13px;color:var(--text-secondary);margin-top:3px;">Rumah BUMN Jakarta · Database Internal Hub</div>
+      <!-- Greeting -->
+      <div class="dash-greeting">
+        <h1 id="welcomeMsg">Selamat Datang! 👋</h1>
+        <p id="welcomeSub">Pilih divisi atau fitur di bawah untuk mulai bekerja. <span class="icon-inspire">Rumah BUMN Jakarta · Internal Hub</span></p>
+      </div>
+
+      <!-- Stats Row (Database Totals) -->
+      <div class="dash-stats" id="dashboardStats" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:#EBF3FF; color:var(--blue-mid);"><i data-lucide="database"></i></div>
+          <div class="stat-card-text"><b id="statTotal">—</b><span>Total Item DB</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:#FFF7ED; color:#f59e0b;"><i data-lucide="link"></i></div>
+          <div class="stat-card-text"><b id="statLinks">—</b><span>Link Aktif</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon" style="background:#FFF3E0; color:#ef4444;"><i data-lucide="key"></i></div>
+          <div class="stat-card-text"><b id="statCreds">—</b><span>Kredensial</span></div>
         </div>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card">
-          <div class="stat-card-icon">📁</div>
-          <div class="stat-card-value" id="statTotal">—</div>
-          <div class="stat-card-label">Total Item</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">🔗</div>
-          <div class="stat-card-value" id="statLinks">—</div>
-          <div class="stat-card-label">Link Aktif</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">🔑</div>
-          <div class="stat-card-value" id="statCreds">—</div>
-          <div class="stat-card-label">Kredensial</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-icon">🏢</div>
-          <div class="stat-card-value">5</div>
-          <div class="stat-card-label">Divisi Aktif</div>
-        </div>
-      </div>
-
-      <!-- Fitur Absensi -->
-      <div class="division-section-title">📍 Absensi Digital</div>
-      <div class="division-cards-grid" style="margin-bottom: 24px;">
-        <a href="/absen.html" class="div-card" style="border-color: rgba(48,127,226,0.3); background: linear-gradient(135deg, rgba(8,87,195,0.12), rgba(48,127,226,0.05));">
-          <div class="div-card-icon" style="background: rgba(48,127,226,0.2); color: #71c5e8;">📍</div>
-          <div class="div-card-name">Absen Saya</div>
-          <div class="div-card-count">Check-in &amp; Check-out + Selfie GPS</div>
-          <div class="div-card-arrow" style="color: var(--blue-light);">Masuk Halaman Absen <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <!-- Absensi Section -->
+      <div class="dash-section-title">📍 Absensi Digital</div>
+      <div class="dash-cards-grid">
+        <a href="/absen.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(48,127,226,0.1); color: var(--blue-mid);"><i data-lucide="map-pin"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Absen Saya</h3>
+            <p>Check-in & Check-out harian dengan selfie dan lokasi GPS otomatis.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Absensi Harian
+              </div>
+            </div>
+          </div>
         </a>
-        <a href="/rekap-absen.html" class="div-card staff-only-card" id="rekapAbsenCard" style="display:none; border-color: rgba(5,150,105,0.3); background: linear-gradient(135deg, rgba(5,150,105,0.12), rgba(16,185,129,0.05));">
-          <div class="div-card-icon" style="background: rgba(5,150,105,0.2); color: #34d399;">📊</div>
-          <div class="div-card-name">Rekap Absensi (Staff)</div>
-          <div class="div-card-count">Pantau kehadiran real-time + peta</div>
-          <div class="div-card-arrow" style="color: #34d399;">Buka Rekap <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <a href="/rekap-absen.html" class="dash-card staff-only-card" id="rekapAbsenCard" style="display:none;">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(5,150,105,0.1); color: var(--green-staff);"><i data-lucide="bar-chart-3"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Rekap Absensi</h3>
+            <p>Pantau kehadiran seluruh tim secara real-time lengkap dengan peta lokasi.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Staff Only
+              </div>
+            </div>
+          </div>
         </a>
       </div>
 
-      <!-- Divisi Internship -->
-      <div class="division-section-title">🎓 Divisi Internship</div>
-      <div class="division-cards-grid">
-        <a href="/business-development.html" class="div-card">
-          <div class="div-card-icon color-bd">📊</div>
-          <div class="div-card-name">Business Development</div>
-          <div class="div-card-count" id="cnt-bd">Memuat...</div>
-          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <!-- Divisi Section -->
+      <div class="dash-section-title">🎓 Divisi Internship</div>
+      <div class="dash-cards-grid">
+        <a href="/business-development.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(48,127,226,0.1); color: var(--accent-bd);"><i data-lucide="trending-up"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Business Development</h3>
+            <p>Dokumen silabus, program BRIncubator, katalog UMKM, dan data review produk.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Divisi: Business Dev
+              </div>
+            </div>
+            <span class="dash-card-badge badge-items" id="cnt-bd">Memuat...</span>
+          </div>
         </a>
-        <a href="/sosmed.html" class="div-card">
-          <div class="div-card-icon color-sosmed">📱</div>
-          <div class="div-card-name">Social Media</div>
-          <div class="div-card-count" id="cnt-sosmed">Memuat...</div>
-          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <a href="/sosmed.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(139,92,246,0.1); color: var(--accent-sosmed);"><i data-lucide="share-2"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Social Media</h3>
+            <p>Akses akun media sosial, konten plan, dan template desain sosial media.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Divisi: Social Media
+              </div>
+            </div>
+            <span class="dash-card-badge badge-items" id="cnt-sosmed">Memuat...</span>
+          </div>
         </a>
-        <a href="/design.html" class="div-card">
-          <div class="div-card-icon color-design">🎨</div>
-          <div class="div-card-name">Design</div>
-          <div class="div-card-count" id="cnt-design">Memuat...</div>
-          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <a href="/design.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(236,72,153,0.1); color: var(--accent-design);"><i data-lucide="palette"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Design</h3>
+            <p>Workspace Canva, aset desain visual, template, dan file pendukung kreatif.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Divisi: Design
+              </div>
+            </div>
+            <span class="dash-card-badge badge-items" id="cnt-design">Memuat...</span>
+          </div>
         </a>
-        <a href="/event.html" class="div-card">
-          <div class="div-card-icon color-event">🎪</div>
-          <div class="div-card-name">Event</div>
-          <div class="div-card-count" id="cnt-event">Memuat...</div>
-          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <a href="/event.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(245,158,11,0.1); color: var(--accent-event);"><i data-lucide="calendar"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Event</h3>
+            <p>Informasi acara, jadwal kegiatan, dan dokumen perencanaan event komunitas.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Divisi: Event
+              </div>
+            </div>
+            <span class="dash-card-badge badge-items" id="cnt-event">Memuat...</span>
+          </div>
         </a>
-        <a href="/admin.html" class="div-card">
-          <div class="div-card-icon color-admin">📋</div>
-          <div class="div-card-name">Admin</div>
-          <div class="div-card-count" id="cnt-admin">Memuat...</div>
-          <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <a href="/admin.html" class="dash-card">
+          <div class="dash-card-top">
+            <div class="dash-card-avatar" style="background: rgba(5,150,105,0.1); color: var(--accent-admin);"><i data-lucide="file-text"></i></div>
+          </div>
+          <div class="dash-card-body">
+            <h3>Admin</h3>
+            <p>Dokumen administrasi, surat-menyurat, absensi, inventaris, dan data operasional.</p>
+          </div>
+          <div class="dash-card-meta">
+            <div class="dash-card-meta-left">
+              <div class="dash-card-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Divisi: Administrasi
+              </div>
+            </div>
+            <span class="dash-card-badge badge-items" id="cnt-admin">Memuat...</span>
+          </div>
         </a>
       </div>
 
       <!-- Staff-only section -->
       <div id="staffSection" style="display:none;">
-        <div class="division-section-title">👥 Staff &amp; Internal</div>
-        <div class="division-cards-grid">
-          <a href="/administrasi.html" class="div-card">
-            <div class="div-card-icon color-admin">📋</div>
-            <div class="div-card-name">Administrasi</div>
-            <div class="div-card-count" id="cnt-administrasi">Memuat...</div>
-            <div class="div-card-arrow">Buka Divisi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+        <div class="dash-section-title">👥 Staff & Internal</div>
+        <div class="dash-cards-grid">
+          <a href="/administrasi.html" class="dash-card">
+            <div class="dash-card-top">
+              <div class="dash-card-avatar" style="background: rgba(5,150,105,0.1); color: var(--accent-admin);"><i data-lucide="shield-check"></i></div>
+            </div>
+            <div class="dash-card-body">
+              <h3>Administrasi</h3>
+              <p>Dokumen internal, kebijakan, dan data administrasi khusus level staff.</p>
+            </div>
+            <div class="dash-card-meta">
+              <div class="dash-card-meta-left">
+                <div class="dash-card-meta-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Staff Only
+                </div>
+              </div>
+              <span class="dash-card-badge badge-items" id="cnt-administrasi">Memuat...</span>
+            </div>
           </a>
-          <a href="/email.html" class="div-card">
-            <div class="div-card-icon color-email">📧</div>
-            <div class="div-card-name">Akun Email</div>
-            <div class="div-card-count" id="cnt-email">Memuat...</div>
-            <div class="div-card-arrow">Buka Menu <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          <a href="/email.html" class="dash-card">
+            <div class="dash-card-top">
+              <div class="dash-card-avatar" style="background: rgba(239,68,68,0.1); color: var(--accent-email);"><i data-lucide="mail"></i></div>
+            </div>
+            <div class="dash-card-body">
+              <h3>Akun Email</h3>
+              <p>Kredensial akun email operasional untuk keperluan internal organisasi.</p>
+            </div>
+            <div class="dash-card-meta">
+              <div class="dash-card-meta-left">
+                <div class="dash-card-meta-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Staff Only
+                </div>
+              </div>
+              <span class="dash-card-badge badge-items" id="cnt-email">Memuat...</span>
+            </div>
           </a>
-          <a href="/manage.html" class="div-card">
-            <div class="div-card-icon color-bd">⚙</div>
-            <div class="div-card-name">Kelola Data</div>
-            <div class="div-card-count">Tambah, edit, hapus item</div>
-            <div class="div-card-arrow">Buka Panel <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+          <a href="/manage.html" class="dash-card">
+            <div class="dash-card-top">
+              <div class="dash-card-avatar" style="background: rgba(48,127,226,0.1); color: var(--blue-mid);"><i data-lucide="settings"></i></div>
+            </div>
+            <div class="dash-card-body">
+              <h3>Kelola Data</h3>
+              <p>Tambah, edit, hapus item database dan daftarkan akun baru untuk tim.</p>
+            </div>
+            <div class="dash-card-meta">
+              <div class="dash-card-meta-left">
+                <div class="dash-card-meta-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                  CRUD Panel
+                </div>
+              </div>
+            </div>
           </a>
         </div>
       </div>
-
 
       <footer style="margin-top:40px;">Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
     </div>
@@ -158,8 +493,15 @@
 initAppShell('dashboard', function(user) {
   // Welcome message
   const name = user.name ? user.name.split(' ')[0] : 'Pengguna';
-  document.getElementById('welcomeMsg').textContent = `Selamat Datang, ${name}! 👋`;
-  document.getElementById('welcomeSub').textContent = `Anda masuk sebagai ${user.role === 'staff' ? 'Staff' : 'Internship'} · ${user.email}`;
+  document.getElementById('welcomeMsg').textContent = `Hello, ${name}! 👋`;
+  document.getElementById('welcomeSub').innerHTML = `Anda masuk sebagai <strong>${user.role === 'staff' ? 'Staff' : 'Internship'}</strong> · ${user.email}`;
+
+  // GSAP animation for greeting & cards
+  if (window.gsap) {
+    gsap.from('#welcomeMsg', { opacity: 0, y: -20, duration: 0.6, ease: 'back.out(1.7)' });
+    gsap.from('#welcomeSub', { opacity: 0, y: 10, duration: 0.5, delay: 0.2 });
+    gsap.from('.dash-card', { opacity: 0, scale: 0.95, y: 20, stagger: 0.05, duration: 0.4, delay: 0.3, ease: 'power2.out' });
+  }
 
   // Show staff section & cards
   if (user.role === 'staff') {
@@ -174,22 +516,23 @@ initAppShell('dashboard', function(user) {
     divs.push('email');
     divs.push('administrasi');
   }
-  
+
   let totalItems = 0, totalLinks = 0, totalCreds = 0;
 
-  
   divs.forEach(div => {
     fetch(`/api/items?division=${div}`)
       .then(r => r.json())
       .then(items => {
         const el = document.getElementById(`cnt-${div}`);
-        if (el) el.textContent = `${items.length} item tersedia`;
+        if (el) el.textContent = `${items.length} item`;
         totalItems += items.length;
         totalLinks += items.filter(i => i.type === 'link').length;
         totalCreds += items.filter(i => i.type === 'cred').length;
-        animateCount(document.getElementById('statTotal'), totalItems);
-        animateCount(document.getElementById('statLinks'), totalLinks);
-        animateCount(document.getElementById('statCreds'), totalCreds);
+        
+        const setStat = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+        setStat('statTotal', totalItems);
+        setStat('statLinks', totalLinks);
+        setStat('statCreds', totalCreds);
       })
       .catch(() => {
         const el = document.getElementById(`cnt-${div}`);

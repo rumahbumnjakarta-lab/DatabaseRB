@@ -64,9 +64,7 @@ Setiap divisi memiliki kode warna aksen khas untuk border kartu dan latar ikon:
 
 ### 3. Tipografi (Fonts)
 Menggunakan Google Fonts yang di-import langsung di `style.css`:
-*   `Fraunces` (serif): Untuk heading besar (`h1`, `h2`, `h3`) agar terlihat formal & premium.
-*   `Inter` (sans-serif): Untuk teks deskripsi, tombol, menu navigasi, dan antarmuka umum (sangat terbaca).
-*   `JetBrains Mono` (monospace): Khusus teks kode, kredensial email, sandi, dan tag kategori.
+*   `Inter` (sans-serif): Digunakan untuk **seluruh** elemen teks — heading, deskripsi, tombol, navigasi, kredensial, dan antarmuka umum. Font ini dipilih karena sangat terbaca dan memberikan kesan modern serta profesional.
 
 ---
 
@@ -111,6 +109,27 @@ Data disimpan dalam format array JSON datar (flat array). Setiap item memiliki s
 *   `email`: Alamat email akun (wajib jika `type` bernilai `'cred'`).
 *   `pass`: Kata sandi akun (wajib jika `type` bernilai `'cred'`).
 *   `note`: Keterangan atau catatan tambahan mengenai item.
+
+---
+
+## 🔐 Sistem Autentikasi & Peran (Role-Based Access)
+
+Aplikasi ini memiliki sistem autentikasi dan otorisasi menggunakan **Supabase** untuk menjaga keamanan data internal:
+
+1. **Pendaftaran Akun Tertutup**: Pendaftaran akun baru **tidak dibuka untuk publik** di halaman login. Hanya pengguna dengan peran **Staff** yang dapat mendaftarkan akun untuk anggota baru melalui Dashboard Pengelola (`manage.html`) pada menu **Kelola Akun Tim**.
+2. **Penentuan Peran Otomatis (Domain `.id`)**: Peran pengguna (Intern/Staff) ditentukan secara otomatis berdasarkan domain email yang didaftarkan. Aplikasi ini mewajibkan penggunaan domain resmi:
+   *   **`@intern.rbjakarta.id`**: Otomatis mendapatkan hak akses **Internship** (hanya dapat melihat data, absen, dan mengedit profil sendiri).
+   *   **`@staff.rbjakarta.id`**: Otomatis mendapatkan hak akses **Staff** (akses penuh, dapat mengelola item operasional, melihat rekap absensi seluruh tim, dan mendaftarkan akun baru).
+
+### Contoh Akun Login (Default)
+Berikut adalah contoh kredensial bawaan yang dapat digunakan untuk masuk ke dalam sistem:
+
+*   **Akun Staff (Admin):**
+    *   **Email**: `admin@staff.rbjakarta.id`
+    *   **Password**: `password123`
+*   **Akun Internship:**
+    *   **Email**: `user@intern.rbjakarta.id`
+    *   **Password**: `password123`
 
 ---
 

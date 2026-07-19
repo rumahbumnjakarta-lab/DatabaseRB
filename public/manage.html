@@ -6,7 +6,7 @@
 <title>Kelola Data — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Dashboard admin untuk mengelola link operasional dan kredensial divisi Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 
 <style>
@@ -97,7 +97,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   margin-bottom: 6px;
 }
 .dash-header-text h1 {
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 30px;
   font-weight: 700;
   color: #fff;
@@ -179,7 +179,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
 }
 .stat-card-text span {
   font-size: 11.5px;
@@ -248,7 +248,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   flex-wrap: wrap;
 }
 .table-card-header h2 {
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 17px;
   color: var(--text-primary);
   margin: 0;
@@ -428,7 +428,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   flex-shrink: 0;
 }
 .drawer-header h3 {
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 20px;
   color: var(--text-primary);
   margin: 0;
@@ -604,7 +604,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   margin-bottom: 16px;
 }
 .modal-box h3 {
-  font-family: 'Fraunces', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 20px;
   color: var(--text-primary);
   margin: 0 0 8px;
@@ -739,6 +739,10 @@ body { background: var(--bg); color: var(--text-primary); transition: background
         <a href="#" class="tab-link" data-tab="admin" id="tab-admin" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Administrasi</a>
         <a href="#" class="tab-link" data-tab="email" id="tab-email" style="color:var(--text-secondary);font-size:13px;font-weight:600;text-decoration:none;padding:0 14px;line-height:57px;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.2s;">Akun Email</a>
       </div>
+      <button class="manage-btn" onclick="openRegisterModal()" style="flex-shrink:0;padding:8px 14px;font-size:12.5px;margin-right:8px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-mid);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Daftar Akun Baru
+      </button>
       <button class="manage-btn" id="btnOpenDrawer" onclick="openDrawer()" style="flex-shrink:0;padding:8px 14px;font-size:12.5px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Item
@@ -749,22 +753,36 @@ body { background: var(--bg); color: var(--text-primary); transition: background
     <div id="appContent" style="display:none;">
 
 
+<!-- ─── Action Banner ─── -->
+<div style="max-width: 1280px; margin: 24px auto 0; padding: 0 32px;">
+  <div style="background: var(--navy-deep); border-radius: 16px; padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <div>
+      <h3 style="color: #fff; margin: 0 0 8px; font-family: 'Inter', sans-serif; font-size: 22px;">Kelola Akun Tim</h3>
+      <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px;">Tambahkan akun baru untuk anggota Staff atau Intern agar mereka dapat masuk ke dalam sistem.</p>
+    </div>
+    <button onclick="openRegisterModal()" style="background: var(--gold); color: #0E1620; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Daftar Akun Baru
+    </button>
+  </div>
+</div>
+
 <!-- ─── Stat Cards ─── -->
 <div class="dash-stats" id="dashStats">
   <div class="stat-card">
-    <div class="stat-card-icon" style="background:#EBF3FF;">📋</div>
+    <div class="stat-card-icon" style="background:#EBF3FF; color:var(--blue-mid);"><i data-lucide="layers"></i></div>
     <div class="stat-card-text"><b id="statTotal">–</b><span>Total Item</span></div>
   </div>
   <div class="stat-card">
-    <div class="stat-card-icon" style="background:#F0FDF4;">🏷</div>
+    <div class="stat-card-icon" style="background:#F0FDF4; color:var(--green-staff);"><i data-lucide="tag"></i></div>
     <div class="stat-card-text"><b id="statCat">–</b><span>Kategori</span></div>
   </div>
   <div class="stat-card">
-    <div class="stat-card-icon" style="background:#FFF7ED;">🔗</div>
+    <div class="stat-card-icon" style="background:#FFF7ED; color:#f59e0b;"><i data-lucide="link"></i></div>
     <div class="stat-card-text"><b id="statLinks">–</b><span>Link</span></div>
   </div>
   <div class="stat-card">
-    <div class="stat-card-icon" style="background:#FFF3E0;">🔑</div>
+    <div class="stat-card-icon" style="background:#FFF3E0; color:#ef4444;"><i data-lucide="key"></i></div>
     <div class="stat-card-text"><b id="statCreds">–</b><span>Kredensial</span></div>
   </div>
 </div>
@@ -774,7 +792,8 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 
   <!-- Division Pills -->
   <div class="div-selector" id="divSelector">
-    <div class="div-pill active" data-tab="bd" onclick="switchDivision('bd', this)"><span class="pill-dot"></span> Business Dev</div>
+    <div class="div-pill active" data-tab="all" onclick="switchDivision('all', this)"><span class="pill-dot"></span> Semua Divisi</div>
+    <div class="div-pill" data-tab="bd" onclick="switchDivision('bd', this)"><span class="pill-dot"></span> Business Dev</div>
     <div class="div-pill" data-tab="sosmed" onclick="switchDivision('sosmed', this)"><span class="pill-dot"></span> Sosmed</div>
     <div class="div-pill" data-tab="design" onclick="switchDivision('design', this)"><span class="pill-dot"></span> Design</div>
     <div class="div-pill" data-tab="event" onclick="switchDivision('event', this)"><span class="pill-dot"></span> Event</div>
@@ -785,7 +804,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   <!-- Data Table Card -->
   <div class="table-card">
     <div class="table-card-header">
-      <h2 id="tableTitle">Business Development</h2>
+      <h2 id="tableTitle">Semua Divisi</h2>
       <span class="table-count-badge" id="tableCount">0 item</span>
       <div class="table-search-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -919,6 +938,32 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   </div>
 </div>
 
+<!-- ─── Register Modal ─── -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal-box" style="max-width: 450px;">
+    <h3>Daftar Akun Baru</h3>
+    <p style="margin-bottom: 20px;">Gunakan email <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong>.</p>
+    <form id="manageRegisterForm" onsubmit="handleManageRegister(event)">
+      <div class="form-field">
+        <label for="manageRegName">Nama Lengkap</label>
+        <input type="text" id="manageRegName" placeholder="Contoh: John Doe" required>
+      </div>
+      <div class="form-field">
+        <label for="manageRegEmail">Email Perusahaan</label>
+        <input type="email" id="manageRegEmail" placeholder="nama@staff.rbjakarta.id" required>
+      </div>
+      <div class="form-field">
+        <label for="manageRegPassword">Kata Sandi Baru</label>
+        <input type="password" id="manageRegPassword" placeholder="Minimal 6 karakter" required minlength="6">
+      </div>
+      <div class="modal-actions" style="margin-top: 24px;">
+        <button type="button" class="btn-modal-cancel" onclick="closeRegisterModal()">Batal</button>
+        <button type="submit" class="btn-drawer-save" id="btnManageReg">Buat Akun</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ─── Toast Container ─── -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -927,10 +972,11 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 <script>
 // ─── State ───
 let allItems = [];
-let activeDivision = 'bd';
+let activeDivision = 'all';
 let deleteTargetId = null;
 
 const divNames = {
+  all: 'Semua Divisi',
   bd: 'Business Development',
   sosmed: 'Social Media',
   design: 'Design',
@@ -992,7 +1038,7 @@ function switchDivision(div, pillEl) {
 
 // ─── Render Stats ───
 function renderStats() {
-  const items = allItems.filter(i => i.division === activeDivision);
+  const items = activeDivision === 'all' ? allItems : allItems.filter(i => i.division === activeDivision);
   const cats = new Set(items.map(i => i.cat));
   const links = items.filter(i => i.type === 'link').length;
   const creds = items.filter(i => i.type === 'cred').length;
@@ -1032,7 +1078,7 @@ function showSkeleton() {
 function renderTable() {
   const query = (document.getElementById('tableSearch').value || '').trim().toLowerCase();
   const items = allItems
-    .filter(i => i.division === activeDivision)
+    .filter(i => activeDivision === 'all' || i.division === activeDivision)
     .filter(i => {
       const hay = [i.title, i.cat, i.note || '', i.email || '', i.url || ''].join(' ').toLowerCase();
       return hay.includes(query);
@@ -1079,7 +1125,7 @@ function renderTable() {
 
 // ─── Update datalist suggestions ───
 function updateSuggestions() {
-  const items = allItems.filter(i => i.division === activeDivision);
+  const items = activeDivision === 'all' ? allItems : allItems.filter(i => i.division === activeDivision);
   const cats = [...new Set(items.map(i => i.cat))];
   const dl = document.getElementById('categorySuggestions');
   dl.innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('');
@@ -1097,7 +1143,7 @@ function setType(type) {
 // ─── Drawer ───
 function openDrawer(prefillDiv) {
   if (prefillDiv) document.getElementById('itemDivision').value = prefillDiv;
-  else document.getElementById('itemDivision').value = activeDivision;
+  else document.getElementById('itemDivision').value = activeDivision === 'all' ? 'bd' : activeDivision;
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawerTitle').textContent = 'Tambah Item Baru';
   document.getElementById('btnSaveLabel').textContent = '💾 Simpan Item';
@@ -1184,45 +1230,79 @@ function resetForm() {
 
 // ─── Delete ───
 function openDeleteModal(id, title) {
-  deleteTargetId = id;
-  document.getElementById('deleteItemName').textContent = '"' + title + '"';
-  document.getElementById('deleteModal').classList.add('open');
+  showSwalConfirm(
+    'Hapus Item?',
+    `Apakah Anda yakin ingin menghapus "${title}"? Data yang dihapus tidak dapat dikembalikan.`,
+    'Ya, Hapus',
+    () => {
+      fetch(`/api/items/${id}`, { method: 'DELETE' })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(() => {
+          showToast('Item berhasil dihapus!');
+          fetchData();
+        })
+        .catch(() => {
+          showToast('Gagal menghapus item.', true);
+        });
+    }
+  );
 }
 
 function closeDeleteModal() {
-  document.getElementById('deleteModal').classList.remove('open');
   deleteTargetId = null;
 }
 
 function confirmDelete() {
-  if (!deleteTargetId) return;
-  const btn = document.getElementById('btnConfirmDelete');
-  btn.textContent = 'Menghapus...';
-  btn.disabled = true;
+  // handled via SweetAlert2
+}
 
-  fetch(`/api/items/${deleteTargetId}`, { method: 'DELETE' })
-    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-    .then(() => {
-      showToast('Item berhasil dihapus!');
-      closeDeleteModal();
-      fetchData();
-    })
-    .catch(() => showToast('Gagal menghapus item!', true))
-    .finally(() => { btn.textContent = 'Ya, Hapus'; btn.disabled = false; });
+// ─── Register ───
+function openRegisterModal() {
+  document.getElementById('manageRegisterForm').reset();
+  document.getElementById('registerModal').classList.add('open');
+}
+
+function closeRegisterModal() {
+  document.getElementById('registerModal').classList.remove('open');
+}
+
+async function handleManageRegister(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnManageReg');
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+
+  const name = document.getElementById('manageRegName').value.trim();
+  const email = document.getElementById('manageRegEmail').value.trim();
+  const password = document.getElementById('manageRegPassword').value;
+
+  try {
+    const res = await fetch('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    
+    let data;
+    try { data = await res.json(); } catch(_) { data = {}; }
+    
+    if (!res.ok) {
+      showToast(data.error || 'Gagal mendaftar', true);
+    } else {
+      showToast('Akun berhasil dibuat!');
+      closeRegisterModal();
+    }
+  } catch (err) {
+    showToast('Koneksi terputus. Coba lagi.', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Buat Akun';
+  }
 }
 
 // ─── Toast ───
 function showToast(msg, isError = false) {
-  const container = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast' + (isError ? ' error' : '');
-  t.innerHTML = `<div class="toast-icon">${isError ? '✕' : '✓'}</div><span>${msg}</span>`;
-  container.appendChild(t);
-  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
-  setTimeout(() => {
-    t.classList.remove('show');
-    setTimeout(() => t.remove(), 400);
-  }, 3200);
+  showSwalToast(msg, isError ? 'error' : 'success');
 }
 
 // ─── Helpers ───

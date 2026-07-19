@@ -97,7 +97,7 @@ function requireStaff(req, res, next) {
 
 // ─── Auth API Routes ─────────────────────────────────────────────────────────
 
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', requireAuth, requireStaff, async (req, res) => {
   const { email, name, password } = req.body;
   const cleanName = (name || '').trim();
 
@@ -113,12 +113,12 @@ app.post('/auth/register', async (req, res) => {
   let role = '';
 
   // Penentuan Role otomatis berdasarkan domain
-  if (cleanEmail.endsWith('@intern.rbjakarta.com')) {
+  if (cleanEmail.endsWith('@intern.rbjakarta.id')) {
     role = 'internship';
-  } else if (cleanEmail.endsWith('@staff.rbjakarta.com')) {
+  } else if (cleanEmail.endsWith('@staff.rbjakarta.id')) {
     role = 'staff';
   } else {
-    return res.status(400).json({ error: 'Domain email tidak valid. Gunakan email @intern.rbjakarta.com atau @staff.rbjakarta.com.' });
+    return res.status(400).json({ error: 'Domain email tidak valid. Gunakan email @intern.rbjakarta.id atau @staff.rbjakarta.id.' });
   }
 
   try {
@@ -288,6 +288,10 @@ app.post('/api/user/profile', requireAuth, async (req, res) => {
 
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
+app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/lucide/dist/umd')));
+app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist')));
+app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules/sweetalert2/dist')));
+app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Protected HTML Pages ─────────────────────────────────────────────────────
@@ -448,6 +452,27 @@ app.post('/api/absen', requireAuth, async (req, res) => {
   }
 });
 
+async function attachUserAvatars(attendanceRecords) {
+  if (!attendanceRecords || !attendanceRecords.length) return attendanceRecords;
+  try {
+    const userIds = [...new Set(attendanceRecords.map(r => r.user_id).filter(Boolean))];
+    if (userIds.length > 0) {
+      const { data: users } = await supabase.from('users').select('id, avatar_url').in('id', userIds);
+      if (users && users.length) {
+        const avatarMap = {};
+        users.forEach(u => { if (u.avatar_url) avatarMap[u.id] = u.avatar_url; });
+        return attendanceRecords.map(r => ({
+          ...r,
+          user_avatar: avatarMap[r.user_id] || r.user_avatar || null
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn('Could not attach user avatars:', e.message);
+  }
+  return attendanceRecords;
+}
+
 // GET /api/absen/today — Absensi hari ini (realtime)
 app.get('/api/absen/today', requireAuth, async (req, res) => {
   const today = new Date();
@@ -469,7 +494,8 @@ app.get('/api/absen/today', requireAuth, async (req, res) => {
 
     const { data, error } = await query;
     if (error) throw error;
-    res.json(data || []);
+    const enrichedData = await attachUserAvatars(data || []);
+    res.json(enrichedData);
   } catch (err) {
     console.error('Error fetching today absen:', err);
     res.status(500).json({ error: 'Gagal mengambil data absensi.' });
@@ -493,7 +519,8 @@ app.get('/api/absen', requireAuth, requireStaff, async (req, res) => {
 
     const { data, error } = await query.limit(200);
     if (error) throw error;
-    res.json(data || []);
+    const enrichedData = await attachUserAvatars(data || []);
+    res.json(enrichedData);
   } catch (err) {
     console.error('Error fetching absen:', err);
     res.status(500).json({ error: 'Gagal mengambil data absensi.' });

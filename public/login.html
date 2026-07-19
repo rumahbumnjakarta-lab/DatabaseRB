@@ -6,7 +6,7 @@
 <title>Login — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Masuk ke Database Operational Hub Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -120,7 +120,7 @@
   @keyframes blink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(0.7);} }
 
   h1 {
-    font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700;
+    font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 700;
     color: #fff; margin-bottom: 8px; line-height: 1.2; text-align: center;
   }
   .subtitle {
@@ -208,7 +208,7 @@
   </div>
 
   <h1>Database Hub</h1>
-  <p class="subtitle">Sistem database operasional internal. Gunakan email domain <strong>@intern.rbjakarta.com</strong> atau <strong>@staff.rbjakarta.com</strong> untuk masuk.</p>
+  <p class="subtitle">Sistem database operasional internal. Gunakan email domain <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong> untuk masuk.</p>
 
   <!-- Notifikasi -->
   <div class="notif-box" id="notifBox">
@@ -219,14 +219,13 @@
   <!-- Tabs -->
   <div class="auth-tabs">
     <div class="auth-tab active" onclick="switchTab('login')">Masuk</div>
-    <div class="auth-tab" onclick="switchTab('register')">Daftar Baru</div>
   </div>
 
   <!-- Form Login -->
   <form id="loginForm" class="auth-form active">
     <div class="input-group">
       <label for="loginEmail">Email Perusahaan</label>
-      <input type="email" id="loginEmail" placeholder="nama@staff.rbjakarta.com" required>
+      <input type="email" id="loginEmail" placeholder="nama@staff.rbjakarta.id" required>
     </div>
     <div class="input-group">
       <label for="loginPassword">Kata Sandi</label>
@@ -235,22 +234,7 @@
     <button type="submit" class="btn-submit" id="btnLoginBtn">Masuk ke Sistem</button>
   </form>
 
-  <!-- Form Register -->
-  <form id="registerForm" class="auth-form">
-    <div class="input-group">
-      <label for="regName">Nama Lengkap</label>
-      <input type="text" id="regName" placeholder="Contoh: John Doe" required>
-    </div>
-    <div class="input-group">
-      <label for="regEmail">Email Perusahaan</label>
-      <input type="email" id="regEmail" placeholder="nama@intern.rbjakarta.com" required>
-    </div>
-    <div class="input-group">
-      <label for="regPassword">Kata Sandi Baru</label>
-      <input type="password" id="regPassword" placeholder="Minimal 6 karakter" required minlength="6">
-    </div>
-    <button type="submit" class="btn-submit" id="btnRegBtn">Buat Akun</button>
-  </form>
+
 
   <p class="login-note">
     Akses dan peran Anda (Internship atau Staff) akan ditentukan <strong>otomatis</strong> berdasarkan domain email yang digunakan.
@@ -280,15 +264,12 @@
     if(tab === 'login') {
       document.querySelector('.auth-tabs div:nth-child(1)').classList.add('active');
       document.getElementById('loginForm').classList.add('active');
-    } else {
-      document.querySelector('.auth-tabs div:nth-child(2)').classList.add('active');
-      document.getElementById('registerForm').classList.add('active');
     }
   }
 
   function isValidCompanyEmail(email) {
     const clean = email.toLowerCase().trim();
-    return clean.endsWith('@intern.rbjakarta.com') || clean.endsWith('@staff.rbjakarta.com');
+    return clean.endsWith('@intern.rbjakarta.id') || clean.endsWith('@staff.rbjakarta.id');
   }
 
   function showNotif(msg, type) {
@@ -334,70 +315,26 @@
     }
   });
 
-  // Handle Register
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideNotif();
-    const btn = document.getElementById('btnRegBtn');
-    btn.disabled = true;
-    btn.textContent = 'Memproses...';
 
-    const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value;
-
-    if (!name) {
-      showNotif('Nama lengkap wajib diisi.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Buat Akun';
-      return;
-    }
-
-    if (!isValidCompanyEmail(email)) {
-      showNotif('Email harus berakhiran @intern.rbjakarta.com atau @staff.rbjakarta.com.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Buat Akun';
-      return;
-    }
-
-    if (password.length < 6) {
-      showNotif('Kata sandi minimal 6 karakter.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Buat Akun';
-      return;
-    }
-
-    try {
-      const res = await fetch('/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
-      let data = {};
-      try {
-        data = await res.json();
-      } catch (_) {
-        throw new Error('invalid_json');
-      }
-      
-      if (!res.ok) {
-        showNotif(data.error || 'Gagal mendaftar.', 'error');
-        btn.disabled = false;
-        btn.textContent = 'Buat Akun';
-      } else {
-        showNotif(data.message + ' Silakan login.', 'success');
-        document.getElementById('registerForm').reset();
-        setTimeout(() => switchTab('login'), 2000);
-      }
-    } catch (err) {
-      showNotif(err.message === 'invalid_json'
-        ? 'Server tidak merespons dengan benar. Pastikan server sudah dijalankan ulang.'
-        : 'Koneksi terputus. Coba lagi.', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Buat Akun';
-    }
-  });
 </script>
-
+<script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+  function showNotif(msg, type = 'error') {
+    if (window.Swal) {
+      Swal.fire({
+        icon: type === 'error' ? 'error' : 'success',
+        title: type === 'error' ? 'Gagal Masuk' : 'Berhasil',
+        text: msg,
+        background: '#0c1421',
+        color: '#fff',
+        confirmButtonColor: '#307fe2'
+      });
+    } else {
+      const box = document.getElementById('notifBox');
+      box.textContent = msg;
+      box.className = `notif-box show ${type}`;
+    }
+  }
+</script>
 </body>
 </html>
