@@ -7,7 +7,7 @@
 <meta name="description" content="Dashboard admin untuk mengelola link operasional dan kredensial divisi Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2">
 
 <style>
 /* =============================================
@@ -1146,13 +1146,13 @@ function renderTable() {
   empty.style.display = 'none';
 
   tbody.innerHTML = items.map(item => {
-    const isLink = item.type === 'link';
-    const subHtml = isLink
-      ? `<div class="item-sub"><a href="${item.url}" target="_blank" title="${item.url}">${truncate(item.url, 55)}</a></div>`
-      : `<div class="item-sub">✉ ${item.email || '—'} &nbsp;·&nbsp; 🔐 ${item.pass || '—'}</div>`;
-    const noteHtml = item.note ? `<div class="item-note">${item.note}</div>` : '';
-    const typeBadge = isLink
-      ? `<span class="type-badge link">🔗 Link</span>`
+    let noteHtml = item.note 
+      ? `<div class="item-note">${escHtml(item.note)}</div>` 
+      : '';
+      
+    // Tipe
+    const typeBadge = item.type === 'link' 
+      ? `<span class="type-badge link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link</span>` 
       : `<span class="type-badge cred">🔑 Kredensial</span>`;
 
     return `
@@ -1160,7 +1160,6 @@ function renderTable() {
         <div class="col-cat"><span class="cat-pill">${escHtml(item.cat)}</span></div>
         <div class="col-title">
           <div class="item-title">${escHtml(item.title)}</div>
-          ${subHtml}
           ${noteHtml}
         </div>
         <div class="col-type">${typeBadge}</div>
