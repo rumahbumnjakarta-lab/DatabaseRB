@@ -1,7 +1,7 @@
 require('dotenv').config({ override: true });
 const express = require('express');
 const path = require('path');
-const session = require('express-session');
+const session = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -66,16 +66,11 @@ async function verifySupabaseConnection() {
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Session
+// Session (Stateless Cookie-based Session for Serverless / Vercel compatibility)
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'rumahbumn-super-secret-session-key-2024',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 hari
-    httpOnly: true,
-    sameSite: 'lax'
-  }
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || 'rumahbumn-super-secret-session-key-2024'],
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 hari
 }));
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
@@ -202,9 +197,8 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.get('/auth/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/login.html');
-  });
+  req.session = null;
+  res.redirect('/login.html');
 });
 
 // ─── API: Cek session user saat ini ──────────────────────────────────────────
