@@ -979,7 +979,21 @@ var divNames = {
 };
 
 // ─── Init (called by initAppShell after auth) ───
-function initManagePage() {
+function initManagePage(user) {
+  if (user && user.role !== 'staff') {
+    // Hide/remove staff only pills in sidebar/selector
+    const adminPill = document.querySelector('.div-pill[data-tab="administrasi"]');
+    if (adminPill) adminPill.remove();
+    const emailPill = document.querySelector('.div-pill[data-tab="email"]');
+    if (emailPill) emailPill.remove();
+
+    // Hide options in add/edit select dropdown
+    const optionAdmin = document.querySelector('#itemDivision option[value="administrasi"]');
+    if (optionAdmin) optionAdmin.remove();
+    const optionEmail = document.querySelector('#itemDivision option[value="email"]');
+    if (optionEmail) optionEmail.remove();
+  }
+
   fetchData();
   // Sync topbar tabs
   document.querySelectorAll('.tab-link').forEach(tab => {
@@ -996,6 +1010,10 @@ function fetchData() {
   fetch('/api/items')
     .then(r => r.json())
     .then(data => {
+      // Filter out staff-only divisions if intern
+      if (window.currentUserCache && window.currentUserCache.role !== 'staff') {
+        data = data.filter(i => i.division !== 'administrasi' && i.division !== 'email');
+      }
       allItems = data;
       renderStats();
       renderTable();
@@ -1314,14 +1332,14 @@ function truncate(s, n) {
 
 <script src="shared.js"></script>
 <script>
-// ─── Staff-only Auth Guard via shared.js ───
+// ─── Staff & Intern Auth Guard via shared.js ───
 initAppShell('manage', function(user) {
   // Show content
   const appContent = document.getElementById('appContent');
   if (appContent) appContent.style.display = 'block';
   // Init the manage page (tabs, data, etc.)
-  initManagePage();
-}, true); // true = staffOnly
+  initManagePage(user);
+}, false); // false = staffOnly
 </script>
 </main>
 </div><!-- .app-shell -->

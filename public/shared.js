@@ -23,7 +23,7 @@ function buildSidebar(user, activePage) {
     { divider: true, label: 'Staff Only', staffOnly: true },
     { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
-    { href: '#', icon: 'settings', label: 'Kelola', key: 'manage', staffOnly: true, onclick: 'openManagePopup(event)' },
+    { href: isStaff ? '#' : '/manage.html', icon: 'settings', label: 'Kelola', key: 'manage', onclick: isStaff ? 'openManagePopup(event)' : null },
   ];
 
   let navHTML = '';

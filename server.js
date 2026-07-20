@@ -382,10 +382,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 // ─── Protected HTML Pages ─────────────────────────────────────────────────────
-app.get('/manage', requireAuth, requireStaff, (req, res) => {
+app.get('/manage', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'manage.html'));
 });
-app.get('/manage.html', requireAuth, requireStaff, (req, res) => {
+app.get('/manage.html', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'manage.html'));
 });
 app.get('/manage-users', requireAuth, requireStaff, (req, res) => {
@@ -428,12 +428,20 @@ app.get('/api/items/:id', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/items — Hanya Staff
-app.post('/api/items', requireAuth, requireStaff, async (req, res) => {
+// POST /api/items — Hanya Staff (atau Intern untuk divisi non-staff)
+app.post('/api/items', requireAuth, async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
   if (!division || !cat || !title || !type) {
     return res.status(400).json({ error: 'Missing required fields (division, cat, title, type)' });
   }
+
+  // Check permission: Interns can't write to administrasi/email
+  const isStaff = req.session.user.role === 'staff';
+  const staffOnlyDivisions = ['administrasi', 'email'];
+  if (!isStaff && staffOnlyDivisions.includes(division)) {
+    return res.status(403).json({ error: 'Forbidden: Intern tidak bisa mengelola divisi ini' });
+  }
+
   const newItem = { division, cat, title, type, note: note || '' };
   if (type === 'link') { newItem.url = url || '#'; newItem.email = null; newItem.pass = null; }
   else if (type === 'cred') { newItem.email = email || ''; newItem.pass = pass || ''; newItem.url = null; }
@@ -447,14 +455,28 @@ app.post('/api/items', requireAuth, requireStaff, async (req, res) => {
   }
 });
 
-// PUT /api/items/:id — Hanya Staff
-app.put('/api/items/:id', requireAuth, requireStaff, async (req, res) => {
+// PUT /api/items/:id — Hanya Staff (atau Intern untuk divisi non-staff)
+app.put('/api/items/:id', requireAuth, async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
   const { id } = req.params;
+  const isStaff = req.session.user.role === 'staff';
+  const staffOnlyDivisions = ['administrasi', 'email'];
+
   try {
     const { data: currentItem, error: getError } = await supabase
       .from('items').select('*').eq('id', id).single();
     if (getError || !currentItem) return res.status(404).json({ error: 'Item tidak ditemukan' });
+
+    // Check permission for current item division
+    if (!isStaff && staffOnlyDivisions.includes(currentItem.division)) {
+      return res.status(403).json({ error: 'Forbidden: Intern tidak bisa mengubah item divisi ini' });
+    }
+
+    // Check permission for target division
+    if (division && !isStaff && staffOnlyDivisions.includes(division)) {
+      return res.status(403).json({ error: 'Forbidden: Intern tidak bisa mengubah item ke divisi ini' });
+    }
+
     const updates = {};
     if (division) updates.division = division;
     if (cat) updates.cat = cat;
@@ -473,10 +495,21 @@ app.put('/api/items/:id', requireAuth, requireStaff, async (req, res) => {
   }
 });
 
-// DELETE /api/items/:id — Hanya Staff
-app.delete('/api/items/:id', requireAuth, requireStaff, async (req, res) => {
+// DELETE /api/items/:id — Hanya Staff (atau Intern untuk divisi non-staff)
+app.delete('/api/items/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
+  const isStaff = req.session.user.role === 'staff';
+  const staffOnlyDivisions = ['administrasi', 'email'];
   try {
+    const { data: currentItem, error: getError } = await supabase
+      .from('items').select('*').eq('id', id).single();
+    if (getError || !currentItem) return res.status(404).json({ error: 'Item tidak ditemukan' });
+
+    // Check permission for existing item division
+    if (!isStaff && staffOnlyDivisions.includes(currentItem.division)) {
+      return res.status(403).json({ error: 'Forbidden: Intern tidak bisa menghapus item divisi ini' });
+    }
+
     const { error } = await supabase.from('items').delete().eq('id', id);
     if (error) throw error;
     res.json({ message: 'Item deleted successfully' });
