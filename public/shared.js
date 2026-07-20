@@ -21,9 +21,9 @@ function buildSidebar(user, activePage) {
     { href: '/sosmed.html', icon: 'share-2', label: 'Social Media', key: 'sosmed' },
     { href: '/design.html', icon: 'palette', label: 'Design', key: 'design' },
     { href: '/event.html', icon: 'calendar', label: 'Event', key: 'event' },
-    { href: '/admin.html', icon: 'file-text', label: 'Admin', key: 'admin', internOnly: true },
-    { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
+    { href: '/admin.html', icon: 'file-text', label: 'Admin', key: 'admin' },
     { divider: true, label: 'Staff Only', staffOnly: true },
+    { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
     { href: '/manage.html', icon: 'settings', label: 'Kelola Data', key: 'manage', staffOnly: true },
   ];
