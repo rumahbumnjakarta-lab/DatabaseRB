@@ -712,9 +712,6 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   .table-search-wrap { width: 100%; }
   .drawer { width: 100%; max-width: 100%; }
   
-  /* Hide Topbar action buttons on mobile to save space */
-  .app-topbar .manage-btn { display: none !important; }
-
   /* Grid adjustments for mobile */
   .item-grid {
     grid-template-columns: 1fr;
@@ -743,15 +740,16 @@ body { background: var(--bg); color: var(--text-primary); transition: background
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div style="flex:1;"></div>
-      <button class="manage-btn" onclick="openRegisterModal()" style="flex-shrink:0;padding:8px 14px;font-size:12.5px;margin-right:8px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-mid);">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Daftar Akun Baru
-      </button>
-      <button class="manage-btn" id="btnOpenDrawer" onclick="openDrawer()" style="flex-shrink:0;padding:8px 14px;font-size:12.5px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Tambah Item
-      </button>
+      <div style="display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;margin-left:4px;">
+        <button class="manage-btn" onclick="openRegisterModal()" style="flex-shrink:0;padding:8px 12px;font-size:12px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-mid);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Daftar Akun Baru
+        </button>
+        <button class="manage-btn" id="btnOpenDrawer" onclick="openDrawer()" style="flex-shrink:0;padding:8px 12px;font-size:12px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Item
+        </button>
+      </div>
     </div>
 
     <!-- Page content -->
