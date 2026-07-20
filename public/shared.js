@@ -24,8 +24,7 @@ function buildSidebar(user, activePage) {
     { divider: true, label: 'Staff Only', staffOnly: true },
     { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
-    { href: '/manage.html', icon: 'settings', label: 'Kelola Data', key: 'manage', staffOnly: true },
-    { href: '/manage-users.html', icon: 'users', label: 'Kelola Akun', key: 'manage-users', staffOnly: true },
+    { href: '#', icon: 'settings', label: 'Kelola', key: 'manage', staffOnly: true, onclick: 'openManagePopup(event)' },
   ];
 
   let navHTML = '';
@@ -37,9 +36,10 @@ function buildSidebar(user, activePage) {
     }
     if (item.staffOnly && !isStaff) return;
     if (item.internOnly && isStaff) return;
-    const isActive = item.key === activePage ? ' active' : '';
+    const isActive = (item.key === activePage || (item.key === 'manage' && (activePage === 'manage' || activePage === 'manage-users'))) ? ' active' : '';
+    const onclickAttr = item.onclick ? `onclick="${item.onclick}"` : '';
     navHTML += `
-      <a href="${item.href}" class="sidebar-link${isActive}">
+      <a href="${item.href}" ${onclickAttr} class="sidebar-link${isActive}">
         <span class="sidebar-icon"><i data-lucide="${item.icon}" style="width:17px;height:17px;"></i></span>
         ${item.label}
       </a>`;
@@ -315,6 +315,83 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
   if (content) {
     content.style.display = 'block';
     content.classList.add('fade-in-pjax');
+  }
+
+  // Inject global manage popup overlay
+  if (!document.getElementById('managePopupOverlay')) {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .manage-popup-overlay {
+        position: fixed; inset: 0; background: rgba(10,22,32,0.6); backdrop-filter: blur(4px); z-index: 1600;
+        opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
+        transition: opacity 0.3s ease;
+      }
+      .manage-popup-overlay.open { opacity: 1; pointer-events: auto; }
+      .manage-popup-box {
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+        width: 90%; max-width: 520px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        transform: translateY(20px); transition: transform 0.3s ease;
+      }
+      .manage-popup-overlay.open .manage-popup-box { transform: translateY(0); }
+      .manage-popup-box h3 { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px; }
+      .manage-popup-box p { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 24px; }
+      .manage-popup-options { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+      .manage-popup-card {
+        display: flex; align-items: center; gap: 16px; padding: 18px;
+        background: var(--bg-surface); border: 1.5px solid var(--border-mid); border-radius: 16px;
+        text-decoration: none; text-align: left; transition: all 0.2s ease;
+      }
+      .manage-popup-card:hover {
+        transform: translateY(-2px); border-color: var(--blue-mid); background: var(--bg-card);
+        box-shadow: 0 8px 24px rgba(48,127,226,0.08);
+      }
+      .manage-popup-icon {
+        width: 46px; height: 46px; border-radius: 12px; background: rgba(48,127,226,0.1);
+        display: flex; align-items: center; justify-content: center; color: var(--blue-mid);
+        flex-shrink: 0; font-size: 20px;
+      }
+      .manage-popup-info { flex: 1; min-width: 0; }
+      .manage-popup-info h4 { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px; }
+      .manage-popup-info p { font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.4; }
+      .manage-popup-close-btn {
+        width: 100%; padding: 12px; background: var(--bg-app); border: 1px solid var(--border-mid);
+        color: var(--text-secondary); border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      }
+      .manage-popup-close-btn:hover { background: var(--border); color: var(--text-primary); }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'managePopupOverlay';
+    overlay.className = 'manage-popup-overlay';
+    overlay.onclick = function(e) { if (e.target === overlay) closeManagePopup(); };
+    overlay.innerHTML = `
+      <div class="manage-popup-box">
+        <h3>Pilih Manajemen</h3>
+        <p>Silakan pilih kategori data yang ingin dikelola:</p>
+        
+        <div class="manage-popup-options">
+          <a href="/manage.html" class="manage-popup-card">
+            <div class="manage-popup-icon"><i data-lucide="database"></i></div>
+            <div class="manage-popup-info">
+              <h4>Kelola Data</h4>
+              <p>Manfaatkan pengaturan database divisi, link, berkas, dan kredensial.</p>
+            </div>
+          </a>
+
+          <a href="/manage-users.html" class="manage-popup-card">
+            <div class="manage-popup-icon"><i data-lucide="users"></i></div>
+            <div class="manage-popup-info">
+              <h4>Kelola Akun</h4>
+              <p>Atur pendaftaran akun baru, detail profil staff/intern, dan hapus akun.</p>
+            </div>
+          </a>
+        </div>
+
+        <button class="manage-popup-close-btn" onclick="closeManagePopup()">Batal</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
   }
 
   // Inject global profile settings drawer
@@ -703,4 +780,17 @@ async function saveDrawerProfile() {
     btn.disabled = false;
     btn.textContent = '💾 Simpan';
   }
+}
+
+function openManagePopup(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  document.getElementById('managePopupOverlay').classList.add('open');
+  renderIcons();
+}
+
+function closeManagePopup() {
+  document.getElementById('managePopupOverlay').classList.remove('open');
 }
