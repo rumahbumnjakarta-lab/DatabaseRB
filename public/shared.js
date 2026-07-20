@@ -14,7 +14,6 @@ function buildSidebar(user, activePage) {
     { href: '/index.html', icon: 'layout-dashboard', label: 'Dashboard', key: 'dashboard' },
     { divider: true, label: 'Absensi' },
     { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya', key: 'absen' },
-    { href: '/rekap-absen.html', icon: 'bar-chart-3', label: 'Rekap Absen', key: 'rekap-absen', staffOnly: true },
     { divider: true, label: 'Divisi' },
     { href: '/business-development.html', icon: 'trending-up', label: 'Business Dev', key: 'bd' },
     { href: '/sosmed.html', icon: 'share-2', label: 'Social Media', key: 'sosmed' },
@@ -36,7 +35,7 @@ function buildSidebar(user, activePage) {
     }
     if (item.staffOnly && !isStaff) return;
     if (item.internOnly && isStaff) return;
-    const isActive = (item.key === activePage || (item.key === 'manage' && (activePage === 'manage' || activePage === 'manage-users'))) ? ' active' : '';
+    const isActive = (item.key === activePage || (item.key === 'manage' && (activePage === 'manage' || activePage === 'manage-users' || activePage === 'rekap-absen'))) ? ' active' : '';
     const onclickAttr = item.onclick ? `onclick="${item.onclick}"` : '';
     navHTML += `
       <a href="${item.href}" ${onclickAttr} class="sidebar-link${isActive}">
@@ -384,6 +383,14 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
             <div class="manage-popup-info">
               <h4>Kelola Akun</h4>
               <p>Atur pendaftaran akun baru, detail profil staff/intern, dan hapus akun.</p>
+            </div>
+          </a>
+
+          <a href="/rekap-absen.html" class="manage-popup-card">
+            <div class="manage-popup-icon"><i data-lucide="bar-chart-3"></i></div>
+            <div class="manage-popup-info">
+              <h4>Rekap Absensi</h4>
+              <p>Lihat dan pantau riwayat kehadiran serta koordinat GPS seluruh tim.</p>
             </div>
           </a>
         </div>
