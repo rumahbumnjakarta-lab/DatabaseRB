@@ -15,7 +15,6 @@ function buildSidebar(user, activePage) {
     { divider: true, label: 'Absensi' },
     { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya', key: 'absen' },
     { href: '/rekap-absen.html', icon: 'bar-chart-3', label: 'Rekap Absen', key: 'rekap-absen', staffOnly: true },
-    { href: '/settings.html', icon: 'user-cog', label: 'Setelan Profil', key: 'settings' },
     { divider: true, label: 'Divisi' },
     { href: '/business-development.html', icon: 'trending-up', label: 'Business Dev', key: 'bd' },
     { href: '/sosmed.html', icon: 'share-2', label: 'Social Media', key: 'sosmed' },
@@ -62,13 +61,13 @@ function buildSidebar(user, activePage) {
         ${navHTML}
       </nav>
       <div class="sidebar-footer">
-        <div class="sidebar-user-info">
+        <div class="sidebar-user-info" style="cursor:pointer;" onclick="openProfileDrawer()" title="Buka Setelan Profil">
           <div class="sidebar-avatar" id="sidebarAvatar">${avatarHTML}</div>
-          <div class="sidebar-user-details">
-            <div class="sidebar-user-name" id="sidebarName">${user ? (user.name || user.email) : '...'}</div>
+          <div class="sidebar-user-details" style="flex:1; min-width:0;">
+            <div class="sidebar-user-name" id="sidebarName" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${user ? (user.name || user.email) : '...'}</div>
             <span class="sidebar-user-role ${roleClass}">${roleLabel}</span>
           </div>
-          <button class="sidebar-logout-btn" onclick="doLogout()" title="Keluar">
+          <button class="sidebar-logout-btn" onclick="event.stopPropagation(); doLogout();" title="Keluar">
             <i data-lucide="log-out" style="width:16px;height:16px;"></i>
           </button>
         </div>
@@ -317,6 +316,81 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
     content.classList.add('fade-in-pjax');
   }
 
+  // Inject global profile settings drawer
+  if (!document.getElementById('profileDrawerOverlay')) {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .profile-drawer-overlay {
+        position: fixed; inset: 0; background: rgba(10,22,32,0.6); backdrop-filter: blur(4px); z-index: 1500;
+        opacity: 0; pointer-events: none; overflow: hidden; transition: opacity 0.3s ease;
+      }
+      .profile-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+      .profile-drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 92vw; background: var(--bg-card);
+        border-left: 1px solid var(--border); z-index: 1501; transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+        display: flex; flex-direction: column; box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+      }
+      .profile-drawer-overlay.open .profile-drawer { transform: translateX(0); }
+      .profile-drawer-header {
+        padding: 22px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
+        justify-content: space-between; flex-shrink: 0;
+      }
+      .profile-drawer-header h3 { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0; }
+      .profile-drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+      .profile-drawer-footer { padding: 20px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; flex-shrink: 0; }
+      .profile-drawer .btn-close-drawer { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background 0.2s, color 0.2s; }
+      .profile-drawer .btn-close-drawer:hover { background: var(--bg-app); color: var(--text-primary); }
+      .profile-drawer .form-field { margin-bottom: 20px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+      .profile-drawer .form-field label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+      .profile-drawer .form-field input { width: 100%; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border-mid); border-radius: 10px; font-size: 13.5px; color: var(--text-primary); outline: none; transition: all 0.2s; }
+      .profile-drawer .form-field input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px var(--blue-glow); }
+      .profile-drawer .btn-drawer-cancel { padding: 12px; background: var(--bg-app); color: var(--text-secondary); border: 1px solid var(--border-mid); border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
+      .profile-drawer .btn-drawer-cancel:hover { background: var(--border); color: var(--text-primary); }
+      .profile-drawer .btn-drawer-save { padding: 12px; background: var(--blue-mid); color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; }
+      .profile-drawer .btn-drawer-save:hover { background: var(--blue-dark); }
+      .profile-drawer .btn-drawer-save:disabled { opacity: 0.6; cursor: not-allowed; }
+    `;
+    document.head.appendChild(style);
+
+    const drawerOverlay = document.createElement('div');
+    drawerOverlay.id = 'profileDrawerOverlay';
+    drawerOverlay.className = 'profile-drawer-overlay';
+    drawerOverlay.onclick = function(e) { if (e.target === drawerOverlay) closeProfileDrawer(); };
+    drawerOverlay.innerHTML = `
+      <div class="profile-drawer">
+        <div class="profile-drawer-header">
+          <h3>Setelan Profil</h3>
+          <button class="btn-close-drawer" onclick="closeProfileDrawer()" title="Tutup">✕</button>
+        </div>
+        
+        <div class="profile-drawer-body">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 16px;">
+              <div class="profile-avatar-large" id="profileDrawerAvatarLarge" style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #fff; overflow: hidden; background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid)); border: 4px solid var(--bg-card); box-shadow: 0 8px 24px rgba(48,127,226,0.2);">?</div>
+              <label style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--blue-mid); border: 3px solid var(--bg-card); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: transform 0.2s;" for="profileDrawerAvatarInput" title="Ubah Foto">
+                📷
+                <input type="file" id="profileDrawerAvatarInput" accept="image/*" style="display:none;" onchange="previewDrawerAvatar(this)">
+              </label>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted);" id="profileDrawerEmail">...</div>
+          </div>
+
+          <div class="form-field">
+            <label for="profileDrawerName">Nama Lengkap</label>
+            <input type="text" id="profileDrawerName" placeholder="Masukkan nama lengkap...">
+          </div>
+        </div>
+
+        <div class="profile-drawer-footer">
+          <button type="button" class="btn-drawer-cancel" onclick="closeProfileDrawer()">Batal</button>
+          <button type="button" class="btn-drawer-save" id="btnSaveDrawerProfile" onclick="saveDrawerProfile()">💾 Simpan</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(drawerOverlay);
+  }
+
   // Ensure vendor libraries are loaded
   ensureVendorLibraries(() => {
     renderIcons();
@@ -546,4 +620,86 @@ function showFakePjaxProgress() {
     bar.style.transition = 'width 0.4s ease, opacity 0.3s ease';
     bar.style.width = '60%';
   }, 10);
+}
+
+// ─── Global Profile Drawer Helper Functions ───
+var drawerAvatarBase64 = null;
+var currentDrawerUser = null;
+
+function openProfileDrawer() {
+  const user = window.currentUserCache;
+  if (!user) return;
+  currentDrawerUser = user;
+  drawerAvatarBase64 = null;
+
+  document.getElementById('profileDrawerEmail').textContent = user.email;
+  document.getElementById('profileDrawerName').value = user.name || '';
+
+  const avatarContainer = document.getElementById('profileDrawerAvatarLarge');
+  const initial = (user.name || user.email).charAt(0).toUpperCase();
+  if (user.avatar && user.avatar.startsWith('http')) {
+    avatarContainer.innerHTML = `<img src="${user.avatar}" alt="" style="width:100%; height:100%; object-fit:cover;">`;
+  } else {
+    avatarContainer.textContent = initial;
+  }
+
+  document.getElementById('profileDrawerOverlay').classList.add('open');
+}
+
+function closeProfileDrawer() {
+  document.getElementById('profileDrawerOverlay').classList.remove('open');
+}
+
+function previewDrawerAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    drawerAvatarBase64 = e.target.result;
+    const container = document.getElementById('profileDrawerAvatarLarge');
+    container.innerHTML = `<img src="${drawerAvatarBase64}" alt="Preview" style="width:100%; height:100%; object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveDrawerProfile() {
+  const name = document.getElementById('profileDrawerName').value.trim();
+  const btn = document.getElementById('btnSaveDrawerProfile');
+  
+  if (!name) {
+    showSwalToast('Nama tidak boleh kosong.', 'error');
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+  
+  try {
+    const res = await fetch('/api/user/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        avatar_base64: drawerAvatarBase64
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      showSwalToast('Profil berhasil disimpan!', 'success');
+      setTimeout(() => {
+        location.reload();
+      }, 800);
+    } else {
+      showSwalToast(data.error || 'Gagal menyimpan profil.', 'error');
+      btn.disabled = false;
+      btn.textContent = '💾 Simpan';
+    }
+  } catch (err) {
+    showSwalToast('Terjadi kesalahan koneksi server.', 'error');
+    btn.disabled = false;
+    btn.textContent = '💾 Simpan';
+  }
 }
