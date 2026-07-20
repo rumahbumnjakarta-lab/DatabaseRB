@@ -25,6 +25,7 @@ function buildSidebar(user, activePage) {
     { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
     { href: '/manage.html', icon: 'settings', label: 'Kelola Data', key: 'manage', staffOnly: true },
+    { href: '/manage-users.html', icon: 'users', label: 'Kelola Akun', key: 'manage-users', staffOnly: true },
   ];
 
   let navHTML = '';

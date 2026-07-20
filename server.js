@@ -292,6 +292,82 @@ app.post('/api/user/profile', requireAuth, async (req, res) => {
 });
 
 
+// ─── API: Users Management (Staff Only) ───────────────────────────────────────
+
+// GET /api/users — List all user accounts
+app.get('/api/users', requireAuth, requireStaff, async (req, res) => {
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, email, name, role, avatar_url, created_at')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(users);
+  } catch (err) {
+    console.error('List users error:', err);
+    res.status(500).json({ error: 'Gagal mengambil data akun: ' + err.message });
+  }
+});
+
+// PUT /api/users/:id — Edit account details
+app.put('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
+  const { id } = req.params;
+  const { name, email, role } = req.body;
+  const cleanName = (name || '').trim();
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  if (!cleanName || !cleanEmail || !role) {
+    return res.status(400).json({ error: 'Nama, email, dan role wajib diisi.' });
+  }
+
+  try {
+    const { data: updatedUser, error } = await supabase
+      .from('users')
+      .update({ name: cleanName, email: cleanEmail, role })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // If editing currently logged-in user, update session
+    if (req.session.user.id === id) {
+      req.session.user.name = updatedUser.name;
+      req.session.user.email = updatedUser.email;
+      req.session.user.role = updatedUser.role;
+    }
+
+    res.json({ message: 'Akun berhasil diperbarui!', user: updatedUser });
+  } catch (err) {
+    console.error('Update user error:', err);
+    res.status(500).json({ error: 'Gagal memperbarui akun: ' + err.message });
+  }
+});
+
+// DELETE /api/users/:id — Delete account
+app.delete('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
+  const { id } = req.params;
+
+  if (req.session.user.id === id) {
+    return res.status(400).json({ error: 'Anda tidak bisa menghapus akun Anda sendiri.' });
+  }
+
+  try {
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ message: 'Akun berhasil dihapus!' });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ error: 'Gagal menghapus akun: ' + err.message });
+  }
+});
+
+
 // ─── Static Files ─────────────────────────────────────────────────────────────
 app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/lucide/dist/umd')));
 app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist')));
@@ -311,6 +387,12 @@ app.get('/manage', requireAuth, requireStaff, (req, res) => {
 });
 app.get('/manage.html', requireAuth, requireStaff, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'manage.html'));
+});
+app.get('/manage-users', requireAuth, requireStaff, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'manage-users.html'));
+});
+app.get('/manage-users.html', requireAuth, requireStaff, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'manage-users.html'));
 });
 
 // ─── API: Items (CRUD) — Memerlukan Login ─────────────────────────────────────
