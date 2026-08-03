@@ -12,13 +12,15 @@ function buildSidebar(user, activePage) {
 
   const navItems = [
     { href: '/index.html', icon: 'layout-dashboard', label: 'Dashboard', key: 'dashboard' },
+    { href: '/agenda-hub.html', icon: 'calendar-days', label: 'Agenda & Event', key: 'agenda' },
     { divider: true, label: 'Absensi' },
     { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya', key: 'absen' },
+    { href: '/perizinan.html', icon: 'file-check-2', label: 'Izin & Sakit', key: 'perizinan' },
     { divider: true, label: 'Divisi' },
     { href: '/business-development.html', icon: 'trending-up', label: 'Business Dev', key: 'bd' },
     { href: '/sosmed.html', icon: 'share-2', label: 'Social Media', key: 'sosmed' },
     { href: '/design.html', icon: 'palette', label: 'Design', key: 'design' },
-    { href: '/event.html', icon: 'calendar', label: 'Event', key: 'event' },
+    { href: '/event-hub.html', icon: 'calendar', label: 'Event Hub', key: 'event' },
     { href: '/admin.html', icon: 'file-text', label: 'Admin', key: 'admin' },
     { divider: true, label: 'Staff Only', staffOnly: true },
     { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },

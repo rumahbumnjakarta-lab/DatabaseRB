@@ -4,8 +4,149 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Design — Database Rumah BUMN Jakarta</title>
-<meta name="description" content="Database link dan akses operasional divisi Design Rumah BUMN Jakarta.">
+<meta name="description" content="Design Request Dashboard dan database operasional divisi Design Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* Custom division accent (Magenta per Panduan Sheets) */
+  :root {
+    --accent-design: #d946ef;
+  }
+
+  /* Design Request Section */
+  .dr-section { margin-bottom: 40px; }
+  .dr-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .dr-header h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
+  .dr-header p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
+
+  .btn-request-design {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-design); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-request-design:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+  /* Stats */
+  .dr-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .dr-stat-card {
+    background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .dr-stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .dr-stat-card .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Filter Chips */
+  .dr-filters {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .dr-chip {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-mid);
+    background: var(--bg-surface); color: var(--text-secondary);
+  }
+  .dr-chip.active { background: var(--accent-design); color: #fff; border-color: var(--accent-design); }
+  .dr-chip:hover { border-color: var(--accent-design); }
+
+  /* Kanban Board */
+  .kanban-board {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;
+  }
+  .kanban-col {
+    background: #ffffff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 16px; min-height: 200px; box-shadow: 0 2px 10px rgba(15,23,42,0.03);
+  }
+  .kanban-col-header {
+    font-size: 13px; font-weight: 700; color: var(--text-primary);
+    padding-bottom: 12px; margin-bottom: 12px; border-bottom: 2px solid var(--border-mid);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .kanban-col-header .col-count {
+    background: var(--bg-app); padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; color: var(--text-muted); font-weight: 600;
+  }
+  .kanban-col.pending .kanban-col-header { border-bottom-color: var(--yellow); }
+  .kanban-col.in-progress .kanban-col-header { border-bottom-color: var(--blue-mid); }
+  .kanban-col.done .kanban-col-header { border-bottom-color: var(--green); }
+
+  .kanban-card {
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+  }
+  .kanban-card:hover { background: #ffffff; border-color: var(--accent-design); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(236,72,153,0.1); }
+  .kanban-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+  .kanban-card-meta { font-size: 11px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 8px; }
+  .kanban-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+
+  .badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-urgent { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-normal { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
+  .badge-low { background: rgba(148,163,184,0.15); color: var(--text-muted); }
+
+  .badge-pending { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-in_progress { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
+  .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-rejected { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .div-badge {
+    padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
+    background: rgba(255,255,255,0.08); color: var(--text-secondary);
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+    width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    border-radius: 8px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent-design); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-cancel {
+    padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    color: var(--text-secondary); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  }
+  .btn-submit {
+    padding: 10px 20px; background: var(--accent-design); border: none;
+    color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  }
+  .btn-submit:hover { filter: brightness(1.1); }
+
+  .kanban-empty { text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px; }
+
+  @media (max-width: 768px) {
+    .kanban-board { grid-template-columns: 1fr; }
+    .dr-stats { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
@@ -16,47 +157,382 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div class="topbar-title">Design <small>Database link &amp; akses divisi</small></div>
+      <div class="topbar-title">Design <small>Request Dashboard & Database</small></div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
-      <div class="division-header">
-        <div class="division-header-icon" style="background:rgba(236,72,153,0.1); color:var(--accent-design);"><i data-lucide="palette"></i></div>
-        <div class="division-header-text">
-          <h1>Design</h1>
-          <p>Semua aset, referensi, tools, dan akses operasional divisi Design.</p>
+
+      <!-- Design Request Section -->
+      <div class="dr-section">
+        <div class="dr-header">
+          <div>
+            <h2><i data-lucide="palette" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px;color:var(--accent-design);"></i> Design Request</h2>
+            <p>Kelola permintaan desain dari seluruh divisi</p>
+          </div>
+          <button class="btn-request-design" onclick="openRequestModal()">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Ajukan Request
+          </button>
         </div>
-        <div class="division-stats">
-          <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
-          <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+
+        <!-- Stats -->
+        <div class="dr-stats" id="drStats"></div>
+
+        <!-- Filters -->
+        <div class="dr-filters" id="drFilters">
+          <div class="dr-chip active" data-filter="all" onclick="filterRequests('all', this)"><i data-lucide="layers" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i> Semua</div>
+          <div class="dr-chip" data-filter="pending" onclick="filterRequests('pending', this)"><i data-lucide="clock" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i> Pending</div>
+          <div class="dr-chip" data-filter="in_progress" onclick="filterRequests('in_progress', this)"><i data-lucide="wrench" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i> Dikerjakan</div>
+          <div class="dr-chip" data-filter="done" onclick="filterRequests('done', this)"><i data-lucide="check-circle-2" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i> Selesai</div>
+          <div class="dr-chip" data-filter="rejected" onclick="filterRequests('rejected', this)"><i data-lucide="x-circle" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i> Ditolak</div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board" id="kanbanBoard">
+          <div class="kanban-col pending">
+            <div class="kanban-col-header"><i data-lucide="clock" style="width:16px;height:16px;color:var(--yellow);margin-right:2px;"></i> Pending <span class="col-count" id="countPending">0</span></div>
+            <div id="colPending"></div>
+          </div>
+          <div class="kanban-col in-progress">
+            <div class="kanban-col-header"><i data-lucide="wrench" style="width:16px;height:16px;color:var(--blue-mid);margin-right:2px;"></i> Dikerjakan <span class="col-count" id="countInProgress">0</span></div>
+            <div id="colInProgress"></div>
+          </div>
+          <div class="kanban-col done">
+            <div class="kanban-col-header"><i data-lucide="check-circle-2" style="width:16px;height:16px;color:var(--green);margin-right:2px;"></i> Selesai <span class="col-count" id="countDone">0</span></div>
+            <div id="colDone"></div>
+          </div>
         </div>
       </div>
-      <div class="controls">
-        <div class="search-bar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+
+      <!-- Existing Division Links Section -->
+      <div style="margin-top:40px; padding-top: 32px; border-top: 1px solid var(--border);">
+        <div class="division-header">
+          <div class="division-header-icon" style="background:rgba(236,72,153,0.1); color:var(--accent-design);"><i data-lucide="palette"></i></div>
+          <div class="division-header-text">
+            <h1>Database Design</h1>
+            <p>Semua aset, referensi, tools, dan akses operasional divisi Design.</p>
+          </div>
+          <div class="division-stats">
+            <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
+            <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+          </div>
         </div>
-        <div class="chips" id="chipRow"></div>
-      </div>
-      <div class="wrap">
-        <div class="grid" id="grid"></div>
-        <div class="empty" id="emptyState" style="display:none;">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <p>Tidak ada hasil ditemukan.</p>
+        <div class="controls">
+          <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+          </div>
+          <div class="chips" id="chipRow"></div>
+        </div>
+        <div class="wrap">
+          <div class="grid" id="grid"></div>
+          <div class="empty" id="emptyState" style="display:none;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p>Tidak ada hasil ditemukan.</p>
+          </div>
         </div>
       </div>
+
       <footer style="margin-top:40px;">Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
     </div>
   </main>
 </div>
 
+<!-- Modal Ajukan Request -->
+<div class="modal-overlay" id="requestModal" onclick="if(event.target===this) closeRequestModal()">
+  <div class="modal-box">
+    <h3>Ajukan Design Request</h3>
+    <form id="requestForm" onsubmit="submitRequest(event)">
+      <div class="form-group">
+        <label>Judul / Deskripsi Singkat</label>
+        <input type="text" id="drTitle" required placeholder="Contoh: Poster Pelatihan Digital Marketing">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis Desain</label>
+          <select id="drType" required>
+            <option value="" disabled selected>Pilih Jenis Desain...</option>
+            <option value="Poster">Poster</option>
+            <option value="Flyer">Flyer</option>
+            <option value="Banner">Banner</option>
+            <option value="Feed IG">Feed IG</option>
+            <option value="Story IG">Story IG</option>
+            <option value="Carousel">Carousel</option>
+            <option value="Logo">Logo</option>
+            <option value="Sertifikat">Sertifikat</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Divisi Pemohon</label>
+          <select id="drDivision" required>
+            <option value="" disabled selected>Pilih Divisi...</option>
+            <option value="Business Development">Business Dev</option>
+            <option value="Social Media">Social Media</option>
+            <option value="Event">Event</option>
+            <option value="Admin">Admin</option>
+            <option value="Administrasi">Administrasi</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Deskripsi Detail</label>
+        <textarea id="drDesc" placeholder="Jelaskan kebutuhan desain secara detail (warna, teks, ukuran, dll.)..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Deadline (Opsional)</label>
+          <input type="date" id="drDeadline">
+        </div>
+        <div class="form-group">
+          <label>Prioritas</label>
+          <select id="drPriority">
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeRequestModal()">Batal</button>
+        <button type="submit" class="btn-submit" id="btnSubmitRequest">Kirim Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Detail Request -->
+<div class="modal-overlay" id="detailRequestModal" onclick="if(event.target===this) closeDetailRequestModal()">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+      <h3 id="detDrTitle" style="margin:0; padding-right:20px;">Detail Request</h3>
+      <button onclick="closeDetailRequestModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;">✕</button>
+    </div>
+    <div id="detDrBadges" style="margin-bottom:16px;"></div>
+    <div id="detDrBody" style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-mid); margin-bottom:16px;"></div>
+    <div id="detDrActions" style="display:none;">
+      <div class="form-row" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label>Ubah Status</label>
+          <select id="detDrStatus">
+            <option value="pending">Pending</option>
+            <option value="in_progress">Dikerjakan</option>
+            <option value="done">Selesai</option>
+            <option value="rejected">Ditolak</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Catatan Designer (Opsional)</label>
+          <input type="text" id="detDrNotes" placeholder="Catatan...">
+        </div>
+      </div>
+      <button class="btn-submit" onclick="updateRequestStatus()" style="width:100%;">Perbarui Status</button>
+    </div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button type="button" class="btn-cancel" onclick="closeDetailRequestModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 <script>
-initAppShell('design', function(user) {
-  fetch('/api/items?division=design')
+  let allRequests = [];
+  let currentFilter = 'all';
+  let currentUser = null;
+
+  function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function getPriorityBadge(p) {
+    const m = { 'urgent': 'badge-urgent', 'normal': 'badge-normal', 'low': 'badge-low' };
+    const l = { 
+      'urgent': '<i data-lucide="alert-circle" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i> Urgent', 
+      'normal': 'Normal', 
+      'low': 'Low' 
+    };
+    return `<span class="badge ${m[p] || 'badge-normal'}">${l[p] || p}</span>`;
+  }
+  function getStatusLabel(s) {
+    const m = { 
+      'pending': '<i data-lucide="clock" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Pending', 
+      'in_progress': '<i data-lucide="wrench" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Dikerjakan', 
+      'done': '<i data-lucide="check-circle-2" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Selesai', 
+      'rejected': '<i data-lucide="x-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Ditolak' 
+    };
+    return m[s] || s;
+  }
+
+  function fetchRequests() {
+    fetch('/api/design-requests')
+      .then(r => r.json())
+      .then(data => { allRequests = data; renderAll(); })
+      .catch(() => { allRequests = []; renderAll(); });
+  }
+
+  function renderAll() {
+    renderStats();
+    renderKanban();
+  }
+
+  function renderStats() {
+    const total = allRequests.length;
+    const pending = allRequests.filter(r => r.status === 'pending').length;
+    const inProg = allRequests.filter(r => r.status === 'in_progress').length;
+    const done = allRequests.filter(r => r.status === 'done').length;
+    document.getElementById('drStats').innerHTML = `
+      <div class="dr-stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Request</div></div>
+      <div class="dr-stat-card"><div class="stat-num" style="color:var(--yellow);">${pending}</div><div class="stat-label">Pending</div></div>
+      <div class="dr-stat-card"><div class="stat-num" style="color:var(--blue-mid);">${inProg}</div><div class="stat-label">Dikerjakan</div></div>
+      <div class="dr-stat-card"><div class="stat-num" style="color:var(--green);">${done}</div><div class="stat-label">Selesai</div></div>
+    `;
+  }
+
+  function renderKanban() {
+    const filtered = currentFilter === 'all' ? allRequests : allRequests.filter(r => r.status === currentFilter);
+    const pending = filtered.filter(r => r.status === 'pending');
+    const inProg = filtered.filter(r => r.status === 'in_progress');
+    const done = filtered.filter(r => r.status === 'done' || r.status === 'rejected');
+
+    document.getElementById('countPending').textContent = pending.length;
+    document.getElementById('countInProgress').textContent = inProg.length;
+    document.getElementById('countDone').textContent = done.length;
+
+    renderColumn('colPending', pending);
+    renderColumn('colInProgress', inProg);
+    renderColumn('colDone', done);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderColumn(colId, items) {
+    const el = document.getElementById(colId);
+    if (!items.length) { el.innerHTML = '<div class="kanban-empty">Tidak ada request.</div>'; return; }
+    let html = '';
+    items.forEach(r => {
+      const safeData = JSON.stringify(r).replace(/"/g, '&quot;');
+      const deadlineStr = r.deadline ? new Date(r.deadline).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) : '';
+      html += `
+        <div class="kanban-card" onclick="openDetailRequest('${safeData}')">
+          <div class="kanban-card-title">${escHtml(r.title)}</div>
+          <div class="kanban-card-meta">
+            <span style="display:flex;align-items:center;gap:3px;"><i data-lucide="palette" style="width:12px;height:12px;"></i> ${escHtml(r.design_type)}</span>
+            <span class="div-badge">${escHtml(r.requester_division)}</span>
+          </div>
+          <div class="kanban-card-footer">
+            ${getPriorityBadge(r.priority)}
+            <span style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:3px;">
+              ${deadlineStr ? `<i data-lucide="calendar" style="width:12px;height:12px;"></i> ${deadlineStr}` : ''}
+            </span>
+          </div>
+        </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  function filterRequests(filter, el) {
+    currentFilter = filter;
+    document.querySelectorAll('.dr-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderKanban();
+  }
+
+  // Modals
+  function openRequestModal() {
+    document.getElementById('requestForm').reset();
+    document.getElementById('requestModal').classList.add('open');
+  }
+  function closeRequestModal() { document.getElementById('requestModal').classList.remove('open'); }
+
+  let activeRequest = null;
+  function openDetailRequest(dataStr) {
+    const r = JSON.parse(dataStr);
+    activeRequest = r;
+    document.getElementById('detDrTitle').textContent = r.title;
+    document.getElementById('detDrBadges').innerHTML = `
+      <span class="badge badge-${r.status}" style="font-size:12px; padding:4px 12px;">${getStatusLabel(r.status)}</span>
+      ${getPriorityBadge(r.priority)}
+      <span class="div-badge" style="font-size:12px; padding:4px 12px; margin-left:4px;">${escHtml(r.requester_division)}</span>
+    `;
+    const dateStr = new Date(r.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    let body = `
+      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
+        <strong style="color:var(--text-primary);">Jenis Desain:</strong> ${escHtml(r.design_type)}
+      </div>
+      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
+        <strong style="color:var(--text-primary);">Pemohon:</strong> ${escHtml(r.requester_name)} (${escHtml(r.requester_division)})
+      </div>
+      ${r.description ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Deskripsi:</strong><br><div style="margin-top:4px; white-space:pre-wrap;">${escHtml(r.description)}</div></div>` : ''}
+      ${r.deadline ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Deadline:</strong> ${new Date(r.deadline).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</div>` : ''}
+      ${r.designer_notes ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Catatan Designer:</strong> ${escHtml(r.designer_notes)}</div>` : ''}
+      <div style="font-size:11px; color:var(--text-muted); margin-top:12px;">Diajukan: ${dateStr}</div>
+    `;
+    document.getElementById('detDrBody').innerHTML = body;
+
+    // Show action buttons for staff
+    const actionsEl = document.getElementById('detDrActions');
+    if (currentUser && currentUser.role === 'staff') {
+      actionsEl.style.display = 'block';
+      document.getElementById('detDrStatus').value = r.status;
+      document.getElementById('detDrNotes').value = r.designer_notes || '';
+    } else {
+      actionsEl.style.display = 'none';
+    }
+
+    document.getElementById('detailRequestModal').classList.add('open');
+    if (window.lucide) window.lucide.createIcons();
+  }
+  function closeDetailRequestModal() { document.getElementById('detailRequestModal').classList.remove('open'); }
+
+  function updateRequestStatus() {
+    if (!activeRequest) return;
+    const status = document.getElementById('detDrStatus').value;
+    const designer_notes = document.getElementById('detDrNotes').value;
+    fetch('/api/design-requests/' + activeRequest.id + '/status', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, designer_notes })
+    })
     .then(r => r.json())
-    .then(items => initDivisionPage(items))
-    .catch(() => initDivisionPage([]));
-});
+    .then(res => {
+      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
+      Swal.fire({ icon:'success', title:'Berhasil', text:'Status request diperbarui!', timer:1500, showConfirmButton:false });
+      closeDetailRequestModal();
+      fetchRequests();
+    });
+  }
+
+  function submitRequest(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitRequest');
+    btn.disabled = true; btn.textContent = 'Mengirim...';
+    const payload = {
+      title: document.getElementById('drTitle').value,
+      design_type: document.getElementById('drType').value,
+      requester_division: document.getElementById('drDivision').value,
+      description: document.getElementById('drDesc').value || null,
+      deadline: document.getElementById('drDeadline').value || null,
+      priority: document.getElementById('drPriority').value
+    };
+    fetch('/api/design-requests', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = 'Kirim Request';
+      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
+      Swal.fire({ icon:'success', title:'Terkirim!', text:'Design request berhasil diajukan!', timer:1500, showConfirmButton:false });
+      closeRequestModal();
+      fetchRequests();
+    })
+    .catch(() => { btn.disabled = false; btn.textContent = 'Kirim Request'; });
+  }
+
+  // Init
+  initAppShell('design', function(user) {
+    currentUser = user;
+    fetchRequests();
+    fetch('/api/items?division=design')
+      .then(r => r.json())
+      .then(items => initDivisionPage(items))
+      .catch(() => initDivisionPage([]));
+  });
 </script>
 </body>
 </html>

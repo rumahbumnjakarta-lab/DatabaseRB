@@ -51,12 +51,13 @@
   --amber:  #f59e0b;
   --green:  #22c55e;
 
-  /* Division accents */
-  --accent-bd:     #307fe2;
-  --accent-sosmed: #8b5cf6;
-  --accent-design: #ec4899;
-  --accent-event:  #f59e0b;
-  --accent-admin:  #059669;
+  /* Division accents (Berdasarkan Panduan Sheets) */
+  --accent-event:  #ef4444; /* Red: Event & Partnerships */
+  --accent-bd:     #f97316; /* Orange: Business Development */
+  --accent-sosmed: #eab308; /* Yellow: Social Media */
+  --accent-admin:  #06b6d4; /* Cyan: General Administration */
+  --accent-lama:   #6b7280; /* Gray: Program Lama */
+  --accent-design: #d946ef; /* Magenta: Design Graphic */
   --accent-email:  #ef4444;
 
   /* Legacy aliases for card components */
@@ -915,7 +916,6 @@ footer {
 }
 
 /* ─── Misc ─── */
-.wrap { }
 .hero, .landing-hero, .div-topbar { display: none !important; }
 
 /* Loading Screen */

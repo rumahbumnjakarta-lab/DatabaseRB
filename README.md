@@ -1,173 +1,142 @@
-# Database Hub Operational — Rumah BUMN Jakarta
+# Database Operational Hub — Rumah BUMN Jakarta
 
-Aplikasi Web Database Hub Dinamis berbasis **Node.js (Express.js)** untuk mengelola dokumen, spreadsheet, dan kredensial (akun email & password) operasional divisi Rumah BUMN Jakarta. 
-
-Project ini telah dikonversi dari web statis menjadi aplikasi dinamis yang memudahkan pemeliharaan data melalui dashboard admin tanpa mengubah kode program.
+Aplikasi Web **Database Hub & Sistem Operasional Internal** berbasis **Node.js (Express.js)** dan **Supabase (PostgreSQL)**. Sistem ini dirancang untuk mengelola link dokumen divisi, kredensial operasional, absensi peserta magang berbasis GPS & foto selfie, serta fitur pengajuan perizinan tidak masuk (izin/sakit) dengan sistem peninjauan mentor.
 
 ---
 
-## 📂 Struktur Direktori & Tata File
+## 🚀 Fitur Utama
 
-Berikut adalah peta struktur file dalam project ini:
+### 1. Portal Divisi & Kelola Data (Operational Hub)
+- **Hub Divisi**: Akses dokumen, spreadsheet, form, dan akun email untuk divisi Business Development, Social Media, Design, Event, Admin, dan Administrasi.
+- **Manajemen Kredensial & Tautan (CRUD)**: Kelola item tautan dan kredensial (email & kata sandi) secara aman sesuai dengan role pengguna.
+- **Copy to Clipboard 1-Click**: Fitur salin email, password, dan URL dengan sekali klik.
+
+### 2. Autentikasi & Pengaturan Role (Staff vs Internship)
+- **Penentuan Role Otomatis via Email Domain**:
+  - Domain `@staff.rbjakarta.id` → **Role Staff / Mentor** (Akses admin penuh, kelola user, rekap absensi, dan review perizinan).
+  - Domain `@intern.rbjakarta.id` → **Role Internship** (Akses absensi, pengajuan perizinan pribadi, dan portal divisi).
+- **Sesi Aman berbasis Cookie**: Menggunakan cookie session terenkripsi yang kompatibel dengan arsitektur serverless.
+
+### 3. Sistem Absensi Digital (GPS & Foto Selfie)
+- **Validasi Geofencing GPS**: Memastikan absensi dilakukan dalam radius area lokasi yang ditentukan menggunakan Leaflet.js maps.
+- **Foto Selfie Verification**: Mengambil foto selfie via kamera perangkat sebagai bukti kehadiran.
+- **Rekap Absensi Real-time**: Panel rekap absensi harian untuk Staff dengan fitur filter tanggal dan auto-refresh.
+
+### 4. Perizinan Tidak Masuk & Kontrol Mentor (Izin / Sakit)
+- **Pengajuan Izin & Sakit (Internship)**: Pengajuan izin tidak masuk melampirkan tanggal mulai/selesai, alasan, dan unggah foto/dokumen bukti pendukung (maksimal 1 MB).
+- **Review & Komentar Mentor (Staff)**: Staff/Mentor dapat meninjau perizinan, menentukan keputusan status (**Disetujui / Ditolak**), dan memberikan **Catatan Staff / Komentar Mentor**.
+- **Privasi Terjamin**: Data perizinan bersifat privat untuk akun Internship (hanya dapat dilihat oleh pemilik akun dan Staff).
+
+---
+
+## 🛠️ Teknologi Yang Digunakan
+
+- **Backend**: Node.js, Express.js, `@supabase/supabase-js`, `bcryptjs`, `cookie-session`, `dotenv`.
+- **Database**: Supabase PostgreSQL.
+- **Frontend**: HTML5, Vanilla CSS3 (Custom Design Tokens & Glassmorphism UI), Vanilla JavaScript (ES6+).
+- **Libraries & Icons**: Lucide Icons, Leaflet.js (GPS Mapping), SweetAlert2.
+
+---
+
+## 📂 Struktur Direktori Project
 
 ```text
-database-RB/
-├── data/
-│   └── items.json            # Database utama berbentuk berkas JSON terpusat
-├── node_modules/             # Folder modul dependensi Node.js (dibuat otomatis)
-├── public/                   # Folder aset statis (Client-side)
-│   ├── FOTO/                 # Folder penyimpanan aset logo dan gambar
-│   │   └── LOGO.png
-│   ├── admin.html            # Halaman Hub Divisi Admin
-│   ├── business-development.html # Halaman Hub Divisi Business Development
-│   ├── design.html           # Halaman Hub Divisi Design
-│   ├── email.html            # Halaman Hub Divisi Akun Email
-│   ├── event.html            # Halaman Hub Divisi Event
-│   ├── index.html            # Landing Page utama (Portal Pemilihan Divisi)
-│   ├── manage.html           # Dashboard Admin CRUD (Kelola Link & Sandi)
-│   ├── shared.js             # Kode logika JavaScript bersama untuk halaman divisi
-│   ├── sosmed.html           # Halaman Hub Divisi Social Media
-│   ├── style.css             # Stylesheet global (Desain & Tema UI)
-│   └── tampilan.html         # Halaman cadangan (template lama)
-├── package.json              # Konfigurasi dependensi project Node.js
-├── package-lock.json         # Kunci versi dependensi npm
-├── server.js                 # Server Backend Express.js utama
-└── README.md                 # Dokumentasi panduan project (file ini)
+DatabaseRB/
+├── public/                       # Berkas Aset Statis & Tampilan Frontend
+│   ├── FOTO/                     # Aset logo & gambar aplikasi
+│   ├── absen.html                # Halaman Absensi Digital (GPS & Kamera)
+│   ├── admin.html                # Portal Divisi Admin
+│   ├── administrasi.html         # Portal Divisi Administrasi (Staff Only)
+│   ├── business-development.html # Portal Divisi Business Development
+│   ├── design.html               # Portal Divisi Design
+│   ├── email.html                # Portal Divisi Akun Email (Staff Only)
+│   ├── event.html                # Portal Divisi Event
+│   ├── index.html                # Dashboard Utama Aplikasi
+│   ├── login.html                # Halaman Masuk (Login)
+│   ├── manage-users.html         # Kelola Pengguna & Akun (Staff Only)
+│   ├── manage.html               # Kelola Link & Kredensial Divisi (Staff Only)
+│   ├── perizinan.html            # Halaman Pengajuan Izin/Sakit & Review Mentor
+│   ├── rekap-absen.html          # Rekap Absensi Real-time (Staff Only)
+│   ├── shared.js                 # App Shell, Sidebar, Navigation, & Shared Utilities
+│   ├── sosmed.html               # Portal Divisi Social Media
+│   ├── style.css                 # Master Stylesheet (Design System & Tokens)
+│   └── theme.js                  # Theme Manager Utility
+├── .env                          # Konfigurasi Environment (Supabase URL & Keys)
+├── AI.md                         # Panduan Konteks & Arsitektur Teknis untuk AI Assistant
+├── DESIGN.md                     # Dokumentasi Sistem Desain UI/UX
+├── schema_permissions.sql        # Skrip SQL Tabel Perizinan Supabase
+├── server.js                     # Server Utama Backend Express.js
+└── package.json                  # Manifes Dependensi Node.js
 ```
 
 ---
 
-## 🎨 Sistem Desain & Antarmuka (UI/UX)
+## ⚙️ Panduan Instalasi & Pengaturan
 
-Situs ini menggunakan desain bertema **Premium, Modern & Trustworthy** dengan palet warna elegan berikut yang didefinisikan sebagai variabel CSS di `public/style.css`:
-
-### 1. Token Warna (CSS Variables)
-*   `--navy` (`#0F2C4C`): Warna biru tua utama (kepercayaan/korporat).
-*   `--navy-deep` (`#0A1E36`): Gradien biru gelap untuk latar belakang hero/navigasi.
-*   `--gold` (`#C89A3A`): Emas gelap untuk aksen tombol utama & hover.
-*   `--gold-bright` (`#E0B655`): Emas terang untuk teks eyebrow & sorotan.
-*   `--paper` (`#F6F4EF`): Latar belakang halaman bertekstur krem lembut (mengurangi kelelahan mata).
-*   `--ink` (`#1B2430`): Warna teks utama (hampir hitam).
-*   `--line` (`#DCD6C8`): Garis pembatas kartu & border lembut.
-*   `--card` (`#FFFFFF`): Latar belakang kartu item (putih bersih).
-*   `--green` (`#2E7D5B`): Warna status sukses (misalnya tombol "Tersalin").
-*   `--red-warn` (`#B23A2F`): Warna peringatan/bahaya (misalnya tombol hapus/kredensial).
-
-### 2. Aksen Divisi (Accent Colors)
-Setiap divisi memiliki kode warna aksen khas untuk border kartu dan latar ikon:
-*   **Business Development**: `--accent-bd` (`#C89A3A`) - Emas
-*   **Social Media**: `--accent-sosmed` (`#6C5CE7`) - Ungu
-*   **Design**: `--accent-design` (`#E84393`) - Merah Muda
-*   **Admin**: `--accent-admin` (`#00B894`) - Hijau Tosca
-*   **Event**: `--accent-event` (`#F39C12`) - Oranye
-*   **Akun Email**: `--accent-email` (`#D44638`) - Merah (Gmail)
-
-### 3. Tipografi (Fonts)
-Menggunakan Google Fonts yang di-import langsung di `style.css`:
-*   `Inter` (sans-serif): Digunakan untuk **seluruh** elemen teks — heading, deskripsi, tombol, navigasi, kredensial, dan antarmuka umum. Font ini dipilih karena sangat terbaca dan memberikan kesan modern serta profesional.
-
----
-
-## 🗄️ Skema Database (`data/items.json`)
-
-Data disimpan dalam format array JSON datar (flat array). Setiap item memiliki skema objek berikut:
-
-### 1. Tipe Link (Tautan Dokumen)
-```json
-{
-  "id": "bd-1",
-  "division": "bd",
-  "cat": "Akademik",
-  "title": "SILABUS",
-  "type": "link",
-  "url": "https://docs.google.com/spreadsheets/...",
-  "note": "Spreadsheet silabus."
-}
+### 1. Clone & Install Dependensi
+```bash
+git clone <repository_url>
+cd DatabaseRB
+npm install
 ```
 
-### 2. Tipe Kredensial (Akun / Sandi)
-```json
-{
-  "id": "bd-12",
-  "division": "bd",
-  "cat": "Akun Email",
-  "title": "Email Merah",
-  "type": "cred",
-  "email": "Rumahbumnjakarta@gmail.com",
-  "pass": "Rumahbumn0417@",
-  "note": "Akun email operasional utama."
-}
+### 2. Konfigurasi Environment (`.env`)
+Buat atau sesuaikan berkas `.env` di direktori utama:
+```env
+SUPABASE_URL=https://<your_supabase_project_ref>.supabase.co
+SUPABASE_KEY=<your_supabase_anon_key>
+SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
+PORT=3000
+SESSION_SECRET=rumahbumn-super-secret-session-key-2024
 ```
 
-### Penjelasan Properti:
-*   `id`: String pengenal unik (UUID digunakan untuk data baru).
-*   `division`: Divisi pemilik data. Nilai yang valid: `'bd'` (Business Development), `'sosmed'` (Social Media), `'design'` (Design), `'admin'` (Admin), `'event'` (Event), atau `'email'` (Akun Email).
-*   `cat`: String nama kategori (misalnya "Absensi", "Canva", "Surat").
-*   `title`: Judul item / dokumen.
-*   `type`: Jenis data. Nilai: `'link'` atau `'cred'`.
-*   `url`: Alamat URL tautan (wajib jika `type` bernilai `'link'`).
-*   `email`: Alamat email akun (wajib jika `type` bernilai `'cred'`).
-*   `pass`: Kata sandi akun (wajib jika `type` bernilai `'cred'`).
-*   `note`: Keterangan atau catatan tambahan mengenai item.
+### 3. Eksekusi Skrip Database di Supabase
+Buka **Supabase Dashboard → SQL Editor**, kemudian jalankan query pembuatan tabel:
+- Tabel `permissions` (bisa dilihat di `schema_permissions.sql`):
+```sql
+CREATE TABLE IF NOT EXISTS public.permissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  user_name TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  user_role TEXT DEFAULT 'internship',
+  type TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  reason TEXT NOT NULL,
+  document_url TEXT,
+  status TEXT DEFAULT 'pending',
+  mentor_comment TEXT,
+  reviewed_by TEXT,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.permissions DISABLE ROW LEVEL SECURITY;
+```
+
+### 4. Jalankan Aplikasi
+- **Mode Pengembangan (Dev Mode)**:
+  ```bash
+  npm run dev
+  ```
+- **Mode Produksi (Start Mode)**:
+  ```bash
+  npm start
+  ```
+Akses di peramban: `http://localhost:3000` (atau `http://localhost:3000/login.html`).
 
 ---
 
-## 🔐 Sistem Autentikasi & Peran (Role-Based Access)
+## 🔑 Akun Uji Coba Default
 
-Aplikasi ini memiliki sistem autentikasi dan otorisasi menggunakan **Supabase** untuk menjaga keamanan data internal:
-
-1. **Pendaftaran Akun Tertutup**: Pendaftaran akun baru **tidak dibuka untuk publik** di halaman login. Hanya pengguna dengan peran **Staff** yang dapat mendaftarkan akun untuk anggota baru melalui Dashboard Pengelola (`manage.html`) pada menu **Kelola Akun Tim**.
-2. **Penentuan Peran Otomatis (Domain `.id`)**: Peran pengguna (Intern/Staff) ditentukan secara otomatis berdasarkan domain email yang didaftarkan. Aplikasi ini mewajibkan penggunaan domain resmi:
-   *   **`@intern.rbjakarta.id`**: Otomatis mendapatkan hak akses **Internship** (hanya dapat melihat data, absen, dan mengedit profil sendiri).
-   *   **`@staff.rbjakarta.id`**: Otomatis mendapatkan hak akses **Staff** (akses penuh, dapat mengelola item operasional, melihat rekap absensi seluruh tim, dan mendaftarkan akun baru).
-
-### Contoh Akun Login (Default)
-Berikut adalah contoh kredensial bawaan yang dapat digunakan untuk masuk ke dalam sistem:
-
-*   **Akun Staff (Admin):**
-    *   **Email**: `admin@staff.rbjakarta.id`
-    *   **Password**: `password123`
-*   **Akun Internship:**
-    *   **Email**: `user@intern.rbjakarta.id`
-    *   **Password**: `password123`
+- **Akun Staff / Mentor**:
+  - Email: `admin@staff.rbjakarta.id`
+  - Password: `12345678`
+- **Akun Internship / User**:
+  - Email: `user@intern.rbjakarta.id`
+  - Password: `12345678`
 
 ---
 
-## 🤖 PETUNJUK UNTUK AI (Instructions for Future AI Agents)
-
-*Jika Anda menggunakan AI untuk mengedit, memodifikasi, atau memperluas aplikasi ini di masa mendatang, berikan petunjuk/instruksi berikut:*
-
-> ### 📌 Panduan Modifikasi bagi AI:
->
-> 1.  **Jangan Mengubah Aturan CSS Global:**
->     Semua gaya tampilan diatur di `public/style.css`. Harap selalu gunakan variabel warna yang ada (seperti `var(--navy)`, `var(--gold)`) untuk menjaga keselarasan desain UI premium yang konsisten.
-> 
-> 2.  **Modifikasi Backend Server:**
->     File `server.js` menangani API CRUD. Selalu lakukan validasi payload data sebelum menulis perubahan ke `data/items.json`. Jika ada field tipe `link`, hapus properti `email`/`pass`. Sebaliknya, jika tipenya `cred`, pastikan property `url` dihapus sebelum disimpan agar file database tetap bersih.
->
-> 3.  **Membuat Halaman Divisi Baru:**
->     Jika ingin menambahkan divisi baru (misalnya "Finance"):
->     *   Daftarkan divisinya di dropdown `public/manage.html` (di bagian form input select divisi dan kamus nama divisi `divNames`).
->     *   Tambahkan warna aksen di `:root` CSS (misalnya `--accent-finance`).
->     *   Buat file HTML baru (misalnya `public/finance.html`) dengan meniru struktur `public/design.html` dan arahkan fetch API ke `/api/items?division=finance`.
->     *   Daftarkan menu navigasinya di nav bar halaman divisi (`divTopbar`) dan grid di `public/index.html`.
->
-> 4.  **Menambahkan Kategori Baru Secara Otomatis:**
->     Daftar kategori untuk auto-complete form di `manage.html` di-load dinamis menggunakan `updateSuggestions()` berdasarkan kategori unik yang sudah ada di database divisi tersebut. AI tidak perlu meng-hardcode kategori baru di dalam form.
-
----
-
-## 🚀 Cara Menjalankan Project
-
-1.  Pastikan **Node.js** (versi >= 18) sudah terinstal di komputer.
-2.  Install semua dependensi dengan perintah:
-    ```bash
-    npm install
-    ```
-3.  Jalankan server dalam mode pengembangan (otomatis me-restart jika ada perubahan file):
-    ```bash
-    npm run dev
-    ```
-4.  Buka web browser dan akses alamat berikut:
-    *   **Hub Utama**: `http://localhost:3000`
-    *   **Dashboard Pengelola**: `http://localhost:3000/manage.html`
+## 📄 Lisensi
+Dipersembahkan untuk **Rumah BUMN Jakarta** (Kolaborasi BRI & Danantara Indonesia).

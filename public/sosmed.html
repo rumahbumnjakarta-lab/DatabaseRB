@@ -4,8 +4,165 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Social Media — Database Rumah BUMN Jakarta</title>
-<meta name="description" content="Database link dan akses operasional divisi Social Media Rumah BUMN Jakarta.">
+<meta name="description" content="Content Planner dan database operasional divisi Social Media Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* Custom division accent (Yellow per Panduan Sheets) */
+  :root {
+    --accent-sosmed: #d97706;
+  }
+
+  /* Content Planner Section */
+  .cp-section { margin-bottom: 40px; }
+  .cp-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .cp-header h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
+  .cp-header p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
+
+  .btn-add-content {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-sosmed); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-add-content:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+  /* Calendar Controls */
+  .cp-controls {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .cp-btn {
+    background: var(--bg-surface); border: 1px solid var(--border-mid); color: var(--text-secondary);
+    border-radius: 8px; width: 36px; height: 36px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .cp-btn:hover { background: var(--blue-mid); color: #fff; border-color: var(--blue-mid); }
+  .cp-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+
+  /* Calendar Grid */
+  .cp-cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+  .cp-cal-header div { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 8px 0; text-transform: uppercase; }
+  .cp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cp-day {
+    min-height: 90px; background: #ffffff; border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px; position: relative; transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .cp-day:hover { border-color: var(--accent-sosmed); }
+  .cp-day.empty { background: rgba(0,0,0,0.01); border-color: transparent; min-height: 40px; }
+  .cp-day.today { border-color: var(--accent-sosmed); box-shadow: 0 0 12px rgba(139,92,246,0.25); background: #fdf4ff; }
+  .cp-day-num { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+  .cp-day.today .cp-day-num { color: var(--accent-sosmed); font-weight: 700; }
+
+  .cp-item {
+    font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+    transition: all 0.15s; font-weight: 600;
+  }
+  .cp-item:hover { filter: brightness(0.95); transform: translateY(-1px); }
+  .cp-item.draft { background: rgba(245,158,11,0.18); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+  .cp-item.ready { background: rgba(59,130,246,0.18); color: #1d4ed8; border: 1px solid rgba(59,130,246,0.25); }
+  .cp-item.published { background: rgba(34,197,94,0.18); color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
+
+  .platform-icon { font-size: 10px; margin-right: 2px; }
+
+  /* Stats Cards */
+  .cp-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .cp-stat-card {
+    background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .cp-stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .cp-stat-card .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+    width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    border-radius: 8px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent-sosmed);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-cancel {
+    padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    color: var(--text-secondary); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  }
+  .btn-submit {
+    padding: 10px 20px; background: var(--accent-sosmed); border: none;
+    color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  }
+  .btn-submit:hover { filter: brightness(1.1); }
+
+  /* List View */
+  .cp-list-wrapper {
+    margin-top: 32px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+  }
+  .cp-list-wrapper h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 16px; }
+  .cp-list-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .cp-list-item:hover { border-color: var(--accent-sosmed); }
+  .cp-list-left { flex: 1; min-width: 0; }
+  .cp-list-title { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+  .cp-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-draft { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-ready { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
+  .badge-published { background: rgba(34,197,94,0.15); color: var(--green); }
+
+  .badge-ig { background: rgba(236,72,153,0.15); color: #ec4899; }
+  .badge-tiktok { background: rgba(0,0,0,0.3); color: #fff; }
+  .badge-linkedin { background: rgba(59,130,246,0.15); color: #0a66c2; }
+  .badge-twitter { background: rgba(29,155,240,0.15); color: #1d9bf0; }
+  .badge-facebook { background: rgba(59,89,152,0.15); color: #3b5998; }
+
+  .status-select {
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    border: none; cursor: pointer; background: var(--bg-surface); color: var(--text-primary);
+  }
+
+  @media (max-width: 768px) {
+    .cp-cal-grid { grid-template-columns: repeat(7, 1fr); overflow-x: auto; }
+    .cp-day { min-height: 60px; }
+    .cp-stats { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
@@ -16,47 +173,381 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div class="topbar-title">Social Media <small>Database link &amp; akses divisi</small></div>
+      <div class="topbar-title">Social Media <small>Content Planner & Database</small></div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
-      <div class="division-header">
-        <div class="division-header-icon" style="background:rgba(139,92,246,0.1); color:var(--accent-sosmed);"><i data-lucide="share-2"></i></div>
-        <div class="division-header-text">
-          <h1>Social Media</h1>
-          <p>Semua dokumen, akun, form, dan akses operasional divisi Sosmed.</p>
+
+      <!-- Content Planner Section -->
+      <div class="cp-section">
+        <div class="cp-header">
+          <div>
+            <h2><i data-lucide="calendar-heart" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px;color:var(--accent-sosmed);"></i> Content Planner</h2>
+            <p>Rencanakan jadwal konten sosial media bulanan</p>
+          </div>
+          <button class="btn-add-content" id="btnAddContent" onclick="openAddContentModal()">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah Konten
+          </button>
         </div>
-        <div class="division-stats">
-          <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
-          <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+
+        <!-- Stats -->
+        <div class="cp-stats" id="cpStats"></div>
+
+        <!-- Calendar Controls -->
+        <div class="cp-controls">
+          <button class="cp-btn" onclick="cpPrevMonth()"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
+          <div class="cp-title" id="cpTitle">Memuat...</div>
+          <button class="cp-btn" onclick="cpNextMonth()"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
+          <button class="cp-btn" onclick="cpToday()" style="width:auto; padding:0 12px; font-size:12px; font-weight:600;">Hari Ini</button>
+        </div>
+
+        <!-- Calendar -->
+        <div class="cp-cal-header">
+          <div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div><div>Min</div>
+        </div>
+        <div class="cp-cal-grid" id="cpGrid"></div>
+
+        <!-- List View -->
+        <div class="cp-list-wrapper">
+          <h3>Daftar Konten Bulan Ini</h3>
+          <div id="cpListContent"></div>
         </div>
       </div>
-      <div class="controls">
-        <div class="search-bar">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+
+      <!-- Existing Division Links Section -->
+      <div style="margin-top:40px; padding-top: 32px; border-top: 1px solid var(--border);">
+        <div class="division-header">
+          <div class="division-header-icon" style="background:rgba(139,92,246,0.1); color:var(--accent-sosmed);"><i data-lucide="share-2"></i></div>
+          <div class="division-header-text">
+            <h1>Database Sosmed</h1>
+            <p>Semua dokumen, akun, form, dan akses operasional divisi Sosmed.</p>
+          </div>
+          <div class="division-stats">
+            <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
+            <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+          </div>
         </div>
-        <div class="chips" id="chipRow"></div>
-      </div>
-      <div class="wrap">
-        <div class="grid" id="grid"></div>
-        <div class="empty" id="emptyState" style="display:none;">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <p>Tidak ada hasil ditemukan.</p>
+        <div class="controls">
+          <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+          </div>
+          <div class="chips" id="chipRow"></div>
+        </div>
+        <div class="wrap">
+          <div class="grid" id="grid"></div>
+          <div class="empty" id="emptyState" style="display:none;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p>Tidak ada hasil ditemukan.</p>
+          </div>
         </div>
       </div>
+
       <footer style="margin-top:40px;">Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
     </div>
   </main>
 </div>
 
+<!-- Modal Tambah Content Plan -->
+<div class="modal-overlay" id="addContentModal" onclick="if(event.target===this) closeAddContentModal()">
+  <div class="modal-box">
+    <h3>Tambah Rencana Konten</h3>
+    <form id="contentForm" onsubmit="submitContentPlan(event)">
+      <div class="form-group">
+        <label>Judul Konten</label>
+        <input type="text" id="cpTitleInput" required placeholder="Contoh: Tips UMKM Go Digital">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Platform</label>
+          <select id="cpPlatform" required>
+            <option value="" disabled selected>Pilih Platform...</option>
+            <option value="Instagram">Instagram</option>
+            <option value="TikTok">TikTok</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Twitter">Twitter / X</option>
+            <option value="Facebook">Facebook</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Jenis Konten</label>
+          <select id="cpType">
+            <option value="">Pilih...</option>
+            <option value="Feed">Feed</option>
+            <option value="Reels">Reels</option>
+            <option value="Story">Story</option>
+            <option value="Carousel">Carousel</option>
+            <option value="Video">Video</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Tanggal Publish</label>
+        <input type="date" id="cpDate" required>
+      </div>
+      <div class="form-group">
+        <label>Draft Caption (Opsional)</label>
+        <textarea id="cpCaption" placeholder="Tulis draft caption di sini..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Catatan (Opsional)</label>
+        <input type="text" id="cpNotes" placeholder="Catatan internal tim">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeAddContentModal()">Batal</button>
+        <button type="submit" class="btn-submit" id="btnSubmitContent">Simpan Konten</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Detail Content -->
+<div class="modal-overlay" id="detailContentModal" onclick="if(event.target===this) closeDetailContentModal()">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+      <h3 id="detCpTitle" style="margin:0; padding-right:20px;">Detail Konten</h3>
+      <button onclick="closeDetailContentModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;">✕</button>
+    </div>
+    <div id="detCpBadges" style="margin-bottom:16px;"></div>
+    <div id="detCpBody" style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-mid); margin-bottom:16px;"></div>
+    <div class="form-row" style="margin-bottom:16px;">
+      <div class="form-group">
+        <label>Ubah Status</label>
+        <select id="detCpStatus" onchange="updateContentStatus()">
+          <option value="draft">Draft</option>
+          <option value="ready">Ready</option>
+          <option value="published">Published</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="deleteContentPlan()" style="color:var(--red);">Hapus</button>
+      <button type="button" class="btn-cancel" onclick="closeDetailContentModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 <script>
-initAppShell('sosmed', function(user) {
-  fetch('/api/items?division=sosmed')
+  let cpDate = new Date();
+  let cpPlans = [];
+  const monthNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+  function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function getPlatformIconHTML(p) {
+    const m = { 
+      'Instagram': '<i data-lucide="instagram" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
+      'TikTok': '<i data-lucide="video" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
+      'LinkedIn': '<i data-lucide="linkedin" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
+      'Twitter': '<i data-lucide="twitter" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
+      'Facebook': '<i data-lucide="facebook" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>' 
+    };
+    return m[p] || '<i data-lucide="share-2" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>';
+  }
+  function getPlatformBadgeClass(p) {
+    const m = { 'Instagram': 'badge-ig', 'TikTok': 'badge-tiktok', 'LinkedIn': 'badge-linkedin', 'Twitter': 'badge-twitter', 'Facebook': 'badge-facebook' };
+    return m[p] || '';
+  }
+  function getStatusBadgeClass(s) {
+    const m = { 'draft': 'badge-draft', 'ready': 'badge-ready', 'published': 'badge-published' };
+    return m[s] || 'badge-draft';
+  }
+  function getStatusLabel(s) {
+    const m = { 
+      'draft': '<i data-lucide="file-edit" style="width:11px;height:11px;vertical-align:-1px;margin-right:2px;"></i> Draft', 
+      'ready': '<i data-lucide="check" style="width:11px;height:11px;vertical-align:-1px;margin-right:2px;"></i> Ready', 
+      'published': '<i data-lucide="send" style="width:11px;height:11px;vertical-align:-1px;margin-right:2px;"></i> Published' 
+    };
+    return m[s] || s;
+  }
+
+  function fetchContentPlans() {
+    const y = cpDate.getFullYear(), m = cpDate.getMonth() + 1;
+    document.getElementById('cpTitle').textContent = `${monthNames[m-1]} ${y}`;
+
+    fetch(`/api/content-plans?year=${y}&month=${m}`)
+      .then(r => r.json())
+      .then(data => {
+        cpPlans = data;
+        renderCalendar();
+        renderList();
+        renderStats();
+      })
+      .catch(() => { cpPlans = []; renderCalendar(); renderList(); renderStats(); });
+  }
+
+  function renderStats() {
+    const total = cpPlans.length;
+    const draft = cpPlans.filter(p => p.status === 'draft').length;
+    const ready = cpPlans.filter(p => p.status === 'ready').length;
+    const published = cpPlans.filter(p => p.status === 'published').length;
+    document.getElementById('cpStats').innerHTML = `
+      <div class="cp-stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Konten</div></div>
+      <div class="cp-stat-card"><div class="stat-num" style="color:var(--yellow);">${draft}</div><div class="stat-label">Draft</div></div>
+      <div class="cp-stat-card"><div class="stat-num" style="color:var(--blue-mid);">${ready}</div><div class="stat-label">Ready</div></div>
+      <div class="cp-stat-card"><div class="stat-num" style="color:var(--green);">${published}</div><div class="stat-label">Published</div></div>
+    `;
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('cpGrid');
+    grid.innerHTML = '';
+    const y = cpDate.getFullYear(), m = cpDate.getMonth();
+    const first = new Date(y, m, 1);
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    let startDay = first.getDay() - 1; if (startDay < 0) startDay = 6;
+    const today = new Date();
+
+    for (let i = 0; i < startDay; i++) {
+      const c = document.createElement('div'); c.className = 'cp-day empty'; grid.appendChild(c);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cp-day';
+      const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (today.getFullYear() === y && today.getMonth() === m && today.getDate() === d) cell.classList.add('today');
+
+      let html = `<div class="cp-day-num">${d}</div>`;
+      const dayPlans = cpPlans.filter(p => p.publish_date === dateStr);
+      dayPlans.forEach(p => {
+        const safeData = JSON.stringify(p).replace(/"/g, '&quot;');
+        html += `<div class="cp-item ${p.status}" onclick="openDetailContent('${safeData}')" title="${escHtml(p.title)}">${getPlatformIconHTML(p.platform)} ${escHtml(p.title)}</div>`;
+      });
+      cell.innerHTML = html;
+      grid.appendChild(cell);
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function renderList() {
+    const div = document.getElementById('cpListContent');
+    if (!cpPlans.length) { div.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:24px; font-size:13px;">Belum ada rencana konten bulan ini.</div>'; return; }
+
+    const sorted = [...cpPlans].sort((a,b) => new Date(a.publish_date) - new Date(b.publish_date));
+    let html = '';
+    sorted.forEach(p => {
+      const safeData = JSON.stringify(p).replace(/"/g, '&quot;');
+      const dateStr = new Date(p.publish_date).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+      html += `
+        <div class="cp-list-item" onclick="openDetailContent('${safeData}')">
+          <div class="cp-list-left">
+            <div class="cp-list-title">
+              ${escHtml(p.title)}
+              <span class="badge ${getStatusBadgeClass(p.status)}">${getStatusLabel(p.status)}</span>
+            </div>
+            <div class="cp-list-meta">
+              <span style="display:flex;align-items:center;gap:3px;">${getPlatformIconHTML(p.platform)} ${p.platform}</span>
+              ${p.content_type ? `<span style="display:flex;align-items:center;gap:3px;"><i data-lucide="file-text" style="width:12px;height:12px;"></i> ${p.content_type}</span>` : ''}
+              <span style="display:flex;align-items:center;gap:3px;"><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${dateStr}</span>
+            </div>
+          </div>
+          <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:11px; padding:4px 10px;">${p.platform}</span>
+        </div>`;
+    });
+    div.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function cpPrevMonth() { cpDate.setMonth(cpDate.getMonth() - 1); fetchContentPlans(); }
+  function cpNextMonth() { cpDate.setMonth(cpDate.getMonth() + 1); fetchContentPlans(); }
+  function cpToday() { cpDate = new Date(); fetchContentPlans(); }
+
+  // Modals
+  function openAddContentModal() {
+    document.getElementById('contentForm').reset();
+    document.getElementById('addContentModal').classList.add('open');
+  }
+  function closeAddContentModal() { document.getElementById('addContentModal').classList.remove('open'); }
+
+  let activeContentPlan = null;
+  function openDetailContent(dataStr) {
+    const p = JSON.parse(dataStr);
+    activeContentPlan = p;
+    document.getElementById('detCpTitle').textContent = p.title;
+    document.getElementById('detCpBadges').innerHTML = `
+      <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:12px; padding:4px 12px;">${getPlatformIconHTML(p.platform)} ${p.platform}</span>
+      ${p.content_type ? `<span class="badge" style="background:var(--bg-surface); color:var(--text-secondary); font-size:12px; padding:4px 12px; margin-left:6px;"><i data-lucide="file-text" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> ${p.content_type}</span>` : ''}
+      <span class="badge ${getStatusBadgeClass(p.status)}" style="font-size:12px; padding:4px 12px; margin-left:6px;">${getStatusLabel(p.status)}</span>
+    `;
+    const dateStr = new Date(p.publish_date).toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    let body = `<div style="font-size:13px; color:var(--text-secondary);"><strong style="color:var(--text-primary);">Tanggal Publish:</strong> ${dateStr}</div>`;
+    if (p.caption) body += `<div style="margin-top:12px; font-size:13px; color:var(--text-secondary);"><strong style="color:var(--text-primary);">Caption:</strong><br><pre style="white-space:pre-wrap; font-family:'Inter',sans-serif; margin-top:4px; color:var(--text-secondary);">${escHtml(p.caption)}</pre></div>`;
+    if (p.notes) body += `<div style="margin-top:12px; font-size:13px; color:var(--text-secondary);"><strong style="color:var(--text-primary);">Catatan:</strong> ${escHtml(p.notes)}</div>`;
+    body += `<div style="margin-top:12px; font-size:11px; color:var(--text-muted);">Dibuat oleh: ${escHtml(p.created_by)}</div>`;
+    document.getElementById('detCpBody').innerHTML = body;
+    document.getElementById('detCpStatus').value = p.status;
+    document.getElementById('detailContentModal').classList.add('open');
+    if (window.lucide) window.lucide.createIcons();
+  }
+  function closeDetailContentModal() { document.getElementById('detailContentModal').classList.remove('open'); }
+
+  function updateContentStatus() {
+    if (!activeContentPlan) return;
+    const newStatus = document.getElementById('detCpStatus').value;
+    fetch('/api/content-plans/' + activeContentPlan.id, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
     .then(r => r.json())
-    .then(items => initDivisionPage(items))
-    .catch(() => initDivisionPage([]));
-});
+    .then(res => {
+      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
+      Swal.fire({ icon:'success', title:'Berhasil', text:'Status konten diperbarui!', timer:1500, showConfirmButton:false });
+      closeDetailContentModal();
+      fetchContentPlans();
+    });
+  }
+
+  function deleteContentPlan() {
+    if (!activeContentPlan) return;
+    Swal.fire({ title:'Hapus Konten?', text:'Yakin ingin menghapus rencana konten ini?', icon:'warning', showCancelButton:true, confirmButtonText:'Ya, Hapus', cancelButtonText:'Batal' })
+    .then(result => {
+      if (!result.isConfirmed) return;
+      fetch('/api/content-plans/' + activeContentPlan.id, { method: 'DELETE' })
+      .then(r => r.json())
+      .then(() => {
+        Swal.fire({ icon:'success', title:'Dihapus', timer:1200, showConfirmButton:false });
+        closeDetailContentModal();
+        fetchContentPlans();
+      });
+    });
+  }
+
+  function submitContentPlan(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitContent');
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    const payload = {
+      title: document.getElementById('cpTitleInput').value,
+      platform: document.getElementById('cpPlatform').value,
+      content_type: document.getElementById('cpType').value || null,
+      publish_date: document.getElementById('cpDate').value,
+      caption: document.getElementById('cpCaption').value || null,
+      notes: document.getElementById('cpNotes').value || null
+    };
+    fetch('/api/content-plans', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = 'Simpan Konten';
+      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
+      Swal.fire({ icon:'success', title:'Berhasil!', text:'Konten berhasil ditambahkan!', timer:1500, showConfirmButton:false });
+      closeAddContentModal();
+      fetchContentPlans();
+    })
+    .catch(() => { btn.disabled = false; btn.textContent = 'Simpan Konten'; });
+  }
+
+  // Init
+  initAppShell('sosmed', function(user) {
+    fetchContentPlans();
+    fetch('/api/items?division=sosmed')
+      .then(r => r.json())
+      .then(items => initDivisionPage(items))
+      .catch(() => initDivisionPage([]));
+  });
 </script>
 </body>
 </html>

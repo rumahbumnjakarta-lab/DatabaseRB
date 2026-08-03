@@ -220,16 +220,16 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 }
 .div-pill:hover { border-color: var(--gold); color: var(--gold); }
 .div-pill.active {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #0E1620;
+  background: var(--blue-mid);
+  border-color: var(--blue-mid);
+  color: #ffffff;
   box-shadow: 0 3px 10px rgba(48,127,226,0.25);
 }
 .div-pill .pill-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 .div-pill.active .pill-dot { opacity: 1; }
 
@@ -409,7 +409,6 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   width: 400px;
   max-width: 92vw;
   height: 100vh;
-  height: 100dvh;
   background: var(--bg-card);
   border-left: 1px solid var(--border);
   z-index: 501;
@@ -418,27 +417,31 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   display: flex;
   flex-direction: column;
   box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+  margin: 0;
+  overflow: hidden; /* Fix footer push-out */
 }
 .drawer-overlay.open .drawer {
   transform: translateX(0);
 }
 .drawer-header {
-  padding: 22px 24px;
+  padding: 16px 24px; /* Reduced padding to look cleaner */
   border-bottom: 1px solid var(--border);
+  background: var(--bg-card); /* Ensure header is always white/card color */
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  margin: 0;
 }
 .drawer-header h3 {
   font-family: 'Inter', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   color: var(--text-primary);
   margin: 0;
   font-weight: 700;
 }
 .btn-close-drawer {
-  width: 32px; height: 32px;
+  width: 30px; height: 30px;
   border-radius: 50%;
   border: none;
   background: var(--bg-surface);
@@ -454,16 +457,19 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 .drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  min-height: 0; /* Critical for flex scrolling */
+  padding: 20px 24px;
   background: var(--bg-card);
+  margin: 0;
 }
 .drawer-footer {
-  padding: 16px 24px;
+  padding: 14px 24px;
   border-top: 1px solid var(--border);
   background: var(--bg-card);
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  margin: 0;
 }
 
 /* ─── Form Styles ─── */
@@ -528,9 +534,9 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   gap: 6px;
 }
 .type-toggle-btn.active {
-  border-color: var(--gold);
-  background: var(--gold);
-  color: #0E1620;
+  border-color: var(--blue-mid);
+  background: var(--blue-mid);
+  color: #ffffff;
   font-weight: 700;
   box-shadow: 0 3px 10px rgba(48,127,226,0.25);
 }
@@ -543,8 +549,8 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 /* ─── Drawer Action Buttons ─── */
 .btn-drawer-save {
   flex: 1;
-  background: var(--gold);
-  color: #0E1620;
+  background: var(--blue-mid);
+  color: #ffffff;
   border: none;
   padding: 12px;
   border-radius: 10px;
@@ -554,7 +560,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   transition: all 0.2s;
   font-family: 'Inter', sans-serif;
 }
-.btn-drawer-save:hover { background: var(--gold-bright); }
+.btn-drawer-save:hover { background: var(--blue-dark); }
 .btn-drawer-cancel {
   background: var(--bg-surface);
   color: var(--text-secondary);
@@ -817,150 +823,6 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 
 </div>
 
-<!-- ─── Slide-in Drawer ─── -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="handleOverlayClick(event)">
-  <div class="drawer" id="formDrawer">
-    <div class="drawer-header">
-      <h3 id="drawerTitle">Tambah Item Baru</h3>
-      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup">✕</button>
-    </div>
-
-    <div class="drawer-body">
-      <form id="itemForm" onsubmit="handleFormSubmit(event)">
-        <input type="hidden" id="itemId">
-
-        <!-- Divisi -->
-        <div class="form-field">
-          <label for="itemDivision">Divisi</label>
-          <select id="itemDivision" required>
-            <option value="bd">Business Development</option>
-            <option value="sosmed">Social Media</option>
-            <option value="design">Design</option>
-            <option value="event">Event</option>
-            <option value="admin">Admin</option>
-            <option value="administrasi">Administrasi</option>
-            <option value="email">Akun Email</option>
-          </select>
-        </div>
-
-        <!-- Tipe Item (Toggle Button) -->
-        <div class="form-field">
-          <label>Tipe Item</label>
-          <div class="type-toggle">
-            <button type="button" class="type-toggle-btn active" id="typeBtnLink" onclick="setType('link')">
-              🔗 Link / Dokumen
-            </button>
-            <button type="button" class="type-toggle-btn" id="typeBtnCred" onclick="setType('cred')">
-              🔑 Kredensial
-            </button>
-          </div>
-        </div>
-        <input type="hidden" id="itemType" value="link">
-
-        <div class="form-section-divider"></div>
-
-        <!-- Judul -->
-        <div class="form-field">
-          <label for="itemTitle">Judul Item <span style="color:#DC2626">*</span></label>
-          <input type="text" id="itemTitle" placeholder="Contoh: Canva Workspace Utama" required>
-        </div>
-
-        <!-- Kategori -->
-        <div class="form-field">
-          <label for="itemCat">Kategori <span style="color:#DC2626">*</span></label>
-          <input type="text" id="itemCat" list="categorySuggestions" placeholder="Contoh: Canva, Surat, Akademik" required>
-          <datalist id="categorySuggestions"></datalist>
-          <div class="hint">Pilih dari daftar atau ketik kategori baru.</div>
-        </div>
-
-        <!-- URL Group (for link type) -->
-        <div id="urlGroup" class="form-field">
-          <label for="itemUrl">URL Link <span style="color:#DC2626">*</span></label>
-          <input type="text" id="itemUrl" placeholder="https://docs.google.com/...">
-        </div>
-
-        <!-- Cred Group (for cred type) -->
-        <div id="credGroup" style="display:none;">
-          <div class="form-field">
-            <label for="itemEmail">Alamat Email <span style="color:#DC2626">*</span></label>
-            <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
-          </div>
-          <div class="form-field">
-            <label for="itemPass">Password <span style="color:#DC2626">*</span></label>
-            <input type="text" id="itemPass" placeholder="Password akun">
-          </div>
-        </div>
-
-        <!-- Catatan -->
-        <div class="form-field">
-          <label for="itemNote">Catatan (opsional)</label>
-          <textarea id="itemNote" placeholder="Keterangan singkat mengenai kegunaan item ini..."></textarea>
-        </div>
-      </form>
-    </div>
-
-    <div class="drawer-footer">
-      <button class="btn-drawer-cancel" onclick="closeDrawer()">Batal</button>
-      <button class="btn-drawer-save" onclick="document.getElementById('itemForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
-        <span id="btnSaveLabel">💾 Simpan Item</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── Delete Confirmation Modal ─── -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal-box">
-    <div class="modal-icon">🗑️</div>
-    <h3>Hapus Item?</h3>
-    <p>Anda akan menghapus item <strong id="deleteItemName"></strong>. Tindakan ini tidak dapat dibatalkan.</p>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
-      <button class="btn-modal-delete" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── Register Drawer (Slide-in Right) ─── -->
-<div class="drawer-overlay" id="registerModal" onclick="if(event.target===this) closeRegisterModal()">
-  <div class="drawer">
-    <div class="drawer-header">
-      <h3 style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin:0;">Daftar Akun Baru</h3>
-      <button class="btn-close-drawer" onclick="closeRegisterModal()" title="Tutup">✕</button>
-    </div>
-
-    <div class="drawer-body">
-      <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;margin-top:0;margin-bottom:20px;">
-        Gunakan email <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong> untuk mendaftarkan anggota tim baru.
-      </p>
-      <form id="manageRegisterForm" onsubmit="handleManageRegister(event)">
-        <div class="form-field">
-          <label for="manageRegName">Nama Lengkap</label>
-          <input type="text" id="manageRegName" placeholder="Contoh: John Doe" required>
-        </div>
-        <div class="form-field">
-          <label for="manageRegEmail">Email Perusahaan</label>
-          <input type="email" id="manageRegEmail" placeholder="nama@staff.rbjakarta.id" required>
-        </div>
-        <div class="form-field">
-          <label for="manageRegPassword">Kata Sandi Baru</label>
-          <input type="password" id="manageRegPassword" placeholder="Minimal 6 karakter" required minlength="6">
-        </div>
-      </form>
-    </div>
-
-    <div class="drawer-footer">
-      <button type="button" class="btn-drawer-cancel" onclick="closeRegisterModal()">Batal</button>
-      <button type="button" class="btn-drawer-save" id="btnManageReg" onclick="document.getElementById('manageRegisterForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
-        👤 Buat Akun
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── Toast Container ─── -->
-<div class="toast-container" id="toastContainer"></div>
-
 <footer>Rumah BUMN Jakarta — Kolaborasi BRI &amp; Danantara Indonesia</footer>
 
 <script>
@@ -1078,12 +940,20 @@ function animateNumber(id, target) {
 function showSkeleton() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = Array(4).fill(`
-    <tr class="skeleton-row">
-      <td><div class="skeleton-bar" style="width:70px"></div></td>
-      <td><div class="skeleton-bar" style="width:180px;margin-bottom:6px"></div><div class="skeleton-bar" style="width:120px;height:10px"></div></td>
-      <td><div class="skeleton-bar" style="width:60px"></div></td>
-      <td><div class="skeleton-bar" style="width:100px;margin-left:auto"></div></td>
-    </tr>
+    <div class="item-card skeleton-row" style="opacity: 0.6;">
+      <div class="card-header-top">
+        <div class="skeleton-bar" style="width:70px; height:18px; border-radius:10px; background:var(--border-mid);"></div>
+        <div class="skeleton-bar" style="width:60px; height:18px; border-radius:10px; background:var(--border-mid);"></div>
+      </div>
+      <div>
+        <div class="skeleton-bar" style="width:180px; height:16px; margin-bottom:10px; background:var(--border-mid);"></div>
+        <div class="skeleton-bar" style="width:120px; height:12px; background:var(--border-mid);"></div>
+      </div>
+      <div class="card-actions">
+        <div class="skeleton-bar" style="width:50%; height:32px; border-radius:10px; background:var(--border-mid);"></div>
+        <div class="skeleton-bar" style="width:50%; height:32px; border-radius:10px; background:var(--border-mid);"></div>
+      </div>
+    </div>
   `).join('');
 }
 
@@ -1164,7 +1034,7 @@ function openDrawer(prefillDiv) {
   else document.getElementById('itemDivision').value = activeDivision === 'all' ? 'bd' : activeDivision;
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawerTitle').textContent = 'Tambah Item Baru';
-  document.getElementById('btnSaveLabel').textContent = '💾 Simpan Item';
+  document.getElementById('btnSaveLabel').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Item`;
   setTimeout(() => document.getElementById('itemTitle').focus(), 350);
 }
 
@@ -1211,7 +1081,9 @@ function handleFormSubmit(e) {
     })
     .catch(() => {
       showToast('Gagal menyimpan data!', true);
-      saveBtn.textContent = id ? '💾 Perbarui Item' : '💾 Simpan Item';
+      saveBtn.innerHTML = id 
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Perbarui Item` 
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Item`;
     });
 }
 
@@ -1233,7 +1105,7 @@ function editItem(id) {
   }
 
   document.getElementById('drawerTitle').textContent = 'Edit Item';
-  document.getElementById('btnSaveLabel').textContent = '💾 Perbarui Item';
+  document.getElementById('btnSaveLabel').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Perbarui Item`;
   document.getElementById('drawerOverlay').classList.add('open');
   setTimeout(() => document.getElementById('itemTitle').focus(), 350);
 }
@@ -1274,9 +1146,56 @@ function confirmDelete() {
   // handled via SweetAlert2
 }
 
+// ─── Divisi Dropdown Logic ───
+function updateManageDivisiOptions(role, selectedVal = '') {
+  const select = document.getElementById('manageRegDivisi');
+  if (!select) return;
+  select.innerHTML = '';
+  
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.selected = !selectedVal;
+  placeholder.textContent = 'Pilih Divisi...';
+  select.appendChild(placeholder);
+
+  let options = [];
+  if (role === 'staff') {
+    options = [
+      { value: 'General Administration', label: 'General Administration' }
+    ];
+  } else {
+    options = [
+      { value: 'Business Development', label: 'Business Development' },
+      { value: 'Social Media', label: 'Social Media' },
+      { value: 'Design Graphic', label: 'Design Graphic' },
+      { value: 'Event & Partnerships', label: 'Event & Partnerships' },
+      { value: 'General Administration', label: 'General Administration' }
+    ];
+  }
+
+  options.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt.value;
+    o.textContent = opt.label;
+    if (opt.value === selectedVal) {
+      o.selected = true;
+    }
+    select.appendChild(o);
+  });
+}
+
+// Bind email input keyup/change to detect role
+document.getElementById('manageRegEmail').addEventListener('input', (e) => {
+  const email = e.target.value.toLowerCase().trim();
+  const role = email.endsWith('@staff.rbjakarta.id') ? 'staff' : 'internship';
+  updateManageDivisiOptions(role);
+});
+
 // ─── Register ───
 function openRegisterModal() {
   document.getElementById('manageRegisterForm').reset();
+  updateManageDivisiOptions('internship'); // default
   document.getElementById('registerModal').classList.add('open');
 }
 
@@ -1292,13 +1211,14 @@ async function handleManageRegister(e) {
 
   const name = document.getElementById('manageRegName').value.trim();
   const email = document.getElementById('manageRegEmail').value.trim();
+  const divisi = document.getElementById('manageRegDivisi').value;
   const password = document.getElementById('manageRegPassword').value;
 
   try {
     const res = await fetch('/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name, email, password, divisi })
     });
     
     let data;
@@ -1345,5 +1265,165 @@ initAppShell('manage', function(user) {
 </script>
 </main>
 </div><!-- .app-shell -->
+
+<!-- ─── Slide-in Drawer ─── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="handleOverlayClick(event)">
+  <div class="drawer" id="formDrawer">
+    <div class="drawer-header">
+      <h3 id="drawerTitle">Tambah Item Baru</h3>
+      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <form id="itemForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="itemId">
+
+        <!-- Divisi -->
+        <div class="form-field">
+          <label for="itemDivision">Divisi</label>
+          <select id="itemDivision" required>
+            <option value="bd">Business Development</option>
+            <option value="sosmed">Social Media</option>
+            <option value="design">Design</option>
+            <option value="event">Event</option>
+            <option value="admin">Admin</option>
+            <option value="administrasi">Administrasi</option>
+            <option value="email">Akun Email</option>
+          </select>
+        </div>
+
+        <!-- Tipe Item (Toggle Button) -->
+        <div class="form-field">
+          <label>Tipe Item</label>
+          <div class="type-toggle">
+            <button type="button" class="type-toggle-btn active" id="typeBtnLink" onclick="setType('link')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Link / Dokumen
+            </button>
+            <button type="button" class="type-toggle-btn" id="typeBtnCred" onclick="setType('cred')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></svg> Kredensial
+            </button>
+          </div>
+        </div>
+        <input type="hidden" id="itemType" value="link">
+
+        <div class="form-section-divider"></div>
+
+        <!-- Judul -->
+        <div class="form-field">
+          <label for="itemTitle">Judul Item <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemTitle" placeholder="Contoh: Canva Workspace Utama" required>
+        </div>
+
+        <!-- Kategori -->
+        <div class="form-field">
+          <label for="itemCat">Kategori <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemCat" list="categorySuggestions" placeholder="Contoh: Canva, Surat, Akademik" required>
+          <datalist id="categorySuggestions"></datalist>
+          <div class="hint">Pilih dari daftar atau ketik kategori baru.</div>
+        </div>
+
+        <!-- URL Group (for link type) -->
+        <div id="urlGroup" class="form-field">
+          <label for="itemUrl">URL Link <span style="color:#DC2626">*</span></label>
+          <input type="text" id="itemUrl" placeholder="https://docs.google.com/...">
+        </div>
+
+        <!-- Cred Group (for cred type) -->
+        <div id="credGroup" style="display:none;">
+          <div class="form-field">
+            <label for="itemEmail">Alamat Email <span style="color:#DC2626">*</span></label>
+            <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
+          </div>
+          <div class="form-field">
+            <label for="itemPass">Password <span style="color:#DC2626">*</span></label>
+            <input type="text" id="itemPass" placeholder="Password akun">
+          </div>
+        </div>
+
+        <!-- Catatan -->
+        <div class="form-field">
+          <label for="itemNote">Catatan (opsional)</label>
+          <textarea id="itemNote" placeholder="Keterangan singkat mengenai kegunaan item ini..."></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-drawer-cancel" onclick="closeDrawer()">Batal</button>
+      <button class="btn-drawer-save" onclick="document.getElementById('itemForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
+        <span id="btnSaveLabel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Item</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Delete Confirmation Modal ─── -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <h3>Hapus Item?</h3>
+    <p>Anda akan menghapus item <strong id="deleteItemName"></strong>. Tindakan ini tidak dapat dibatalkan.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+      <button class="btn-modal-delete" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Register Drawer (Slide-in Right) ─── -->
+<div class="drawer-overlay" id="registerModal" onclick="if(event.target===this) closeRegisterModal()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <h3 style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin:0;">Daftar Akun Baru</h3>
+      <button class="btn-close-drawer" onclick="closeRegisterModal()" title="Tutup">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;margin-top:0;margin-bottom:20px;">
+        Gunakan email <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong> untuk mendaftarkan anggota tim baru.
+      </p>
+      <form id="manageRegisterForm" onsubmit="handleManageRegister(event)">
+        <div class="form-field">
+          <label for="manageRegName">Nama Lengkap</label>
+          <input type="text" id="manageRegName" placeholder="Contoh: John Doe" required>
+        </div>
+        <div class="form-field">
+          <label for="manageRegEmail">Email Perusahaan</label>
+          <input type="email" id="manageRegEmail" placeholder="nama@staff.rbjakarta.id" required>
+        </div>
+        <div class="form-field">
+          <label for="manageRegDivisi">Divisi <span style="color:#DC2626">*</span></label>
+          <select id="manageRegDivisi" required>
+            <option value="" disabled selected>Pilih Divisi...</option>
+            <option value="Sekretaris">Sekretaris</option>
+            <option value="Bendahara">Bendahara</option>
+            <option value="Business Development">Business Development</option>
+            <option value="Social Media">Social Media</option>
+            <option value="PIC UMIBA">PIC UMIBA</option>
+            <option value="Fasilitator">Fasilitator</option>
+            <option value="Media & Content">Media & Content</option>
+            <option value="Design">Design</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="manageRegPassword">Kata Sandi Baru</label>
+          <input type="password" id="manageRegPassword" placeholder="Minimal 6 karakter" required minlength="6">
+        </div>
+      </form>
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn-drawer-cancel" onclick="closeRegisterModal()">Batal</button>
+      <button type="button" class="btn-drawer-save" id="btnManageReg" onclick="document.getElementById('manageRegisterForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
+        👤 Buat Akun
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast Container ─── -->
+<div class="toast-container" id="toastContainer"></div>
+
+
 </body>
 </html>

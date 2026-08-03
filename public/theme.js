@@ -49,22 +49,8 @@
 
   // ─── Inject toggle button into DOM ───
   function injectToggle() {
-    if (document.getElementById('themeToggle')) return;
-
-    const btn = document.createElement('button');
-    btn.id          = 'themeToggle';
-    btn.className   = 'theme-toggle';
-    btn.setAttribute('aria-label', 'Ganti mode warna');
-    btn.addEventListener('click', toggleTheme);
-
-    const tooltip = document.createElement('div');
-    tooltip.id        = 'themeTooltip';
-    tooltip.className = 'theme-toggle-tooltip';
-
-    document.body.appendChild(btn);
-    document.body.appendChild(tooltip);
-
-    updateToggleBtn(getTheme());
+    // Disabled floating toggle button per user request
+    return;
   }
 
   // ─── Listen for system preference changes ───

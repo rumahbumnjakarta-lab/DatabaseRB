@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda & Event Hub — Rumah BUMN Jakarta</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .agenda-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .agenda-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .agenda-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+  }
+  
+  .btn-add-agenda {
+    background: linear-gradient(135deg, #307fe2 0%, #1e5bb8 100%);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 9px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 14px rgba(48,127,226,0.3);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-add-agenda:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(48,127,226,0.4);
+  }
+
+  /* Calendar Controls */
+  .cal-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .cal-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-mid);
+    color: var(--text-primary);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cal-btn:hover {
+    background: var(--border);
+  }
+  .cal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 140px;
+    text-align: center;
+  }
+
+  /* Calendar Grid */
+  .cal-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .cal-header-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-header-cell {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+  .cal-header-cell.weekend {
+    color: rgba(239, 68, 68, 0.8); /* Red tint for weekends */
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+  }
+  
+  .cal-cell {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--bg-card);
+    transition: background 0.2s;
+  }
+  .cal-cell:nth-child(7n) {
+    border-right: none;
+  }
+  .cal-cell.empty {
+    background: rgba(255,255,255,0.01);
+  }
+  .cal-cell:hover:not(.empty) {
+    background: var(--bg-surface);
+  }
+  .cal-cell.today .cal-date-num {
+    background: var(--blue-mid);
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cal-date {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .cal-date-num {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .cal-cell.weekend .cal-date-num {
+    color: rgba(239, 68, 68, 0.9);
+  }
+
+  /* Event Pills */
+  .cal-events {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  .event-pill {
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    transition: transform 0.1s, opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .event-pill:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+  .event-pill .event-time {
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.7;
+    font-size: 10px;
+  }
+
+  /* Colors for pills based on division (Sesuai Panduan Sheets) */
+  .bg-event { background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); }   /* Red: Event & Partnerships */
+  .bg-bd { background: rgba(249, 115, 22, 0.15); color: #ea580c; border: 1px solid rgba(249, 115, 22, 0.3); }    /* Orange: Business Development */
+  .bg-sosmed { background: rgba(234, 179, 8, 0.18); color: #b45309; border: 1px solid rgba(234, 179, 8, 0.35); }  /* Yellow: Social Media */
+  .bg-admin { background: rgba(6, 182, 212, 0.15); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.3); }   /* Cyan: General Administration */
+  .bg-design { background: rgba(217, 70, 239, 0.15); color: #c026d3; border: 1px solid rgba(217, 70, 239, 0.3); } /* Magenta: Design Graphic */
+  .bg-default { background: rgba(107, 114, 128, 0.15); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.3); } /* Gray: Program Lama / Lainnya */
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+    width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-box h3 { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
+  
+  /* Detail Modal Specifics */
+  .detail-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    background: var(--bg-surface);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border-mid);
+  }
+  .detail-meta-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .detail-meta-item i {
+    color: var(--blue-mid);
+    margin-top: 2px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    border-radius: 10px; font-size: 14px; color: var(--text-primary);
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--blue-mid); outline: none; box-shadow: 0 0 0 3px rgba(48,127,226,0.15);
+  }
+  
+  .form-row { display: flex; gap: 16px; }
+  .form-row .form-group { flex: 1; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+  .modal-actions button { padding: 10px 18px; border-radius: 9px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; }
+  .btn-cancel { background: transparent; color: var(--text-secondary); }
+  .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+  .btn-submit { background: var(--blue-mid); color: #fff; }
+  .btn-submit:hover { background: var(--blue-dark); }
+  
+  /* Agenda List Section */
+  .agenda-list-wrapper {
+    margin-top: 32px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .agenda-list-wrapper h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .agenda-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-mid);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+  }
+  .agenda-list-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--blue-mid);
+  }
+  .agenda-list-item:last-child { margin-bottom: 0; }
+  .list-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .list-item-title { font-weight: 700; color: var(--text-primary); font-size: 15px; }
+  .list-item-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); }
+  .list-item-meta i { width: 14px; height: 14px; }
+  .list-empty { text-align: center; color: var(--text-muted); padding: 24px; font-size: 13px; }
+
+  /* Loading Overlay for Calendar */
+  #calLoading {
+    position: absolute; inset: 0; background: rgba(9, 14, 23, 0.7); backdrop-filter: blur(2px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; color: var(--text-muted); font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .cal-grid {
+      grid-template-columns: repeat(7, minmax(60px, 1fr));
+      overflow-x: auto;
+    }
+    .cal-header-row {
+      grid-template-columns: repeat(7, minmax(60px, 1fr));
+    }
+    .cal-wrapper {
+      overflow-x: auto;
+    }
+    .event-pill {
+      font-size: 9px;
+      padding: 2px 4px;
+    }
+    .event-pill .event-time { display: none; } /* Sembunyikan jam di mobile agar muat */
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div id="appContent" class="app-content" style="display:none;">
+      
+      <div class="agenda-header">
+        <div>
+          <h2>Agenda & Event Hub</h2>
+          <p>Kalender jadwal kegiatan, silabus, dan acara mendatang.</p>
+        </div>
+        <button id="btnAddAgenda" class="btn-add-agenda" style="display:none;" onclick="openAddModal()">
+          <i data-lucide="plus"></i> Tambah Agenda
+        </button>
+      </div>
+
+      <!-- Calendar UI -->
+      <div class="cal-controls">
+        <button class="cal-btn" onclick="prevMonth()"><i data-lucide="chevron-left"></i></button>
+        <div class="cal-title" id="calTitle">Memuat...</div>
+        <button class="cal-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
+        <button class="cal-btn" onclick="goToday()" style="width:auto; padding:0 12px; font-size:13px; font-weight:600;">Hari Ini</button>
+      </div>
+
+      <div class="cal-wrapper" style="position:relative;">
+        <div id="calLoading" style="display:none;">
+          <div class="loading-spinner"></div>
+          <div style="margin-top:12px;">Memuat jadwal...</div>
+        </div>
+        <div class="cal-header-row">
+          <div class="cal-header-cell">Sen</div>
+          <div class="cal-header-cell">Sel</div>
+          <div class="cal-header-cell">Rab</div>
+          <div class="cal-header-cell">Kam</div>
+          <div class="cal-header-cell">Jum</div>
+          <div class="cal-header-cell weekend">Sab</div>
+          <div class="cal-header-cell weekend">Min</div>
+        </div>
+        <div class="cal-grid" id="calGrid">
+          <!-- Calendar cells generated by JS -->
+        </div>
+      </div>
+
+      <!-- Rincian Acara -->
+      <div class="agenda-list-wrapper" id="agendaListWrapper">
+        <h3>Rincian Acara Bulan Ini</h3>
+        <div id="agendaListContent"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal Tambah Agenda -->
+<div class="modal-overlay" id="addModalOverlay" onclick="if(event.target===this) closeAddModal()">
+  <div class="modal-box">
+    <h3>Tambah Agenda Baru</h3>
+    <form id="addForm" onsubmit="submitAgenda(event)">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+        <!-- Kolom Kiri: Info Dasar & Waktu -->
+        <div>
+          <h4 style="margin-top:0; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="info" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Informasi Dasar</h4>
+          
+          <div class="form-group">
+            <label>Judul Acara / Silabus</label>
+            <input type="text" id="agendaTitle" name="title" required placeholder="Contoh: Pelatihan Digital Marketing">
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Kategori Divisi</label>
+              <select id="agendaCat" name="category" required>
+                <option value="" disabled selected>Pilih Kategori...</option>
+                <option value="Silabus BD">Silabus BD</option>
+                <option value="UMIBA">UMIBA</option>
+                <option value="GBKP Moria">GBKP Moria</option>
+                <option value="Event">Event</option>
+                <option value="Audiensi">Audiensi</option>
+                <option value="Design">Design</option>
+                <option value="Sosmed">Sosmed</option>
+                <option value="Admin">Admin</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Acara</label>
+              <input type="date" id="agendaDate" name="event_date" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Jam Mulai</label>
+              <input type="time" id="agendaStart" name="start_time">
+            </div>
+            <div class="form-group">
+              <label>Jam Selesai</label>
+              <input type="time" id="agendaEnd" name="end_time">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Lokasi / Ruangan</label>
+              <input type="text" id="agendaLoc" name="location" placeholder="Misal: Aula RB">
+            </div>
+            <div class="form-group">
+              <label>Kelas</label>
+              <select id="agendaKelas" name="kelas">
+                <option value="">Pilih...</option>
+                <option value="Offline">Offline</option>
+                <option value="Online">Online</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Jenis Pelatihan</label>
+            <select id="agendaJenisPelatihan" name="jenis_pelatihan">
+              <option value="">Pilih...</option>
+              <option value="Literasi Bisnis">Literasi Bisnis</option>
+              <option value="Literasi Digital">Literasi Digital</option>
+              <option value="Pelatihan Tematik">Pelatihan Tematik</option>
+              <option value="Literasi Dasar">Literasi Dasar</option>
+              <option value="Booking">Booking</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Kolom Kanan: Tim & Tautan -->
+        <div>
+          <h4 style="margin-top:0; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="users" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tim Acara</h4>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Narasumber</label>
+              <input type="text" id="agendaSpeaker" name="speaker_name" placeholder="Nama Pembicara">
+            </div>
+            <div class="form-group">
+              <label>Upload CV (Opsional)</label>
+              <input type="file" id="agendaCvFile" name="cvNarsum" accept=".pdf,.doc,.docx" style="font-size: 12px; padding: 6px;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>PIC</label>
+              <input type="text" id="agendaPic" name="pic_name" placeholder="Penanggung Jawab">
+            </div>
+            <div class="form-group">
+              <label>MC</label>
+              <input type="text" id="agendaMC" name="mc" placeholder="Nama MC">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Jumlah Peserta</label>
+            <input type="number" id="agendaPeserta" name="jumlah_peserta" placeholder="Target Peserta (Angka)">
+          </div>
+
+          <h4 style="margin-top:24px; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="link" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tautan (Opsional)</h4>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="url" id="linkZoom" name="link_zoom" placeholder="🔗 Link Zoom">
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="url" id="linkUmkm" name="link_umkm" placeholder="🔗 Link Pendataan UMKM">
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="url" id="linkGform" name="link_pendaftaran_gform" placeholder="🔗 Link GForm Pendaftaran">
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="url" id="linkSheets" name="spreadsheets_data_peserta" placeholder="🔗 Link Spreadsheet Data">
+          </div>
+          <div class="form-group" style="margin-bottom: 8px;">
+            <input type="text" id="captionSosmed" name="caption_sosmed" placeholder="📝 Caption Sosmed Singkat">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeAddModal()">Batal</button>
+        <button type="submit" class="btn-submit" id="btnSubmitAgenda">Simpan Acara</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Detail Acara -->
+<div class="modal-overlay" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+      <h3 id="detTitle" style="margin:0; font-size:22px; padding-right:20px;">Judul Acara</h3>
+      <button onclick="closeDetailModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;">✕</button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+      <span id="detCat" style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary);">Kategori</span>
+      <span id="detStatus" style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(34,197,94,0.15); color: #22c55e; margin-left:8px; display:none;">Selesai</span>
+    </div>
+
+    <div class="detail-meta-list">
+      <div class="detail-meta-item">
+        <i data-lucide="calendar"></i>
+        <div>
+          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Tanggal & Waktu</div>
+          <span id="detDate"></span> <br>
+          <span id="detTime" style="font-family:'JetBrains Mono',monospace;"></span>
+        </div>
+      </div>
+      <div class="detail-meta-item" id="detLocWrap">
+        <i data-lucide="map-pin"></i>
+        <div>
+          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Lokasi</div>
+          <span id="detLoc"></span>
+        </div>
+      </div>
+      <div class="detail-meta-item" id="detSpeakerWrap">
+        <i data-lucide="mic"></i>
+        <div>
+          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Narasumber</div>
+          <span id="detSpeaker"></span>
+        </div>
+      </div>
+      <div class="detail-meta-item" id="detPicWrap">
+        <i data-lucide="user"></i>
+        <div>
+          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">PIC</div>
+          <span id="detPic"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-meta-list" id="detChecklistWrap" style="display:none;">
+      <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:8px;">Kelengkapan</div>
+      <div id="detChecklist" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; color:var(--text-secondary);"></div>
+    </div>
+
+    <div id="detCvWrap" style="margin-bottom:24px; display:none;">
+      <a href="#" id="detCvLink" target="_blank" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--blue-mid); color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:13px; transition:opacity 0.2s;">
+        <i data-lucide="download" style="width:16px;height:16px;"></i> Unduh CV Narasumber
+      </a>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" onclick="closeDetailModal()">Tutup</button>
+      <button type="button" class="btn-submit" id="btnUpdateChecklist" onclick="openChecklistModal()" style="display:none;">Update Kelengkapan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Update Checklist -->
+<div class="modal-overlay" id="checklistModalOverlay" onclick="if(event.target===this) closeChecklistModal()">
+  <div class="modal-box" style="max-width:400px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+      <h3 style="margin:0; font-size:18px;">Update Kelengkapan</h3>
+      <button onclick="closeChecklistModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;">✕</button>
+    </div>
+    <form id="checklistForm" onsubmit="submitChecklist(event)">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 13px; margin-bottom: 24px;">
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="poster" id="cl_poster"> Poster</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="publikasi" id="cl_publikasi"> Publikasi</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="terlaksana" id="cl_terlaksana"> Terlaksana</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="cms" id="cl_cms"> CMS</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="rb_id" id="cl_rb_id"> RB ID</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="up_modul" id="cl_up_modul"> UP MODUL</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="cv_expert" id="cl_cv_expert"> CV EXPERT</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="flyer_sg_feed" id="cl_flyer_sg_feed"> FLYER SG FEED</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="katalog_cv_canva" id="cl_katalog_cv_canva"> KATALOG CV CANVA</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="blast_share_wa" id="cl_blast_share_wa"> BLAST SHARE WA</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="data_mentor_modul" id="cl_data_mentor_modul"> DATA MENTOR MODUL</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="follow_up" id="cl_follow_up"> FOLLOW UP</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="absen_kehadiran" id="cl_absen_kehadiran"> ABSEN KEHADIRAN</label>
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="surat_pernyataan" id="cl_surat_pernyataan"> SURAT PERNYATAAN</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeChecklistModal()">Batal</button>
+        <button type="submit" class="btn-submit" id="btnSubmitChecklist">Simpan Kelengkapan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  let currentDate = new Date();
+  let currentEvents = [];
+
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  function getCategoryColorClass(cat) {
+    cat = (cat || '').toLowerCase();
+    if (cat.includes('bd') || cat.includes('business')) return 'bg-bd';
+    if (cat.includes('event')) return 'bg-event';
+    if (cat.includes('design')) return 'bg-design';
+    if (cat.includes('sosmed')) return 'bg-sosmed';
+    if (cat.includes('admin')) return 'bg-admin';
+    return 'bg-default';
+  }
+
+  function isEventCompleted(ev) {
+    if (ev.status === 'completed') return true;
+    const now = new Date();
+    const eventDate = new Date(ev.event_date);
+    eventDate.setHours(0,0,0,0);
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    if (eventDate < today) return true;
+    if (eventDate.getTime() === today.getTime()) {
+      if (ev.end_time) {
+        const [h, m] = ev.end_time.split(':');
+        const endTime = new Date();
+        endTime.setHours(parseInt(h), parseInt(m), 0, 0);
+        return now > endTime;
+      } else if (ev.start_time) {
+        const [h, m] = ev.start_time.split(':');
+        const startTime = new Date();
+        startTime.setHours(parseInt(h)+2, parseInt(m), 0, 0);
+        return now > startTime;
+      } else {
+        return now.getHours() >= 23;
+      }
+    }
+    return false;
+  }
+
+  function fetchEventsForMonth(year, month) {
+    document.getElementById('calLoading').style.display = 'flex';
+    // month is 0-indexed in JS Date, but API expects 1-12
+    fetch(`/api/events/month?year=${year}&month=${month + 1}`)
+      .then(r => r.json())
+      .then(events => {
+        currentEvents = events || [];
+        renderCalendarGrid(year, month);
+        renderAgendaList();
+        document.getElementById('calLoading').style.display = 'none';
+      })
+      .catch(err => {
+        console.error(err);
+        showSwalToast('Gagal memuat agenda', 'error');
+        document.getElementById('calLoading').style.display = 'none';
+      });
+  }
+
+  function renderCalendarGrid(year, month) {
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    
+    document.getElementById('calTitle').textContent = `${monthNames[month]} ${year}`;
+
+    // Calculate days
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    
+    // Day of week of the 1st day (0 = Sunday, 1 = Monday... 6 = Saturday)
+    let startDayOfWeek = firstDay.getDay();
+    
+    // We want Monday = 0, Sunday = 6 for our grid
+    let gridOffset = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+    // Create empty cells for offset
+    for (let i = 0; i < gridOffset; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'cal-cell empty';
+      grid.appendChild(emptyCell);
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Create cells for each day
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const isToday = dateStr === todayStr;
+      
+      // Determine if weekend based on grid position
+      const currentGridCol = (gridOffset + day - 1) % 7;
+      const isWeekend = currentGridCol === 5 || currentGridCol === 6;
+
+      const cell = document.createElement('div');
+      cell.className = `cal-cell${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
+      
+      let html = `<div class="cal-date"><span class="cal-date-num">${day}</span></div>`;
+      html += `<div class="cal-events">`;
+      
+      // Filter events for this date
+      const dayEvents = currentEvents.filter(ev => ev.event_date === dateStr);
+      
+      dayEvents.forEach(ev => {
+        const timeStr = ev.start_time ? ev.start_time.substring(0,5) : '';
+        const colorClass = getCategoryColorClass(ev.category);
+        
+        // Escape data for inline JSON parsing
+        const safeData = JSON.stringify(ev).replace(/"/g, '&quot;');
+        
+        html += `
+          <div class="event-pill ${colorClass}" onclick="openDetailModal(event, '${safeData}')">
+            ${timeStr ? `<span class="event-time">${timeStr}</span>` : ''}
+            <span>${escHtml(ev.title)}</span>
+          </div>
+        `;
+      });
+      
+      html += `</div>`;
+      cell.innerHTML = html;
+      grid.appendChild(cell);
+    }
+
+    // Fill remaining cells to complete the last row
+    const totalCells = gridOffset + daysInMonth;
+    const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 0; i < remaining; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'cal-cell empty';
+      grid.appendChild(emptyCell);
+    }
+  }
+
+  function renderAgendaList() {
+    const listDiv = document.getElementById('agendaListContent');
+    if (!currentEvents || currentEvents.length === 0) {
+      listDiv.innerHTML = '<div class="list-empty">Tidak ada acara di bulan ini.</div>';
+      return;
+    }
+    
+    let html = '';
+    const sorted = [...currentEvents].sort((a,b) => new Date(a.event_date) - new Date(b.event_date));
+    
+    sorted.forEach(ev => {
+      let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
+      if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
+      const colorClass = getCategoryColorClass(ev.category);
+      const safeData = JSON.stringify(ev).replace(/"/g, '&quot;');
+      const isCompleted = isEventCompleted(ev);
+      
+      const statusBadge = isCompleted 
+        ? `<span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Selesai</span>`
+        : `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Menunggu</span>`;
+
+      const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
+      let checkedCount = 0;
+      clFields.forEach(f => { if(ev[f]) checkedCount++; });
+      const progressColor = checkedCount === 14 ? '#22c55e' : (checkedCount > 0 ? '#3b82f6' : 'var(--text-muted)');
+      const progressBadge = `<span style="display:flex; align-items:center; gap:4px; color:${progressColor};" title="Progress Kelengkapan"><i data-lucide="check-square"></i> ${checkedCount}/14</span>`;
+
+      html += `
+        <div class="agenda-list-item" style="cursor:pointer;" onclick="openDetailModal(event, '${safeData}')">
+          <div class="list-item-left">
+            <div class="list-item-title" style="display:flex; align-items:center;">${escHtml(ev.title)} ${statusBadge}</div>
+            <div class="list-item-meta">
+              <span style="display:flex; align-items:center; gap:4px;"><i data-lucide="calendar"></i> ${new Date(ev.event_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</span>
+              <span style="display:flex; align-items:center; gap:4px; font-family:'JetBrains Mono', monospace;"><i data-lucide="clock"></i> ${timeStr}</span>
+              ${ev.location ? `<span style="display:flex; align-items:center; gap:4px;"><i data-lucide="map-pin"></i> ${escHtml(ev.location)}</span>` : ''}
+              ${progressBadge}
+            </div>
+          </div>
+          <div>
+            <span class="agenda-badge-cat ${colorClass}" style="font-size:11px; padding:4px 10px; border-radius:20px; font-weight:600; background-color: var(--bg-surface);">${escHtml(ev.category)}</span>
+          </div>
+        </div>
+      `;
+    });
+    listDiv.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+  }
+
+  function goToday() {
+    currentDate = new Date();
+    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+  }
+
+  // Modals
+  function openAddModal() {
+    document.getElementById('addForm').reset();
+    document.getElementById('addModalOverlay').classList.add('open');
+  }
+  function closeAddModal() {
+    document.getElementById('addModalOverlay').classList.remove('open');
+  }
+
+  function openDetailModal(e, dataStr) {
+    if(e) e.stopPropagation();
+    const ev = JSON.parse(dataStr);
+    
+    document.getElementById('detTitle').textContent = ev.title;
+    document.getElementById('detCat').textContent = ev.category;
+    document.getElementById('detCat').className = `agenda-badge-cat ${getCategoryColorClass(ev.category)}`;
+    
+    const statusEl = document.getElementById('detStatus');
+    const isCompleted = isEventCompleted(ev);
+    if (isCompleted) {
+      statusEl.style.display = 'inline-block';
+      statusEl.textContent = 'Selesai';
+      statusEl.style.color = '#22c55e';
+      statusEl.style.background = 'rgba(34,197,94,0.15)';
+    } else {
+      statusEl.style.display = 'inline-block';
+      statusEl.textContent = 'Menunggu';
+      statusEl.style.color = '#f59e0b';
+      statusEl.style.background = 'rgba(245,158,11,0.15)';
+    }
+
+    const dateObj = new Date(ev.event_date);
+    document.getElementById('detDate').textContent = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    
+    let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
+    if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
+    document.getElementById('detTime').textContent = timeStr;
+
+    const wrapLoc = document.getElementById('detLocWrap');
+    if(ev.location) { wrapLoc.style.display = 'flex'; document.getElementById('detLoc').textContent = ev.location; } 
+    else wrapLoc.style.display = 'none';
+
+    const wrapSpeak = document.getElementById('detSpeakerWrap');
+    if(ev.speaker_name) { wrapSpeak.style.display = 'flex'; document.getElementById('detSpeaker').textContent = ev.speaker_name; } 
+    else wrapSpeak.style.display = 'none';
+
+    const wrapPic = document.getElementById('detPicWrap');
+    if(ev.pic_name) { wrapPic.style.display = 'flex'; document.getElementById('detPic').textContent = ev.pic_name; } 
+    else wrapPic.style.display = 'none';
+
+    const cvWrap = document.getElementById('detCvWrap');
+    if(ev.cv_narasumber_url) {
+      cvWrap.style.display = 'block';
+      document.getElementById('detCvLink').href = ev.cv_narasumber_url;
+    } else {
+      cvWrap.style.display = 'none';
+    }
+
+    const checkWrap = document.getElementById('detChecklistWrap');
+    const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
+    
+    const hasChecklist = clFields.some(f => ev[f]);
+    if(hasChecklist) {
+      checkWrap.style.display = 'flex';
+      let html = '';
+      clFields.forEach(f => {
+        if(ev[f]) {
+           const label = f.replace(/_/g, ' ').toUpperCase();
+           html += `<div><span style="color:#22c55e;">✓</span> ${label}</div>`;
+        }
+      });
+      document.getElementById('detChecklist').innerHTML = html;
+    } else {
+      checkWrap.style.display = 'none';
+    }
+
+    document.getElementById('detailModalOverlay').classList.add('open');
+    if (window.lucide) window.lucide.createIcons();
+    
+    // Store active event ID globally for updates, and show button if staff
+    window.currentActiveEvent = ev;
+    const btnUpdate = document.getElementById('btnUpdateChecklist');
+    // Assuming if they can see the 'Add Agenda' button, they are staff and can update checklists
+    const btnAdd = document.getElementById('btnAddAgenda');
+    if(btnAdd && btnAdd.style.display !== 'none') {
+      btnUpdate.style.display = 'inline-flex';
+    } else {
+      btnUpdate.style.display = 'none';
+    }
+  }
+  function closeDetailModal() {
+    document.getElementById('detailModalOverlay').classList.remove('open');
+  }
+
+  function openChecklistModal() {
+    const ev = window.currentActiveEvent;
+    if(!ev) return;
+    const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
+    clFields.forEach(f => {
+      const el = document.getElementById('cl_' + f);
+      if(el) el.checked = !!ev[f];
+    });
+    document.getElementById('checklistModalOverlay').classList.add('open');
+  }
+  function closeChecklistModal() {
+    document.getElementById('checklistModalOverlay').classList.remove('open');
+  }
+
+  function submitChecklist(e) {
+    e.preventDefault();
+    if(!window.currentActiveEvent) return;
+    const eventId = window.currentActiveEvent.id;
+    const btn = document.getElementById('btnSubmitChecklist');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    const form = document.getElementById('checklistForm');
+    const formData = new FormData(form);
+    
+    fetch('/api/events/' + eventId + '/checklist', {
+      method: 'PUT',
+      // Convert FormData to URLSearchParams since our backend doesn't use multer for this PUT route
+      body: new URLSearchParams(formData)
+    })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Kelengkapan';
+      if(res.error) {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: res.error });
+      } else {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Checklist berhasil diperbarui!' });
+        closeChecklistModal();
+        closeDetailModal();
+        fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Simpan Kelengkapan';
+    });
+  }
+
+  function submitAgenda(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitAgenda');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    const form = document.getElementById('addForm');
+    const formData = new FormData(form);
+
+    fetch('/api/events', {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Agenda';
+      if (res.error) {
+        showSwalToast(res.error, 'error');
+      } else {
+        showSwalToast('Agenda berhasil disimpan!', 'success');
+        closeAddModal();
+        // Reload current month
+        fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Agenda';
+      showSwalToast('Terjadi kesalahan koneksi server', 'error');
+    });
+  }
+
+  initAppShell('agenda', function(user) {
+    document.getElementById('topbarContainer').innerHTML = buildTopbar('Agenda & Event Hub');
+    if (user.role === 'staff') {
+      document.getElementById('btnAddAgenda').style.display = 'flex';
+    }
+    // Render initial calendar
+    fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+  });
+</script>
+</body>
+</html>

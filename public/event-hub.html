@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Event &amp; Partnership Hub — Rumah BUMN Jakarta</title>
+<meta name="description" content="Pusat pengelolaan kegiatan, narasumber, dokumen partnership, dan presensi divisi Event Rumah BUMN Jakarta.">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<style>
+body{background:var(--bg-app);}
+.pg-header{background:linear-gradient(135deg,#1e3a5f 0%,#0f2744 60%,#1a3a6e 100%);padding:28px 32px 24px;position:relative;overflow:hidden;}
+.pg-header::before{content:'';position:absolute;top:-30px;right:-30px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.pg-header-c{position:relative;z-index:1;}
+.pg-header h1{font-size:22px;font-weight:800;color:#fff;margin:0 0 4px;display:flex;align-items:center;gap:10px;}
+.pg-header p{font-size:13px;color:rgba(255,255,255,0.65);margin:0 0 20px;}
+.hdr-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-hp{background:#307fe2;color:#fff;border:none;padding:9px 18px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s;}
+.btn-hp:hover{background:#1e5bb8;transform:translateY(-1px);}
+.btn-hs{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:9px 16px;border-radius:9px;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s;}
+.btn-hs:hover{background:rgba(255,255,255,0.2);}
+.stats-bar{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 32px;overflow-x:auto;}
+.si{padding:14px 24px;text-align:center;min-width:120px;border-right:1px solid var(--border);}
+.si:last-child{border-right:none;}
+.sn{font-size:22px;font-weight:800;color:var(--blue-mid);}
+.sl{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-top:2px;}
+.ev-sec{padding:24px 32px;}
+.sec-tb{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.sec-tb h2{font-size:16px;font-weight:700;color:var(--text-primary);margin:0;flex:1;}
+.fchip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border-mid);background:var(--bg-card);font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.18s;}
+.fchip.active{background:var(--blue-mid);border-color:var(--blue-mid);color:#fff;}
+.fchip:hover:not(.active){border-color:var(--blue-mid);color:var(--blue-mid);}
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;}
+.ecard{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer;}
+.ecard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+.ecban{height:5px;background:linear-gradient(90deg,#307fe2,#1e5bb8);}
+.ecban.cp{background:linear-gradient(90deg,#059669,#047857);}
+.ecban.cs{background:linear-gradient(90deg,#7c3aed,#5b21b6);}
+.ecban.cw{background:linear-gradient(90deg,#d97706,#b45309);}
+.ecban.cb{background:linear-gradient(90deg,#0891b2,#0e7490);}
+.ecbody{padding:14px 16px 10px;}
+.ectop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.eccat{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 9px;border-radius:12px;background:rgba(48,127,226,0.1);color:var(--blue-mid);}
+.ecst{font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;}
+.ecst.upcoming{background:rgba(5,150,105,0.1);color:#059669;}
+.ecst.done{background:rgba(100,116,139,0.1);color:var(--text-muted);}
+.ectitle{font-size:14px;font-weight:700;color:var(--text-primary);margin:0 0 8px;line-height:1.4;}
+.ecmeta{display:flex;flex-direction:column;gap:4px;}
+.ecmr{font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;}
+.ecfoot{padding:8px 16px 12px;display:flex;gap:6px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.ecprog{padding:8px 16px;border-top:1px solid var(--border);}
+.plbl{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:4px;}
+.pbar{height:4px;background:var(--border);border-radius:4px;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,#059669,#34d399);border-radius:4px;}
+.bsm{font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;border:none;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:4px;}
+.bsv{background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);}
+.bsv:hover{background:var(--blue-mid);color:#fff;border-color:var(--blue-mid);}
+.bsp{background:rgba(220,38,38,0.08);color:#dc2626;}
+.bsp:hover{background:#dc2626;color:#fff;}
+.bsc{background:rgba(5,150,105,0.08);color:#059669;}
+.bsc:hover{background:#059669;color:#fff;}
+.dwr-ov{position:fixed;inset:0;background:rgba(10,22,32,0.55);backdrop-filter:blur(4px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.dwr-ov.open{opacity:1;pointer-events:all;}
+.dwr{position:fixed;top:0;right:0;bottom:0;width:700px;max-width:96vw;background:var(--bg-card);border-left:1px solid var(--border);z-index:501;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.34,1.1,0.64,1);display:flex;flex-direction:column;}
+.dwr-ov.open .dwr{transform:translateX(0);}
+.dh{padding:18px 22px 0;border-bottom:1px solid var(--border);flex-shrink:0;}
+.dh-top{display:flex;align-items:center;gap:10px;}
+.dh-top h2{flex:1;font-size:17px;font-weight:800;color:var(--text-primary);margin:0;}
+.btnX{background:none;border:none;color:var(--text-muted);cursor:pointer;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.15s;}
+.btnX:hover{background:var(--bg-surface);color:#dc2626;}
+.dtabs{display:flex;margin-top:14px;}
+.dtab{padding:9px 16px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.dtab.active{color:var(--blue-mid);border-bottom-color:var(--blue-mid);}
+.dbody{flex:1;overflow-y:auto;padding:22px;}
+.dfoot{padding:14px 22px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px;justify-content:flex-end;}
+.tpane{display:none;}
+.tpane.active{display:block;}
+.stitle{font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border);}
+.dsec{margin-bottom:20px;}
+.drow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.drow:last-child{border-bottom:none;}
+.dkey{font-weight:600;color:var(--text-muted);min-width:130px;flex-shrink:0;}
+.dval{color:var(--text-primary);}
+.dval a{color:var(--blue-mid);text-decoration:none;}
+.dval a:hover{text-decoration:underline;}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.abtn{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-surface);transition:all 0.2s;}
+.abtn:hover{border-color:var(--blue-mid);background:var(--blue-subtle);transform:translateY(-1px);}
+.aico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aico.r{background:rgba(220,38,38,0.1);color:#dc2626;}
+.aico.b{background:rgba(48,127,226,0.1);color:var(--blue-mid);}
+.aico.g{background:rgba(5,150,105,0.1);color:#059669;}
+.aico.p{background:rgba(124,58,237,0.1);color:#7c3aed;}
+.atitle{font-size:13px;font-weight:700;color:var(--text-primary);}
+.asub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.clgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.clitem{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg-surface);cursor:pointer;transition:all 0.15s;user-select:none;}
+.clitem:hover{border-color:var(--blue-mid);}
+.clitem.chk{border-color:#059669;background:rgba(5,150,105,0.06);}
+.clitem input{display:none;}
+.clico{width:17px;height:17px;border-radius:5px;border:2px solid var(--border-mid);background:var(--bg-card);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.clitem.chk .clico{background:#059669;border-color:#059669;}
+.cllbl{font-size:12px;font-weight:500;color:var(--text-primary);}
+.clitem.chk .cllbl{color:#059669;}
+.modal-ov{position:fixed;inset:0;background:rgba(10,22,32,0.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-ov.open{display:flex;}
+.mbox{background:var(--bg-card);border-radius:18px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25);animation:popIn 0.3s cubic-bezier(0.34,1.5,0.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+.mhead{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.mhead h3{font-size:18px;font-weight:800;margin:0;}
+.mbody{padding:18px 22px;}
+.mfoot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.bcancel{background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);padding:10px 18px;border-radius:9px;font-weight:600;cursor:pointer;font-size:13px;}
+.bsave{background:var(--blue-mid);color:#fff;border:none;padding:10px 22px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:7px;transition:all 0.2s;}
+.bsave:hover{background:#1e5bb8;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg label{font-size:11.5px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border-radius:9px;border:1.5px solid var(--border-mid);background:var(--bg-input);font-size:13px;color:var(--text-primary);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.2s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue-mid);}
+.fg textarea{resize:vertical;min-height:80px;}
+.empty-s{text-align:center;padding:48px 24px;color:var(--text-muted);grid-column:1/-1;}
+.empty-s p{font-size:14px;margin:12px 0 0;}
+#pdfz{display:none;}
+.pdoc{font-family:'Arial',sans-serif;font-size:11pt;color:#000;padding:55px;background:#fff;line-height:1.6;width:794px;}
+.pkop{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:14px;border-bottom:3px double #000;}
+.pkop h2{font-size:14pt;font-weight:bold;margin:0 0 2px;}
+.pkop p{font-size:9pt;margin:0;color:#555;}
+.ptitle{text-align:center;margin:22px 0 4px;}
+.ptitle h3{font-size:14pt;font-weight:bold;text-transform:uppercase;margin:0;text-decoration:underline;}
+.psub{text-align:center;font-size:11pt;margin:0 0 22px;}
+.ptbl{width:100%;border-collapse:collapse;margin-bottom:20px;}
+.ptbl th{background:#1e3a5f;color:#fff;padding:7px 10px;font-size:10pt;text-align:left;}
+.ptbl td{padding:6px 10px;border:1px solid #ccc;font-size:10pt;}
+.ptbl tr:nth-child(even) td{background:#f5f5f5;}
+.psign{display:flex;justify-content:space-between;margin-top:36px;}
+.psb{text-align:center;min-width:175px;}
+.psb p{margin:0;font-size:10pt;}
+.pss{height:58px;}
+.pbody{font-size:11pt;margin-bottom:12px;}
+.plist{list-style:none;padding:0;margin:0 0 18px;}
+.plist li{display:flex;gap:8px;margin-bottom:5px;font-size:11pt;}
+.plist li span:first-child{min-width:175px;font-weight:bold;}
+@media(max-width:768px){
+.pg-header{padding:18px 16px;}.ev-sec{padding:16px;}.stats-bar{padding:0 16px;}
+.ev-grid{grid-template-columns:1fr;}.frow{grid-template-columns:1fr;}.agrid{grid-template-columns:1fr;}.dwr{width:100%;max-width:100%;}
+}
+
+.pdf-offscreen-container {
+  position: absolute !important;
+  left: -9999px !important;
+  top: 0 !important;
+  width: 794px !important;
+  z-index: -9999 !important;
+  opacity: 0.01 !important;
+  pointer-events: none !important;
+}
+
+
+/* Modal Popup Styling for Document Generators */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,22,32,0.65); backdrop-filter: blur(4px); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px;
+  width: 92%; max-width: 680px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  transform: translateY(20px); transition: transform 0.25s ease;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-box h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.modal-box p.sub { margin: 0 0 20px; font-size: 13px; color: var(--text-secondary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.form-group input, .form-group textarea, .form-group select {
+  padding: 10px 14px; border-radius: 10px; border: 1.5px solid var(--border-mid); background: var(--bg-surface);
+  font-size: 13px; color: var(--text-primary); outline: none; transition: border-color 0.15s; font-family: inherit;
+}
+.form-group input:focus, .form-group textarea:focus { border-color: var(--blue-mid); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+.btn-sec { padding: 9px 18px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-surface); font-weight: 600; font-size: 13px; cursor: pointer; color: var(--text-secondary); }
+.btn-pri { padding: 9px 20px; border-radius: 9px; border: none; background: var(--blue-mid); font-weight: 700; font-size: 13px; cursor: pointer; color: #fff; }
+
+</style>
+</head>
+<body>
+<div class="app-shell" id="appShell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+    <div id="appContent" class="app-content" style="display:none;">
+      <div class="pg-header">
+      <div class="pg-header-c">
+        <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Event &amp; Partnership Hub</h1>
+        <p>Kelola narasumber, dokumen partnership, dan presensi kegiatan divisi Event</p>
+        <div class="hdr-actions">
+          <button class="btn-hp" onclick="openAddModal()" id="btnAddEv" style="display:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Tambah Event</button>
+          <button class="btn-hs" onclick="setFilter('upcoming',null)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Upcoming</button>
+          <button class="btn-hs" onclick="setFilter('done',null)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selesai</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="si"><div class="sn" id="stTotal">—</div><div class="sl">Total Event</div></div>
+      <div class="si"><div class="sn" id="stUp">—</div><div class="sl">Upcoming</div></div>
+      <div class="si"><div class="sn" id="stDone">—</div><div class="sl">Selesai</div></div>
+      <div class="si"><div class="sn" id="stMonth">—</div><div class="sl">Bulan Ini</div></div>
+    </div>
+    <div class="ev-sec">
+      <div class="sec-tb">
+        <h2>Daftar Kegiatan</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="fchip active" onclick="setFilter('all',this)">Semua</button>
+          <button class="fchip" onclick="setFilter('upcoming',this)">Upcoming</button>
+          <button class="fchip" onclick="setFilter('done',this)">Selesai</button>
+          <button class="fchip" onclick="setFilter('Pelatihan',this)">Pelatihan</button>
+          <button class="fchip" onclick="setFilter('Seminar',this)">Seminar</button>
+          <button class="fchip" onclick="setFilter('Workshop',this)">Workshop</button>
+          <button class="fchip" onclick="setFilter('Webinar',this)">Webinar</button>
+        </div>
+      </div>
+      <div class="ev-grid" id="evGrid"></div>
+    </div>
+    </div>
+  </main>
+</div>
+
+  
+
+    <!-- PREAMBLE -->
+    <p style="margin-bottom: 20px;">Pada hari ini <span id="pMouDay">[HARI]</span>, tanggal <span id="pMouDate">[TANGGAL (dalam huruf)]</span>, kami yang bertanda tangan di bawah ini:</p>
+
+    <table style="width: 100%; border: none; margin-bottom: 20px; line-height: 1.5; vertical-align: top;">
+      <tr>
+        <td style="width: 25px; vertical-align: top;">I.</td>
+        <td style="width: 150px; vertical-align: top;"><strong id="pMouMitra2">[NAMA PIHAK KESATU]</strong></td>
+        <td style="width: 10px; vertical-align: top;">:</td>
+        <td style="vertical-align: top;">[NAMA PERWAKILAN] berkedudukan di [JABATAN], [ALAMAT LENGKAP], dalam hal ini bertindak untuk dan atas nama Perusahaan, selanjutnya disebut <strong>PIHAK KESATU</strong>.</td>
+      </tr>
+      <tr><td colspan="4" style="height: 15px;"></td></tr>
+      <tr>
+        <td style="vertical-align: top;">II.</td>
+        <td style="vertical-align: top;"><strong>Rumah BUMN BRI Jakarta</strong></td>
+        <td style="vertical-align: top;">:</td>
+        <td style="vertical-align: top;">[NAMA PERWAKILAN BRI] [JABATAN] PT. Bank Rakyat Indonesia (Persero), Tbk. di [KOTA], dalam hal ini bertindak dalam jabatannya tersebut mewakili Direksi berdasarkan Surat Mutasi Nomor [NOMOR SURAT MUTASI] tanggal [TANGGAL] bertindak untuk dan atas nama PT. Bank Rakyat Indonesia (Persero) Tbk, berkedudukan di Jalan Jendral Sudirman Nomor 44-45 Jakarta Pusat selanjutnya disebut <strong>PIHAK KEDUA</strong>.</td>
+      </tr>
+    </table>
+
+    <p style="margin-bottom: 20px;"><strong>PIHAK KESATU</strong> dan <strong>PIHAK KEDUA</strong> selanjutnya secara sendiri disebut sebagai "PIHAK" dan secara bersama-sama disebut "PARA PIHAK". PARA PIHAK terlebih dahulu menerangkan hal-hal sebagai berikut:</p>
+
+    <ol style="padding-left: 20px; margin-bottom: 30px;">
+      <li style="margin-bottom: 10px;">Bahwa PIHAK KESATU adalah [DESKRIPSI SINGKAT PIHAK KESATU DAN BIDANG USAHANYA].</li>
+      <li style="margin-bottom: 10px;">Bahwa PIHAK KEDUA adalah Badan Usaha Milik Negara (BUMN) yang bergerak di bidang perbankan yang menghimpun dana dari masyarakat...</li>
+      <li style="margin-bottom: 10px;">Bahwa PARA PIHAK bermaksud mengadakan kerjasama dalam rangka [TUJUAN KERJA SAMA] melalui kolaborasi program pemberdayaan UMKM BRI.</li>
+      <li style="margin-bottom: 10px;">PARA PIHAK bermaksud untuk mengadakan kerja sama berupa [OBJEK/RUANG LINGKUP KERJA SAMA].</li>
+    </ol>
+
+    <p style="text-align: center; font-weight: bold; margin: 40px 0 20px;">Berdasarkan hal-hal tersebut di atas, PARA PIHAK sepakat untuk membuat dan menandatangani Perjanjian Kerja Sama dengan syarat dan ketentuan sebagai berikut:</p>
+
+    <div style="page-break-before: always;"></div>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h4 style="margin: 0; font-size: 12pt; font-weight: bold;">PASAL 1</h4>
+      <h4 style="margin: 0; font-size: 12pt; font-weight: bold;">DEFINISI</h4>
+    </div>
+    <ol style="padding-left: 20px; margin-bottom: 30px;">
+      <li>"Data dan Informasi Pelaku UMKM" adalah data dan informasi yang diberikan oleh PIHAK KESATU kepada PIHAK KEDUA yang didapatkan dari [SUMBER DATA].</li>
+      <li>"Rumah BUMN" merupakan program inisiatif Kementerian BUMN berupa pusat kolaborasi dan pembinaan Pelaku UMKM yang menyediakan pelatihan dan fasilitas untuk meningkatkan daya saing UMKM.</li>
+    </ol>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h4 style="margin: 0; font-size: 12pt; font-weight: bold;">PASAL 2</h4>
+      <h4 style="margin: 0; font-size: 12pt; font-weight: bold;">MAKSUD DAN TUJUAN</h4>
+    </div>
+    <ol style="padding-left: 20px; margin-bottom: 30px;" start="3">
+      <li>Maksud Perjanjian Kerja Sama ini adalah sebagai landasan kerja sama bagi PARA PIHAK untuk mendukung [MAKSUD KERJA SAMA].</li>
+    </ol>
+
+    <div style="page-break-before: always;"></div>
+
+    <p style="text-align: center; margin-top: 50px; font-style: italic;">(Pasal-pasal dilanjutkan sesuai draft resmi hingga Pasal 22)</p>
+
+    <div style="page-break-before: always;"></div>
+
+    <p style="margin-bottom: 40px;">Perjanjian Kerja Sama ini dibuat dalam rangkap 2 (dua) dan ditandatangani oleh PARA PIHAK pada hari dan tanggal sebagaimana disebutkan pada awal Perjanjian Kerja Sama ini, masing-masing bermeterai cukup dan mempunyai kekuatan hukum yang sama.</p>
+
+    <table style="width: 100%; border-collapse: collapse; text-align: center;">
+      <tr>
+        <td style="width: 50%; padding-bottom: 100px; font-weight: bold;">PIHAK KEDUA,</td>
+        <td style="width: 50%; padding-bottom: 100px; font-weight: bold;">PIHAK KESATU,</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold; text-decoration: underline;">[NAMA PIMPINAN BRI]</td>
+        <td style="font-weight: bold; text-decoration: underline;" id="pMouPICBot">[NAMA PIMPINAN PIHAK KESATU]</td>
+      </tr>
+      <tr>
+        <td>[JABATAN]</td>
+        <td>[JABATAN]</td>
+      </tr>
+    </table>
+  </div>
+
+<!-- Drawer -->
+<div class="dwr-ov" id="dwrOv" onclick="if(event.target===this)closeDwr()">
+  <div class="dwr">
+    <div class="dh">
+      <div class="dh-top"><h2 id="dwrTitle">Detail</h2><button class="btnX" onclick="closeDwr()">&#x2715;</button></div>
+      <div class="dtabs">
+        <button class="dtab active" id="t1b" onclick="swTab('narasumber',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Narasumber</button>
+        <button class="dtab" id="t2b" onclick="swTab('partnership',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Partnership</button>
+        <button class="dtab" id="t3b" onclick="swTab('presensi',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Presensi</button>
+      </div>
+    </div>
+    <div class="dbody">
+      <div class="tpane active" id="tab-narasumber">
+        <div class="dsec"><div class="stitle">Info Kegiatan</div><div id="dInfo"></div></div>
+        <div class="dsec">
+          <div class="stitle">Data Narasumber</div><div id="dNarsum"></div>
+          <div class="agrid" style="margin-top:14px;">
+            <div class="abtn" onclick="genCert()"><div class="aico p"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div><div><div class="atitle">Generate Sertifikat</div><div class="asub">PDF narasumber</div></div></div>
+            <div class="abtn" onclick="copyWA()"><div class="aico g"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg></div><div><div class="atitle">Copy Pesan WA</div><div class="asub">Template undangan</div></div></div>
+          </div>
+        </div>
+        <div class="dsec"><div class="stitle">Aset &amp; Link</div><div id="dAssets"></div></div>
+      </div>
+      <div class="tpane" id="tab-partnership">
+        <div class="dsec">
+          <div class="stitle">Generator Dokumen Resmi</div>
+          <p style="font-size:13px;color:var(--text-secondary);margin:0 0 14px;">Klik untuk otomatis membuat dokumen berdasarkan data event ini.</p>
+          <div class="agrid">
+            <div class="abtn" onclick="genTOR()"><div class="aico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div><div class="atitle">Generate TOR</div><div class="asub">Terms of Reference</div></div></div>
+            <div class="abtn" onclick="genUnd()"><div class="aico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="atitle">Surat Undangan</div><div class="asub">Undangan narasumber</div></div></div>
+            <div class="abtn" onclick="genPmh()"><div class="aico p"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="atitle">Surat Permohonan</div><div class="asub">Kerjasama / audiensi</div></div></div>
+            <div class="abtn" onclick="genMoU()"><div class="aico g"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div><div class="atitle">Draft MoU</div><div class="asub">Template kemitraan</div></div></div>
+          </div>
+        </div>
+        <div class="dsec"><div class="stitle">Tautan Penting</div><div id="dLinks"></div></div>
+      </div>
+      <div class="tpane" id="tab-presensi">
+        <div class="dsec">
+          <div class="stitle">Cetak Dokumen</div>
+          <div class="agrid">
+            <div class="abtn" onclick="genAbs()"><div class="aico r"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg></div><div><div class="atitle">Cetak Daftar Hadir</div><div class="asub">30 baris siap print</div></div></div>
+            <div class="abtn" onclick="genSP()"><div class="aico r"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div><div class="atitle">Surat Pernyataan</div><div class="asub">Dokumen pasca kegiatan</div></div></div>
+          </div>
+        </div>
+        <div class="dsec" id="clSec" style="display:none;">
+          <div class="stitle">Kelengkapan Checklist</div>
+          <form id="clForm" onsubmit="saveCL(event)">
+            <div class="clgrid" id="clGrid"></div>
+            <button type="submit" class="bsave" style="margin-top:14px;width:100%;justify-content:center;" id="btnSaveCL">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Simpan Checklist
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="dfoot"><button class="bcancel" onclick="closeDwr()">Tutup</button></div>
+  </div>
+</div>
+<!-- Add Modal -->
+<div class="modal-ov" id="addMod">
+  <div class="mbox">
+    <div class="mhead"><h3>Tambah Event Baru</h3><button class="btnX" onclick="closeAddModal()">&#x2715;</button></div>
+    <form id="addForm" onsubmit="submitAdd(event)">
+      <div class="mbody">
+        <div class="frow">
+          <div class="fg"><label>Kategori *</label>
+            <select name="category" required><option value="">Pilih...</option><option>Pelatihan</option><option>Seminar</option><option>Workshop</option><option>Webinar</option><option>Coaching</option><option>Networking</option><option>Lainnya</option></select>
+          </div>
+          <div class="fg"><label>Tanggal *</label><input type="date" name="event_date" required></div>
+        </div>
+        <div class="fg" style="margin-bottom:12px;"><label>Judul Kegiatan *</label><input type="text" name="title" placeholder="Contoh: Pelatihan Digital Marketing UMKM" required></div>
+        <div class="frow">
+          <div class="fg"><label>Waktu Mulai</label><input type="time" name="start_time"></div>
+          <div class="fg"><label>Waktu Selesai</label><input type="time" name="end_time"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Lokasi / Platform</label><input type="text" name="location" placeholder="Aula Lt.2 / Zoom"></div>
+          <div class="fg"><label>Kelas</label><input type="text" name="kelas" placeholder="Kelas A"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Narasumber</label><input type="text" name="speaker_name" placeholder="Nama narasumber"></div>
+          <div class="fg"><label>PIC</label><input type="text" name="pic_name" placeholder="Nama PIC"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Jenis Pelatihan</label><input type="text" name="jenis_pelatihan" placeholder="Soft Skill / Hard Skill"></div>
+          <div class="fg"><label>MC</label><input type="text" name="mc" placeholder="Nama MC"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Target Peserta</label><input type="number" name="jumlah_peserta"></div>
+          <div class="fg"><label>CV Narasumber</label><input type="file" name="cvNarsum" accept=".pdf,.doc,.docx"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Link Zoom</label><input type="url" name="link_zoom" placeholder="https://zoom.us/..."></div>
+          <div class="fg"><label>GForm Pendaftaran</label><input type="url" name="link_pendaftaran_gform" placeholder="https://forms.google.com/..."></div>
+        </div>
+        <div class="fg"><label>Caption Sosmed</label><textarea name="caption_sosmed" placeholder="Caption singkat untuk publikasi..."></textarea></div>
+      </div>
+      <div class="mfoot">
+        <button type="button" class="bcancel" onclick="closeAddModal()">Batal</button>
+        <button type="submit" class="bsave" id="btnAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Simpan Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- PDF Templates -->
+<div id="pdfz">
+  
+    <div class="ptitle"><h3>DAFTAR HADIR KEGIATAN</h3></div>
+    <div class="psub" id="pAbsSub"></div>
+    <table class="ptbl"><thead><tr><th style="width:35px">No</th><th>Nama Peserta</th><th>Asal/UMKM</th><th>No HP</th><th style="width:90px">TTD</th></tr></thead><tbody id="pAbsRows"></tbody></table>
+    <div class="psign"><div class="psb"><p>Jakarta, <span id="pAbsDate"></span></p><p>Mengetahui,</p><div class="pss"></div><p><strong>________________________</strong></p><p>Koordinator Event — Rumah BUMN Jakarta</p></div></div>
+  </div>
+
+  
+
+    <!-- I. Latar Belakang -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">I. Latar Belakang</h4>
+      <p style="text-indent: 40px; margin-bottom: 10px;">Pelaku UMKM saat ini dihadapkan pada tantangan [DESKRIPSIKAN TANTANGAN/MASALAH YANG RELEVAN DENGAN TEMA PELATIHAN]. Banyak UMKM memiliki potensi yang besar, namun belum mampu berkembang secara optimal karena [PENYEBAB MASALAH].</p>
+      <p style="text-indent: 40px; margin-bottom: 10px;">Melalui pelatihan ini, Rumah BUMN hadir sebagai fasilitator bagi UMKM binaan dengan menyediakan wadah pembelajaran yang terstruktur dan aplikatif. Pelatihan dilaksanakan secara offline di <span id="pTorLoc1">[NAMA LOKASI]</span> dengan kapasitas hingga <span id="pTorCap1">[JUMLAH]</span> peserta, sehingga diharapkan tercipta ruang diskusi yang interaktif, relevan, dan langsung dapat diterapkan oleh peserta dalam pengembangan usahanya.</p>
+      <p style="text-indent: 40px; margin-bottom: 10px;">Bersama <span id="pTorMitra1">[NAMA MITRA]</span> sebagai kolaborator, pelatihan ini dirancang untuk memberikan edukasi praktis mengenai [TOPIK UTAMA PELATIHAN]. Melalui sinergi ini, peserta akan mendapatkan wawasan dan keterampilan yang dapat langsung diterapkan untuk [MANFAAT YANG DIHARAPKAN].</p>
+    </div>
+
+    <!-- II. Tujuan Kegiatan -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">II. Tujuan Kegiatan</h4>
+      <p style="margin-bottom: 5px;">Tujuan dari pelatihan ini adalah:</p>
+      <ol style="margin-top: 5px; padding-left: 20px;">
+        <li>Memberikan pemahaman kepada pelaku UMKM mengenai [TOPIK/MATERI UTAMA 1].</li>
+        <li>Membantu UMKM [TUJUAN SPESIFIK 2].</li>
+        <li>Meningkatkan kapasitas UMKM dalam [TUJUAN SPESIFIK 3].</li>
+        <li>Mendorong pelaku UMKM untuk [TUJUAN SPESIFIK 4].</li>
+        <li>Memperkuat kolaborasi antara UMKM binaan Rumah BUMN dengan <span id="pTorMitra2">[NAMA MITRA]</span> dalam mendukung pertumbuhan usaha yang berkelanjutan.</li>
+      </ol>
+    </div>
+
+    <div style="page-break-before: always;"></div>
+
+    <!-- III. Target dan Sasaran -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">III. Target dan Sasaran</h4>
+      <p style="margin-bottom: 5px; font-weight: bold;">Target Peserta</p>
+      <ul style="margin-top: 5px; padding-left: 20px;">
+        <li>UMKM binaan Rumah BUMN, yang terdiri dari:
+          <ol type="a">
+            <li>[SEGMEN PESERTA 1]</li>
+            <li>[SEGMEN PESERTA 2]</li>
+            <li>[SEGMEN PESERTA 3]</li>
+          </ol>
+        </li>
+      </ul>
+      <p style="margin-bottom: 5px; font-weight: bold; margin-top: 15px;">Sasaran Pelaksanaan</p>
+      <ul style="margin-top: 5px; padding-left: 20px;">
+        <li>Offline
+          <ol type="a">
+            <li>Lokasi: <span id="pTorLoc2">[NAMA LOKASI LENGKAP]</span></li>
+            <li>Kapasitas: <span id="pTorCap2">[JUMLAH]</span> peserta</li>
+          </ol>
+        </li>
+      </ul>
+    </div>
+
+    <!-- IV. Susunan Kegiatan -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">IV. Susunan Kegiatan</h4>
+      <p style="margin-bottom: 10px;">Adapun pelatihan akan dilaksanakan pada <span id="pTorDateText">[HARI, TANGGAL BULAN TAHUN]</span>, dengan susunan kegiatan secara rinci di tabel berikut:</p>
+      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #000; padding: 5px; background: #e0e0e0;">No</th>
+            <th style="border: 1px solid #000; padding: 5px; background: #e0e0e0;">Waktu</th>
+            <th style="border: 1px solid #000; padding: 5px; background: #e0e0e0;">Durasi (min)</th>
+            <th style="border: 1px solid #000; padding: 5px; background: #e0e0e0;">Teknis Kegiatan</th>
+            <th style="border: 1px solid #000; padding: 5px; background: #e0e0e0;">Ket.</th>
+          </tr>
+        </thead>
+        <tbody style="text-align: center;">
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px;">1</td>
+            <td style="border: 1px solid #000; padding: 5px;">10.00 – 10.30</td>
+            <td style="border: 1px solid #000; padding: 5px;">30'</td>
+            <td style="border: 1px solid #000; padding: 5px;">Registrasi Peserta</td>
+            <td style="border: 1px solid #000; padding: 5px;">Team RB</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px;">2</td>
+            <td style="border: 1px solid #000; padding: 5px;">10.30 – 11.00</td>
+            <td style="border: 1px solid #000; padding: 5px;">30'</td>
+            <td style="border: 1px solid #000; padding: 5px; text-align: left;">
+              - Sambutan Tim RB<br>
+              - Pengenalan tema dan narasumber
+            </td>
+            <td style="border: 1px solid #000; padding: 5px;"><span id="pTorMC">[MC]</span></td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px;">3</td>
+            <td style="border: 1px solid #000; padding: 5px;"><span id="pTorTTime">[WAKTU]</span></td>
+            <td style="border: 1px solid #000; padding: 5px;">60'</td>
+            <td style="border: 1px solid #000; padding: 5px;">Pemaparan Materi</td>
+            <td style="border: 1px solid #000; padding: 5px;"><span id="pTorMitra3">[NARASUMBER]</span></td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px;">4</td>
+            <td style="border: 1px solid #000; padding: 5px;">-</td>
+            <td style="border: 1px solid #000; padding: 5px;">20'</td>
+            <td style="border: 1px solid #000; padding: 5px;">Tanya Jawab Peserta</td>
+            <td style="border: 1px solid #000; padding: 5px;"><span id="pTorMC2">[MC]</span></td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px;">5</td>
+            <td style="border: 1px solid #000; padding: 5px;">-</td>
+            <td style="border: 1px solid #000; padding: 5px;">10'</td>
+            <td style="border: 1px solid #000; padding: 5px;">Penutupan & Dokumentasi</td>
+            <td style="border: 1px solid #000; padding: 5px;">MC & OP</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="page-break-before: always;"></div>
+
+    <!-- V. Silabus Pelatihan -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">V. Silabus Pelatihan</h4>
+      <p style="margin-bottom: 5px; font-weight: bold;">Pokok Bahasan Modul</p>
+      <ol style="margin-top: 5px; padding-left: 20px;">
+        <li>[TOPIK MATERI 1]
+          <ol type="a"><li>[Sub-poin a]</li><li>[Sub-poin b]</li></ol>
+        </li>
+        <li>[TOPIK MATERI 2]
+          <ol type="a"><li>[Sub-poin a]</li><li>[Sub-poin b]</li></ol>
+        </li>
+        <li>[TOPIK MATERI 3]</li>
+      </ol>
+    </div>
+
+    <!-- VI. Format Diskusi -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">VI. Format Diskusi</h4>
+      <p style="text-indent: 40px; margin-bottom: 10px;">Acara akan diselenggarakan secara Luring oleh Rumah BUMN Jakarta yang menghadirkan peserta dari berbagai sektor UMKM. Pelatihan dibawakan dengan metode presentasi dan sesi tanya jawab dengan menghadirkan pembicara dari <span id="pTorMitra4">[NAMA MITRA]</span>.</p>
+    </div>
+
+    <!-- VII. Waktu dan Tempat -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">VII. Waktu dan Tempat</h4>
+      <table style="width: 100%; border: none;">
+        <tr><td style="width: 150px;">Hari/Tanggal</td><td>: <span id="pTorDateBottom">[HARI, TANGGAL BULAN TAHUN]</span></td></tr>
+        <tr><td>Waktu</td><td>: <span id="pTorTimeBottom">[JAM MULAI] – [JAM SELESAI] WIB</span></td></tr>
+        <tr><td>Tempat</td><td>: <span id="pTorLocBottom">[NAMA LOKASI]</span></td></tr>
+      </table>
+    </div>
+
+    <!-- VIII. Penutup -->
+    <div style="margin-bottom: 20px;">
+      <h4 style="margin: 0 0 10px 0; font-size: 12pt; font-weight: bold;">VIII. Penutup</h4>
+      <p style="text-indent: 40px; margin-bottom: 10px;">Demikianlah Term of Reference tentang kegiatan ini dibuat semoga dapat menjadi bahan pertimbangan sebagaimana mestinya. Melalui Pelatihan Bisnis yang akan kita selenggarakan bersama <span id="pTorMitra5">[NAMA MITRA]</span> sebagai kolaborator, dengan ini kami dari Rumah BUMN Jakarta bermaksud mengajukan permohonan pemakaian tempat di <span id="pTorLoc3">[NAMA LOKASI]</span> untuk pelaksanaan pelatihan yang berjudul "<span id="pTorTitleBot">[JUDUL PELATIHAN]</span>".</p>
+    </div>
+
+  </div>
+
+  
+    <div class="ptitle"><h3>SURAT PERNYATAAN KEGIATAN</h3></div>
+    <div style="height:18px;"></div>
+    <div id="pSpBody" class="pbody"></div>
+    <div class="psign">
+      <div class="psb"><p>Jakarta, <span id="pSpDate"></span></p><p>Yang Membuat Pernyataan,</p><div class="pss"></div><p><strong>________________________</strong></p><p id="pSpPic"></p></div>
+      <div class="psb"><p>Mengetahui,</p><div class="pss"></div><p><strong>________________________</strong></p><p>Pimpinan Rumah BUMN Jakarta</p></div>
+    </div>
+  </div>
+  
+    <div id="pUndBody" class="pbody"></div>
+    <div class="psign"><div class="psb"><p>Jakarta, <span id="pUndDate"></span></p><p>Hormat Kami,</p><div class="pss"></div><p><strong>________________________</strong></p><p>Koordinator Event — Rumah BUMN Jakarta</p></div></div>
+  </div>
+  
+</div>
+<script src="shared.js"></script>
+<script>
+let AE=[],CE=null,CF='all',IS=false;
+const CLF=[
+  {key:'poster',label:'Poster Kegiatan'},{key:'publikasi',label:'Publikasi Sosmed'},
+  {key:'terlaksana',label:'Kegiatan Terlaksana'},{key:'cms',label:'Upload CMS'},
+  {key:'rb_id',label:'RB ID Terdata'},{key:'up_modul',label:'Upload Modul'},
+  {key:'cv_expert',label:'CV Expert/CMS'},{key:'flyer_sg_feed',label:'Flyer SG Feed'},
+  {key:'katalog_cv_canva',label:'Katalog CV Canva'},{key:'blast_share_wa',label:'Blast WA'},
+  {key:'data_mentor_modul',label:'Data Mentor Modul'},{key:'follow_up',label:'Follow Up'},
+  {key:'absen_kehadiran',label:'Absen Kehadiran'},{key:'surat_pernyataan',label:'Surat Pernyataan'},
+];
+initAppShell('event',function(u){
+  document.getElementById('topbarContainer').innerHTML=buildTopbar('Event & Partnership Hub','Narasumber, Dokumen & Presensi');
+  IS=u.role==='staff';
+  if(IS) document.getElementById('btnAddEv').style.display='flex';
+  loadEvents();
+});
+async function loadEvents(){
+  try{
+    const[r1,r2]=await Promise.all([fetch('/api/events/upcoming'),fetch('/api/events/archive')]);
+    const up=r1.ok?await r1.json():[];const arch=r2.ok?await r2.json():[];
+    AE=[...(Array.isArray(up)?up:[]),...(Array.isArray(arch)?arch:[])];
+  }catch{AE=[];}
+  renderStats();renderGrid();
+}
+function renderStats(){
+  const n=new Date(),m=n.getMonth(),y=n.getFullYear();
+  document.getElementById('stTotal').textContent=AE.length;
+  document.getElementById('stUp').textContent=AE.filter(e=>e.status==='upcoming'||!e.status).length;
+  document.getElementById('stDone').textContent=AE.filter(e=>e.status==='done').length;
+  document.getElementById('stMonth').textContent=AE.filter(e=>{const d=new Date(e.event_date);return d.getMonth()===m&&d.getFullYear()===y;}).length;
+}
+function setFilter(f,el){
+  CF=f;document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('active'));
+  if(el)el.classList.add('active');renderGrid();
+}
+function renderGrid(){
+  const g=document.getElementById('evGrid');
+  let L=AE;
+  if(CF==='upcoming')L=AE.filter(e=>e.status==='upcoming'||!e.status);
+  else if(CF==='done')L=AE.filter(e=>e.status==='done');
+  else if(!['all','upcoming','done'].includes(CF))L=AE.filter(e=>e.category===CF);
+  if(!L.length){g.innerHTML='<div class="empty-s"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>Tidak ada event ditemukan.</p></div>';return;}
+  const catMap={pelatihan:'cp',seminar:'cs',workshop:'cw',webinar:'cb'};
+  g.innerHTML=L.map(ev=>{
+    const cc=catMap[(ev.category||'').toLowerCase()]||'';
+    const done=CLF.filter(f=>ev[f.key]).length,tot=CLF.length,pct=Math.round(done/tot*100);
+    const ds=ev.event_date?new Date(ev.event_date).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}):'—';
+    const sb=ev.status==='done'?'<span class="ecst done">Selesai</span>':'<span class="ecst upcoming">Upcoming</span>';
+    return `<div class="ecard" onclick="openDwr('${ev.id}')">
+      <div class="ecban ${cc}"></div>
+      <div class="ecbody">
+        <div class="ectop"><span class="eccat">${ev.category||'Event'}</span>${sb}</div>
+        <h3 class="ectitle">${x(ev.title)}</h3>
+        <div class="ecmeta">
+          <div class="ecmr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${ds}</div>
+          ${ev.location?`<div class="ecmr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${x(ev.location)}</div>`:''}
+          ${ev.speaker_name?`<div class="ecmr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${x(ev.speaker_name)}</div>`:''}
+        </div>
+      </div>
+      <div class="ecprog"><div class="plbl"><span>Kelengkapan</span><span>${done}/${tot}</span></div><div class="pbar"><div class="pfill" style="width:${pct}%"></div></div></div>
+      <div class="ecfoot">
+        <button class="bsm bsv" onclick="event.stopPropagation();openDwr('${ev.id}')">Detail</button>
+        <button class="bsm bsp" onclick="event.stopPropagation();qAbs('${ev.id}')">Cetak Absensi</button>
+        ${IS?`<button class="bsm bsc" onclick="event.stopPropagation();openCL('${ev.id}')">Checklist</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openDwr(id){
+  CE=AE.find(e=>e.id==id);if(!CE)return;const ev=CE;
+  document.getElementById('dwrTitle').textContent=ev.title;
+  swTab('narasumber',document.getElementById('t1b'));
+  document.getElementById('dInfo').innerHTML=ds([
+    ['Tanggal',fd(ev.event_date)],['Waktu',`${ev.start_time||'—'} – ${ev.end_time||'—'}`],
+    ['Lokasi',ev.location],['Kategori',ev.category],['Kelas',ev.kelas],
+    ['Jenis Pelatihan',ev.jenis_pelatihan],['MC',ev.mc],['Target Peserta',ev.jumlah_peserta],['PIC',ev.pic_name]
+  ]);
+  document.getElementById('dNarsum').innerHTML=ds([
+    ['Nama Narasumber',ev.speaker_name],
+    ev.cv_narasumber_url?['CV Narasumber',`<a href="${ev.cv_narasumber_url}" target="_blank">📄 Lihat/Download CV</a>`]:null
+  ].filter(Boolean),1);
+  document.getElementById('dAssets').innerHTML=ds([
+    ['Caption Sosmed',ev.caption_sosmed],
+    ['Status Poster',ev.poster?'✅ Sudah':'⏳ Belum'],
+    ['Status Publikasi',ev.publikasi?'✅ Sudah':'⏳ Belum'],
+  ]);
+  document.getElementById('dLinks').innerHTML=ds([
+    ev.link_zoom?['Link Zoom',`<a href="${ev.link_zoom}" target="_blank">🔗 Buka Zoom</a>`]:null,
+    ev.link_pendaftaran_gform?['GForm',`<a href="${ev.link_pendaftaran_gform}" target="_blank">🔗 Google Form</a>`]:null,
+    ev.spreadsheets_data_peserta?['Data Peserta',`<a href="${ev.spreadsheets_data_peserta}" target="_blank">📊 Spreadsheet</a>`]:null,
+    ev.link_umkm?['Link UMKM',`<a href="${ev.link_umkm}" target="_blank">🔗 Buka</a>`]:null,
+  ].filter(Boolean),1);
+  if(IS){
+    document.getElementById('clSec').style.display='block';
+    document.getElementById('clGrid').innerHTML=CLF.map(f=>{
+      const ck=!!ev[f.key];
+      return `<label class="clitem${ck?' chk':''}" onclick="tgCL(this)">
+        <input type="checkbox" name="${f.key}"${ck?' checked':''}><div class="clico">${ck?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+        <span class="cllbl">${f.label}</span>
+      </label>`;
+    }).join('');
+  }
+  document.getElementById('dwrOv').classList.add('open');
+}
+function tgCL(el){const cb=el.querySelector('input');cb.checked=!cb.checked;el.classList.toggle('chk',cb.checked);el.querySelector('.clico').innerHTML=cb.checked?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':'';}
+function openCL(id){CE=AE.find(e=>e.id==id);openDwr(id);setTimeout(()=>swTab('presensi',document.getElementById('t3b')),50);}
+function qAbs(id){CE=AE.find(e=>e.id==id);genAbs();}
+function closeDwr(){document.getElementById('dwrOv').classList.remove('open');}
+function swTab(n,el){document.querySelectorAll('.tpane').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');if(el)el.classList.add('active');}
+function saveCL(e){
+  e.preventDefault();if(!CE)return;
+  const btn=document.getElementById('btnSaveCL');btn.disabled=true;btn.textContent='Menyimpan...';
+  fetch('/api/events/'+CE.id+'/checklist',{method:'PUT',body:new URLSearchParams(new FormData(document.getElementById('clForm')))})
+    .then(r=>r.json()).then(res=>{btn.disabled=false;btn.textContent='Simpan Checklist';
+    if(res.error){Swal.fire({icon:'error',title:'Gagal',text:res.error});return;}
+    Swal.fire({icon:'success',title:'Berhasil!',timer:1500,showConfirmButton:false});loadEvents();
+  }).catch(()=>{btn.disabled=false;btn.textContent='Simpan Checklist';});
+}
+function openAddModal(){document.getElementById('addForm').reset();document.getElementById('addMod').classList.add('open');}
+function closeAddModal(){document.getElementById('addMod').classList.remove('open');}
+async function submitAdd(e){
+  e.preventDefault();const btn=document.getElementById('btnAdd');btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    const r=await fetch('/api/events',{method:'POST',body:new FormData(document.getElementById('addForm'))});
+    const res=await r.json();btn.disabled=false;btn.textContent='Simpan Event';
+    if(res.error){Swal.fire({icon:'error',title:'Gagal',text:res.error});return;}
+    Swal.fire({icon:'success',title:'Berhasil!',timer:1500,showConfirmButton:false});
+    closeAddModal();loadEvents();
+  }catch{btn.disabled=false;btn.textContent='Simpan Event';}
+}
+const PO={margin:0,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'px',format:'a4'}};
+function pn(t,p){return`${p}_${(t||'event').replace(/[^a-zA-Z0-9]/g,'_').slice(0,40)}.pdf`;}
+function genAbs(){
+  if(!CE)return;const ev=CE;
+  document.getElementById('pAbsSub').textContent=`${ev.title} | ${fd(ev.event_date)} | ${ev.location||''}`;
+  document.getElementById('pAbsDate').textContent=fd(ev.event_date);
+  let r='';for(let i=1;i<=30;i++)r+=`<tr><td style="text-align:center">${i}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
+  document.getElementById('pAbsRows').innerHTML=r;
+  html2pdf().set({...PO,filename:pn(ev.title,'Absensi')}).from(document.getElementById('pAbs')).save();
+}
+
+function genTOR(){
+  if(!CE)return; const ev = CE;
+  document.getElementById('tor_title').value = ev.title || '';
+  document.getElementById('tor_mitra').value = ev.speaker_name || '';
+  const dObj = new Date(ev.event_date);
+  const hariArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('tor_date_str').value = ev.event_date ? `${hariArr[dObj.getDay()]}, ${fd(ev.event_date)} (${ev.start_time||'10.00'} WIB)` : '';
+  document.getElementById('tor_location').value = ev.location || 'Rumah BUMN Jakarta';
+  document.getElementById('tor_capacity').value = ev.jumlah_peserta || '30';
+  document.getElementById('tor_mc').value = ev.mc || 'MC RBJ';
+  document.getElementById('modalFormTOR').classList.add('open');
+}
+
+function closeModalTOR(){
+  document.getElementById('modalFormTOR').classList.remove('open');
+}
+
+function downloadTORFromModal(e){
+  e.preventDefault();
+  closeModalTOR();
+  const title = document.getElementById('tor_title').value;
+  const mitra = document.getElementById('tor_mitra').value;
+  const dateStr = document.getElementById('tor_date_str').value;
+  const loc = document.getElementById('tor_location').value;
+  const cap = document.getElementById('tor_capacity').value;
+  const mc = document.getElementById('tor_mc').value;
+
+  document.getElementById('pTorTitleTop').textContent = `"${title}"`;
+  document.getElementById('pTorTitleMid').textContent = `"${title}"`;
+  document.getElementById('pTorTitleBot').textContent = title;
+  document.getElementById('pTorDateTop').textContent = dateStr;
+  document.getElementById('pTorDateText').textContent = dateStr;
+  document.getElementById('pTorDateBottom').textContent = dateStr;
+  document.getElementById('pTorLocTop').textContent = loc;
+  document.getElementById('pTorLoc1').textContent = loc;
+  document.getElementById('pTorLoc2').textContent = loc;
+  document.getElementById('pTorLoc3').textContent = loc;
+  document.getElementById('pTorLocBottom').textContent = loc;
+  document.getElementById('pTorCap1').textContent = cap;
+  document.getElementById('pTorCap2').textContent = cap;
+  document.getElementById('pTorMitra1').textContent = mitra;
+  document.getElementById('pTorMitra2').textContent = mitra;
+  document.getElementById('pTorMitra3').textContent = mitra;
+  document.getElementById('pTorMitra4').textContent = mitra;
+  document.getElementById('pTorMitra5').textContent = mitra;
+  document.getElementById('pTorMC').textContent = mc;
+  document.getElementById('pTorMC2').textContent = mc;
+
+  const opt = {...PO, filename: pn(title, 'TOR_Lengkap')};
+  opt.margin = [10, 10, 10, 10];
+  html2pdf().set(opt).from(document.getElementById('pTOR')).save();
+}
+
+function genMoU(){
+  if(!CE)return; const ev = CE;
+  document.getElementById('mou_title').value = ev.title || '';
+  document.getElementById('mou_pihak1_perusahaan').value = ev.speaker_name || '';
+  const dObj = new Date(ev.event_date);
+  const hariArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('mou_date_str').value = ev.event_date ? `${hariArr[dObj.getDay()]}, ${fd(ev.event_date)}` : '';
+  document.getElementById('modalFormMoU').classList.add('open');
+}
+
+function closeModalMoU(){
+  document.getElementById('modalFormMoU').classList.remove('open');
+}
+
+function downloadMoUFromModal(e){
+  e.preventDefault();
+  closeModalMoU();
+  const title = document.getElementById('mou_title').value;
+  const p1_perusahaan = document.getElementById('mou_pihak1_perusahaan').value;
+  const p1_nama = document.getElementById('mou_pihak1_nama').value || '[NAMA PERWAKILAN]';
+  const dateStr = document.getElementById('mou_date_str').value;
+  const noPks1 = document.getElementById('mou_no_pks1').value || '[NOMOR PKS PIHAK KESATU]';
+  const noPks2 = document.getElementById('mou_no_pks2').value || '[NOMOR PKS PIHAK KEDUA / RBJ]';
+
+  document.getElementById('pMouMitraTop').textContent = p1_perusahaan;
+  document.getElementById('pMouMitra2').textContent = p1_perusahaan;
+  document.getElementById('pMouPICBot').textContent = p1_nama;
+  document.getElementById('pMouTitleTop').textContent = title;
+  document.getElementById('pMouDate').textContent = dateStr;
+
+  const opt = {...PO, filename: pn(title, 'Draft_MoU')};
+  opt.margin = [15, 15, 15, 15];
+  html2pdf().set(opt).from(document.getElementById('pMoU')).save();
+}
+function genSP(){
+  if(!CE)return;const ev=CE;
+  document.getElementById('pSpDate').textContent=fd(ev.event_date);
+  document.getElementById('pSpPic').textContent=ev.pic_name||'PIC Kegiatan';
+  document.getElementById('pSpBody').innerHTML=`<p>Yang bertanda tangan di bawah ini:</p><p><strong>Nama &nbsp;: ${ev.pic_name||'____________________'}</strong></p><p><strong>Jabatan : Divisi Event — Rumah BUMN Jakarta</strong></p><br><p>Menyatakan bahwa telah dilaksanakan kegiatan dengan rincian sebagai berikut:</p><br><ul class="plist"><li><span>Nama Kegiatan</span><span>: ${ev.title}</span></li><li><span>Tanggal</span><span>: ${fd(ev.event_date)}</span></li><li><span>Waktu</span><span>: ${ev.start_time||'—'} – ${ev.end_time||'—'} WIB</span></li><li><span>Tempat</span><span>: ${ev.location||'—'}</span></li><li><span>Narasumber</span><span>: ${ev.speaker_name||'—'}</span></li><li><span>Jumlah Peserta</span><span>: ${ev.jumlah_peserta||'—'} orang</span></li></ul><br><p>Demikian surat pernyataan ini dibuat dengan sebenar-benarnya.</p>`;
+  html2pdf().set({...PO,filename:pn(ev.title,'SuratPernyataan')}).from(document.getElementById('pSP')).save();
+}
+function genUnd(){
+  if(!CE)return;const ev=CE;
+  document.getElementById('pUndDate').textContent=fd(ev.event_date);
+  document.getElementById('pUndBody').innerHTML=`<p>Kepada Yth.<br><strong>${ev.speaker_name||'____________________'}</strong><br>di tempat.</p><br><p>Assalamu'alaikum Wr. Wb.</p><p>Sehubungan dengan akan diadakannya kegiatan berikut:</p><br><ul class="plist"><li><span>Nama Kegiatan</span><span>: ${ev.title}</span></li><li><span>Tanggal</span><span>: ${fd(ev.event_date)}</span></li><li><span>Waktu</span><span>: ${ev.start_time||'—'} – ${ev.end_time||'—'} WIB</span></li><li><span>Tempat</span><span>: ${ev.location||'—'}</span></li></ul><br><p>Dengan hormat kami mengundang Bapak/Ibu sebagai <strong>Narasumber</strong>. Konfirmasi: ${ev.pic_name||'—'}.</p><br><p>Wassalamu'alaikum Wr. Wb.</p>`;
+  html2pdf().set({...PO,filename:pn(ev.title,'SuratUndangan')}).from(document.getElementById('pUnd')).save();
+}
+function genCert(){
+  if(!CE)return;const ev=CE;
+  document.getElementById('cName').textContent=ev.speaker_name||'____________________';
+  document.getElementById('cEvent').textContent=ev.title;
+  document.getElementById('cDate').textContent=`${fd(ev.event_date)} | ${ev.location||'Rumah BUMN Jakarta'}`;
+  document.getElementById('cPic').textContent=ev.pic_name||'PIC Kegiatan';
+  html2pdf().set({...PO,filename:pn(ev.speaker_name,'Sertifikat'),jsPDF:{unit:'px',format:'a4',orientation:'landscape'}}).from(document.getElementById('pCert')).save();
+}
+function genPmh(){Swal.fire({icon:'info',title:'Segera Hadir!',text:'Fitur Surat Permohonan akan segera tersedia!',confirmButtonColor:'#307fe2'});}
+
+function copyWA(){
+  if(!CE)return;const ev=CE;
+  const msg=`Assalamu'alaikum Wr. Wb.\n\nKepada Yth.\n*${ev.speaker_name||'Bapak/Ibu Narasumber'}*\n\nPerkenalkan kami dari *Rumah BUMN Jakarta*, program kolaborasi BRI & Danantara Indonesia.\n\nKami bermaksud mengundang Bapak/Ibu sebagai *Narasumber* dalam kegiatan:\n\n📌 *${ev.title}*\n📅 Tanggal: ${fd(ev.event_date)}\n🕐 Waktu: ${ev.start_time||'—'} – ${ev.end_time||'—'} WIB\n📍 Tempat: ${ev.location||'—'}\n\nBesar harapan kami atas kehadiran Bapak/Ibu.\n\n_Salam,_\n_Tim Event — Rumah BUMN Jakarta_`;
+  navigator.clipboard.writeText(msg).then(()=>Swal.fire({icon:'success',title:'Berhasil Disalin!',text:'Paste ke WhatsApp.',timer:2000,showConfirmButton:false}));
+}
+function ds(rows,raw=0){
+  return '<div class="dsec">'+rows.filter(r=>r&&(r[1]||r[1]===0)).map(([k,v])=>
+    `<div class="drow"><span class="dkey">${k}</span><span class="dval">${raw?v:x(String(v))}</span></div>`
+  ).join('')+'</div>';
+}
+function x(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fd(d){if(!d)return'—';return new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});}
+</script>
+
+<!-- MODAL FORM GENERATE TOR -->
+
+<div class="pdf-offscreen-container">
+<div id="pMoU" class="pdoc" style="font-family: 'Times New Roman', Times, serif; padding: 40px; color: #000; text-align: justify; line-height: 1.5; font-size: 12pt;">
+    
+    <!-- HEADER -->
+    <div style="text-align: center; margin-bottom: 40px; font-weight: bold; line-height: 2;">
+      <h3 style="margin: 0; font-size: 14pt;">PERJANJIAN KERJA SAMA</h3>
+      <h3 style="margin: 0; font-size: 14pt;">ANTARA</h3>
+      <h3 style="margin: 0; font-size: 14pt;" id="pMouMitraTop">[NAMA PIHAK KESATU / PERUSAHAAN MITRA]</h3>
+      <h3 style="margin: 0; font-size: 14pt;">DENGAN</h3>
+      <h3 style="margin: 0; font-size: 14pt;">PT BANK RAKYAT INDONESIA (PERSERO) Tbk</h3>
+      <h3 style="margin: 0; font-size: 14pt;">TENTANG</h3>
+      <h3 style="margin: 0; font-size: 14pt;" id="pMouTitleTop">[JUDUL/TOPIK PERJANJIAN KERJA SAMA]</h3>
+      <br>
+      <p style="margin: 0; font-weight: normal; font-size: 12pt;">No. [NOMOR PKS PIHAK KESATU]</p>
+      <p style="margin: 0; font-weight: normal; font-size: 12pt;">No. [NOMOR PKS PIHAK KEDUA / RBJ]</p>
+    </div>
+<div id="pAbs" class="pdoc">
+    <div class="pkop"><h2>RUMAH BUMN JAKARTA</h2><p>Kolaborasi BRI &amp; Danantara Indonesia</p><p>Jl. KH Mas Mansyur No.10, Tanah Abang, Jakarta Pusat</p></div>
+    <div class="ptitle"><h3>DAFTAR HADIR KEGIATAN</h3></div>
+    <div class="psub" id="pAbsSub"></div>
+    <table class="ptbl"><thead><tr><th style="width:35px">No</th><th>Nama Peserta</th><th>Asal/UMKM</th><th>No HP</th><th style="width:90px">TTD</th></tr></thead><tbody id="pAbsRows"></tbody></table>
+    <div class="psign"><div class="psb"><p>Jakarta, <span id="pAbsDate"></span></p><p>Mengetahui,</p><div class="pss"></div><p><strong>________________________</strong></p><p>Koordinator Event — Rumah BUMN Jakarta</p></div></div>
+  </div>
+<div id="pTOR" class="pdoc" style="font-family: 'Times New Roman', Times, serif; padding: 40px; color: #000; text-align: justify; line-height: 1.5; font-size: 12pt;">
+    
+    <!-- HEADER -->
+    <table style="width: 100%; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+      <tr>
+        <td style="width: 50%; vertical-align: top;">
+          <h2 style="margin: 0; color: #005A8D; font-family: Arial, sans-serif; font-size: 18px;">RUMAH BUMN JAKARTA</h2>
+          <p style="margin: 0; font-family: Arial, sans-serif; font-size: 10px; color: #555;">Kolaborasi BRI & Danantara Indonesia</p>
+        </td>
+        <td style="width: 50%; text-align: right; vertical-align: top;">
+          <h2 style="margin: 0; color: #005A8D; font-family: Arial, sans-serif; font-size: 18px;">[LOGO MITRA]</h2>
+        </td>
+      </tr>
+    </table>
+
+    <!-- TITLE -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h3 style="margin: 0; font-size: 14pt; font-weight: bold;">TOR PENYELENGGARAAN PELATIHAN RUMAH BUMN JAKARTA</h3>
+      <h3 style="margin: 5px 0; font-size: 14pt; font-weight: bold;">PELATIHAN BISNIS</h3>
+      <h3 style="margin: 0; font-size: 14pt; font-weight: bold;" id="pTorTitleTop">"[JUDUL PELATIHAN]"</h3>
+      <br>
+      <p style="margin: 5px 0;">Waktu Pelaksanaan: <span id="pTorDateTop">[HARI, TANGGAL BULAN TAHUN]</span></p>
+      <p style="margin: 5px 0;">Lokasi: <span id="pTorLocTop">[NAMA LOKASI]</span></p>
+    </div>
+
+    <div style="page-break-before: always;"></div>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h3 style="margin: 0; font-size: 12pt; font-weight: bold;">KERANGKA ACUAN KERJA / TERM OF REFERENCE (TOR)</h3>
+      <h3 style="margin: 0; font-size: 12pt; font-weight: bold;">PELATIHAN BISNIS</h3>
+      <h3 style="margin: 0; font-size: 12pt; font-weight: bold;" id="pTorTitleMid">"[JUDUL PELATIHAN]"</h3>
+    </div>
+<div id="pSP" class="pdoc">
+    <div class="pkop"><h2>RUMAH BUMN JAKARTA</h2><p>Kolaborasi BRI &amp; Danantara Indonesia</p></div>
+    <div class="ptitle"><h3>SURAT PERNYATAAN KEGIATAN</h3></div>
+    <div style="height:18px;"></div>
+<div id="pUnd" class="pdoc">
+    <div class="pkop"><h2>RUMAH BUMN JAKARTA</h2><p>Kolaborasi BRI &amp; Danantara Indonesia</p></div>
+    <div style="height:22px;"></div>
+<div id="pCert" class="pdoc" style="text-align:center;padding:70px 55px;">
+    <div style="border:4px double #1e3a5f;padding:38px;">
+      <h2 style="font-size:11pt;text-transform:uppercase;letter-spacing:2px;color:#888;margin:0 0 8px;">Rumah BUMN Jakarta</h2>
+      <h1 style="font-size:28pt;font-weight:bold;color:#1e3a5f;margin:0 0 8px;font-family:Georgia,serif;">SERTIFIKAT</h1>
+      <p style="font-size:11pt;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 22px;">NARASUMBER / PEMBICARA</p>
+      <p style="font-size:12pt;margin:0 0 6px;">Diberikan kepada:</p>
+      <h2 id="cName" style="font-size:22pt;font-weight:bold;color:#1e3a5f;margin:0 0 6px;border-bottom:2px solid #1e3a5f;padding-bottom:8px;display:inline-block;font-family:Georgia,serif;"></h2>
+      <p style="margin:14px 0 4px;font-size:12pt;">Atas partisipasinya sebagai <strong>Narasumber</strong> dalam kegiatan:</p>
+      <p id="cEvent" style="font-size:14pt;font-weight:bold;color:#1e3a5f;margin:4px 0 14px;"></p>
+      <p id="cDate" style="font-size:11pt;color:#666;margin:0 0 30px;"></p>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <div style="text-align:center;min-width:170px;"><div style="height:58px;"></div><div style="border-top:1px solid #000;padding-top:6px;"><p id="cPic" style="margin:0;font-size:10pt;"></p><p style="margin:0;font-size:9pt;color:#666;">PIC Kegiatan</p></div></div>
+        <div style="text-align:center;min-width:170px;"><div style="height:58px;"></div><div style="border-top:1px solid #000;padding-top:6px;"><p style="margin:0;font-size:10pt;">Pimpinan Rumah BUMN Jakarta</p><p style="margin:0;font-size:9pt;color:#666;">Rumah BUMN Jakarta</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalFormTOR" onclick="if(event.target===this)closeModalTOR()">
+  <div class="modal-box">
+    <h3>Isi Data TOR Pelatihan</h3>
+    <p class="sub">Lengkapi atau sesuaikan parameter berikut untuk dicetak ke dalam TOR resmi.</p>
+    <form id="formTOR" onsubmit="downloadTORFromModal(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Judul Pelatihan</label>
+          <input type="text" id="tor_title" required>
+        </div>
+        <div class="form-group">
+          <label>Nama Mitra / Narasumber</label>
+          <input type="text" id="tor_mitra" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Waktu & Tanggal Pelatihan</label>
+          <input type="text" id="tor_date_str" required>
+        </div>
+        <div class="form-group">
+          <label>Lokasi / Venue</label>
+          <input type="text" id="tor_location" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kapasitas Peserta (Orang)</label>
+          <input type="text" id="tor_capacity" value="30">
+        </div>
+        <div class="form-group">
+          <label>MC / Moderator</label>
+          <input type="text" id="tor_mc" value="MC RBJ">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Latar Belakang / Tantangan UMKM</label>
+        <textarea id="tor_background" rows="2">Digitalisasi dan pengelolaan keuangan yang relevan untuk meningkatkan omset UMKM.</textarea>
+      </div>
+      <div class="form-group">
+        <label>Tujuan Kegiatan (Poin 1 - 4)</label>
+        <input type="text" id="tor_tujuan1" value="Memberikan pemahaman praktis mengenai strategi bisnis" style="margin-bottom:6px;">
+        <input type="text" id="tor_tujuan2" value="Meningkatkan kapasitas operasional dan finansial UMKM" style="margin-bottom:6px;">
+        <input type="text" id="tor_tujuan3" value="Mendorong UMKM Go Digital dan perluasan pasar">
+      </div>
+      <div class="form-group">
+        <label>Silabus / Pokok Bahasan Modul</label>
+        <textarea id="tor_silabus" rows="3">1. Pengenalan Strategi Pemasaran & Brand
+2. Optimalisasi Media Sosial & Marketplace
+3. Manajemen Keuangan & Pencatatan Kas</textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-sec" onclick="closeModalTOR()">Batal</button>
+        <button type="submit" class="btn-pri">📄 Unduh PDF TOR</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL FORM GENERATE MOU / PKS -->
+<div class="modal-overlay" id="modalFormMoU" onclick="if(event.target===this)closeModalMoU()">
+  <div class="modal-box">
+    <h3>Isi Data Perjanjian Kerja Sama (MoU / PKS)</h3>
+    <p class="sub">Lengkapi parameter berikut untuk dicetak ke dalam draft PKS resmi 12 Halaman.</p>
+    <form id="formMoU" onsubmit="downloadMoUFromModal(event)">
+      <div class="form-group">
+        <label>Judul / Topik Kerjasama</label>
+        <input type="text" id="mou_title" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Perusahaan / Pihak Kesatu</label>
+          <input type="text" id="mou_pihak1_perusahaan" required>
+        </div>
+        <div class="form-group">
+          <label>Nama Perwakilan Pihak Kesatu</label>
+          <input type="text" id="mou_pihak1_nama" placeholder="Contoh: Bpk. Ahmad Yani">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jabatan Perwakilan Pihak Kesatu</label>
+          <input type="text" id="mou_pihak1_jabatan" placeholder="Contoh: Direktur Utama">
+        </div>
+        <div class="form-group">
+          <label>Alamat Pihak Kesatu</label>
+          <input type="text" id="mou_pihak1_alamat" placeholder="Jakarta Pusat">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nomor PKS Pihak Kesatu</label>
+          <input type="text" id="mou_no_pks1" placeholder="001/PKS-EXT/2026">
+        </div>
+        <div class="form-group">
+          <label>Nomor PKS Pihak Kedua (BRI / RBJ)</label>
+          <input type="text" id="mou_no_pks2" placeholder="B.102/RBJ/PARTNERSHIP/2026">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hari & Tanggal Penandatanganan</label>
+          <input type="text" id="mou_date_str" required>
+        </div>
+        <div class="form-group">
+          <label>Nomor Surat Mutasi BRI</label>
+          <input type="text" id="mou_no_mutasi" placeholder="Surat Mutasi No. 45/BRI/2025">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-sec" onclick="closeModalMoU()">Batal</button>
+        <button type="submit" class="btn-pri">📝 Unduh PDF MoU / PKS</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

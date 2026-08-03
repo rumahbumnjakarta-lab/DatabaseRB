@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1421">
+<title>Perizinan Tidak Masuk — Rumah BUMN Jakarta</title>
+<meta name="description" content="Sistem Pengajuan Izin dan Sakit dengan Upload Dokumen Pendukung & Review Mentor.">
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+/* ─── Layout Container ─── */
+.perm-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 0 80px;
+}
+
+/* Header Banner */
+.perm-header {
+  background: linear-gradient(135deg, rgba(8,87,195,0.2), rgba(48,127,226,0.06));
+  border: 1px solid rgba(48,127,226,0.2);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.perm-header::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(113,197,232,0.15), transparent 70%);
+  pointer-events: none;
+}
+.perm-title h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+.perm-title p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Stats Cards */
+.perm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card .val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-card .lbl {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 4px;
+}
+.stat-card.pending { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.04); }
+.stat-card.approved { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.04); }
+.stat-card.rejected { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.04); }
+
+/* Filter & Tabs Bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-tabs {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+}
+.filter-tab {
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.filter-tab:hover { color: var(--text-primary); }
+.filter-tab.active {
+  background: var(--blue-mid);
+  color: #ffffff;
+}
+
+/* Card List */
+.perm-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.perm-item-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  transition: border-color 0.2s ease;
+}
+.perm-item-card:hover {
+  border-color: var(--border-mid);
+}
+.perm-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.perm-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.perm-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--blue-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  border: 1px solid var(--border-mid);
+}
+.perm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.perm-user-name { font-weight: 700; font-size: 14.5px; color: var(--text-primary); }
+.perm-user-sub { font-size: 12px; color: var(--text-muted); }
+
+/* Badges */
+.badge-status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.badge-status.pending { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); }
+.badge-status.approved { background: rgba(34, 197, 94, 0.12); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.25); }
+.badge-status.rejected { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); }
+
+/* Details Area */
+.perm-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  background: var(--bg-surface);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.detail-box .lbl { font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.detail-box .val { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-top: 2px; }
+
+/* Mentor Comment Box */
+.mentor-comment-box {
+  background: rgba(48,127,226,0.06);
+  border: 1px solid rgba(48,127,226,0.2);
+  border-left: 3px solid var(--blue-mid);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 10px;
+}
+.mentor-comment-header {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--blue-mid);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.mentor-comment-text {
+  font-size: 12.5px;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  transform: translateY(15px);
+  transition: transform 0.25s ease;
+}
+.modal-overlay.open .modal-card { transform: translateY(0); }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.modal-close {
+  background: transparent; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 4px; border-radius: 50%;
+}
+.modal-close:hover { color: var(--text-primary); background: var(--bg-surface); }
+
+/* Form Controls */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; display: block; }
+.form-control {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-control:focus { border-color: var(--blue-mid); }
+
+/* Upload Area */
+.upload-dropzone {
+  border: 2px dashed var(--border-mid);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-dropzone:hover { border-color: var(--blue-mid); background: rgba(48,127,226,0.04); }
+.preview-thumb {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 8px;
+  object-fit: contain;
+  margin-top: 10px;
+}
+
+/* Primary Button */
+.btn-primary {
+  background: linear-gradient(135deg, #307fe2 0%, #1e5bb8 100%);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover { opacity: 0.95; box-shadow: 0 4px 14px rgba(48,127,226,0.3); }
+
+/* Lightbox */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 10px; object-fit: contain; }
+.lightbox-close {
+  position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2);
+  border: none; color: #fff; font-size: 22px; width: 40px; height: 40px;
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<!-- Auth Loading Spinner -->
+<div id="authLoading" style="position:fixed; inset:0; background:var(--bg-app); z-index:99999; display:flex; align-items:center; justify-content:center;">
+  <div class="loading-spinner"></div>
+</div>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <!-- App Topbar -->
+    <div class="app-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Perizinan Tidak Masuk <small>Pengajuan Izin &amp; Sakit · Review Mentor/Staff</small></div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="appContent" class="app-content" style="display:none;">
+      <div class="perm-container">
+
+        <!-- Header Card Banner -->
+        <div class="perm-header">
+          <div class="perm-title">
+            <h1><i data-lucide="file-check-2" style="width:22px;height:22px;vertical-align:-3px;color:var(--blue-mid);margin-right:6px;"></i>Perizinan Tidak Masuk</h1>
+            <p id="permHeaderSub">Pengajuan izin/sakit, lampiran foto dokumen, dan review mentor/staff.</p>
+          </div>
+          <button class="btn-primary" id="btnOpenNewPerm" onclick="openNewPermissionModal()">
+            <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+            Ajukan Izin / Sakit
+          </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="perm-stats">
+          <div class="stat-card">
+            <div class="val" id="statTotal">0</div>
+            <div class="lbl">Total Pengajuan</div>
+          </div>
+          <div class="stat-card pending">
+            <div class="val" style="color:#f59e0b;" id="statPending">0</div>
+            <div class="lbl">Menunggu Review</div>
+          </div>
+          <div class="stat-card approved">
+            <div class="val" style="color:#22c55e;" id="statApproved">0</div>
+            <div class="lbl">Disetujui</div>
+          </div>
+          <div class="stat-card rejected">
+            <div class="val" style="color:#ef4444;" id="statRejected">0</div>
+            <div class="lbl">Ditolak</div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterByStatus('all', this)">Semua</button>
+            <button class="filter-tab" onclick="filterByStatus('pending', this)">Pending</button>
+            <button class="filter-tab" onclick="filterByStatus('approved', this)">Disetujui</button>
+            <button class="filter-tab" onclick="filterByStatus('rejected', this)">Ditolak</button>
+          </div>
+          <div style="font-size:12.5px; color:var(--text-muted);" id="listSummaryText">Memuat data perizinan...</div>
+        </div>
+
+        <!-- Permission Grid List -->
+        <div class="perm-grid" id="permGrid">
+          <div style="text-align:center; padding:40px; color:var(--text-muted);">Memuat data perizinan...</div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Modal Pengajuan Perizinan Baru ─── -->
+<div class="modal-overlay" id="newPermModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Ajukan Izin / Sakit</div>
+      <button class="modal-close" onclick="closeNewPermissionModal()"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+    </div>
+    <form id="permForm" onsubmit="handlePermSubmit(event)">
+      <div class="form-group">
+        <label class="form-label">Jenis Perizinan</label>
+        <select class="form-control" id="permType" required>
+          <option value="sakit">Sakit (Lampirkan Surat Dokter/Obat)</option>
+          <option value="izin">Izin (Keperluan Mendesak)</option>
+          <option value="cuti">Cuti / Khusus</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="form-group">
+          <label class="form-label">Tanggal Mulai</label>
+          <input type="date" class="form-control" id="startDate" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tanggal Selesai</label>
+          <input type="date" class="form-control" id="endDate" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Alasan / Penjelasan</label>
+        <textarea class="form-control" id="permReason" rows="3" placeholder="Jelaskan alasan perizinan secara singkat..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Dokumen / Foto Bukti Pendukung (Opsional)</label>
+        <div class="upload-dropzone" onclick="document.getElementById('fileInput').click()">
+          <i data-lucide="upload-cloud" style="width:28px;height:28px;color:var(--blue-mid);margin-bottom:6px;"></i>
+          <div style="font-size:12.5px;font-weight:600;color:var(--text-primary);">Klik untuk upload foto / surat dokter</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Format JPG, PNG, WEBP (Maks 1MB)</div>
+          <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+          <img id="filePreview" class="preview-thumb" style="display:none;">
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-primary" style="background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-mid);" onclick="closeNewPermissionModal()">Batal</button>
+        <button type="submit" class="btn-primary" id="btnSubmitPerm">Kirim Pengajuan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Modal Review Staff / Mentor ─── -->
+<div class="modal-overlay" id="mentorReviewModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Review Perizinan (Staff/Mentor)</div>
+      <button class="modal-close" onclick="closeMentorModal()"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+    </div>
+    
+    <div id="mentorApplicantDetails" style="background:var(--bg-surface); padding:12px; border-radius:10px; margin-bottom:14px; font-size:12.5px;">
+      <!-- Detail applicant dynamically rendered -->
+    </div>
+
+    <form id="mentorForm" onsubmit="handleMentorReviewSubmit(event)">
+      <input type="hidden" id="mentorReviewId">
+      
+      <div class="form-group">
+        <label class="form-label">Keputusan Status</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--border-mid); border-radius:8px; cursor:pointer; background:rgba(34,197,94,0.05);">
+            <input type="radio" name="mentorStatus" value="approved" checked>
+            <span style="font-weight:700; color:#22c55e;">🟢 Disetujui</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--border-mid); border-radius:8px; cursor:pointer; background:rgba(239,68,68,0.05);">
+            <input type="radio" name="mentorStatus" value="rejected">
+            <span style="font-weight:700; color:#ef4444;">🔴 Ditolak</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Komentar Mentor / Catatan Staff</label>
+        <textarea class="form-control" id="mentorCommentInput" rows="3" placeholder="Tulis catatan atau pesan untuk intern..."></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" class="btn-primary" style="background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border-mid);" onclick="closeMentorModal()">Batal</button>
+        <button type="submit" class="btn-primary" id="btnSaveMentorReview">Simpan Keputusan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+let currentUser = null;
+let allPermissions = [];
+let activeStatusFilter = 'all';
+let selectedBase64Image = null;
+
+initAppShell('perizinan', function(user) {
+  currentUser = user;
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').value = todayStr;
+  document.getElementById('endDate').value = todayStr;
+
+  const isStaff = user && user.role === 'staff';
+  const subElem = document.getElementById('permHeaderSub');
+  const btnNew = document.getElementById('btnOpenNewPerm');
+
+  if (btnNew) {
+    btnNew.style.display = isStaff ? 'none' : 'inline-flex';
+  }
+
+  if (subElem) {
+    if (isStaff) {
+      subElem.innerHTML = 'Kelola &amp; tinjau seluruh pengajuan perizinan peserta magang (Staff / Mentor Mode).';
+    } else {
+      subElem.innerHTML = '🔒 <b>Privasi Terjaga</b> · Data perizinan Anda bersifat rahasia dan hanya dapat dilihat oleh Anda dan Staff/Mentor.';
+    }
+  }
+
+  loadPermissions();
+});
+
+async function loadPermissions() {
+  const permGrid = document.getElementById('permGrid');
+  permGrid.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">Memuat data perizinan...</div>`;
+
+  try {
+    const res = await fetch('/api/permissions');
+    if (!res.ok) throw new Error('Gagal mengambil data dari server');
+    allPermissions = await res.json();
+
+    updateStats();
+    renderPermissions();
+  } catch (err) {
+    console.error(err);
+    permGrid.innerHTML = `
+      <div style="text-align:center; padding:40px 20px; background:var(--bg-card); border:1px solid var(--border); border-radius:14px;">
+        <i data-lucide="alert-circle" style="width:36px;height:36px;color:var(--text-muted);margin-bottom:8px;"></i>
+        <div style="font-weight:600;color:var(--text-primary);">Belum Ada Data / Tabel Belum Dibuat</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Pastikan tabel <code>permissions</code> telah dibuat di Supabase SQL Editor.</div>
+      </div>`;
+    lucide.createIcons();
+  }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allPermissions.length;
+  document.getElementById('statPending').textContent = allPermissions.filter(p => p.status === 'pending').length;
+  document.getElementById('statApproved').textContent = allPermissions.filter(p => p.status === 'approved').length;
+  document.getElementById('statRejected').textContent = allPermissions.filter(p => p.status === 'rejected').length;
+}
+
+function filterByStatus(status, btnElem) {
+  activeStatusFilter = status;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  if (btnElem) btnElem.classList.add('active');
+  renderPermissions();
+}
+
+function renderPermissions() {
+  const permGrid = document.getElementById('permGrid');
+  let list = [...allPermissions];
+
+  if (activeStatusFilter !== 'all') {
+    list = list.filter(p => p.status === activeStatusFilter);
+  }
+
+  document.getElementById('listSummaryText').textContent = `Menampilkan ${list.length} dari ${allPermissions.length} pengajuan`;
+
+  if (list.length === 0) {
+    permGrid.innerHTML = `
+      <div style="text-align:center; padding:50px 20px; background:var(--bg-card); border:1px solid var(--border); border-radius:14px;">
+        <i data-lucide="inbox" style="width:36px;height:36px;color:var(--text-muted);margin-bottom:8px;"></i>
+        <div style="font-weight:600;color:var(--text-primary);">Belum ada data perizinan</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Klik "+ Ajukan Izin / Sakit" untuk membuat pengajuan baru.</div>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  permGrid.innerHTML = list.map(item => {
+    const isStaff = currentUser && currentUser.role === 'staff';
+    const isOwner = currentUser && currentUser.id === item.user_id;
+    const initial = (item.user_name || item.user_email || '?').charAt(0).toUpperCase();
+
+    let statusLabel = 'Pending';
+    let statusClass = 'pending';
+    if (item.status === 'approved') { statusLabel = 'Disetujui'; statusClass = 'approved'; }
+    if (item.status === 'rejected') { statusLabel = 'Ditolak'; statusClass = 'rejected'; }
+
+    const formattedStartDate = formatDate(item.start_date);
+    const formattedEndDate = formatDate(item.end_date);
+    const dateRangeStr = (item.start_date === item.end_date) 
+      ? formattedStartDate 
+      : `${formattedStartDate} s/d ${formattedEndDate}`;
+
+    const typeBadgeLabel = { sakit: 'Sakit', izin: 'Izin', cuti: 'Cuti', lainnya: 'Lainnya' }[item.type] || item.type;
+
+    return `
+      <div class="perm-item-card">
+        <div class="perm-item-header">
+          <div class="perm-user-meta">
+            <div class="perm-avatar">
+              ${item.user_avatar && item.user_avatar.startsWith('http') 
+                ? `<img src="${item.user_avatar}" alt="">` 
+                : initial}
+            </div>
+            <div>
+              <div class="perm-user-name">${escHtml(item.user_name || item.user_email)}</div>
+              <div class="perm-user-sub">${escHtml(item.user_email)} · <span style="text-transform:capitalize;">${item.user_role || 'internship'}</span></div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="badge-status ${statusClass}">
+              ${statusClass === 'pending' ? '⏳' : (statusClass === 'approved' ? '✅' : '❌')} ${statusLabel}
+            </span>
+          </div>
+        </div>
+
+        <div class="perm-details">
+          <div class="detail-box">
+            <div class="lbl">Jenis Perizinan</div>
+            <div class="val" style="color:var(--blue-mid); text-transform:capitalize;">${typeBadgeLabel}</div>
+          </div>
+          <div class="detail-box">
+            <div class="lbl">Tanggal</div>
+            <div class="val">${dateRangeStr}</div>
+          </div>
+          <div class="detail-box" style="grid-column: 1 / -1;">
+            <div class="lbl">Alasan</div>
+            <div class="val" style="font-weight:400;">${escHtml(item.reason)}</div>
+          </div>
+        </div>
+
+        ${item.document_url ? `
+          <div style="margin-bottom:10px;">
+            <button class="btn-primary" style="padding:5px 12px; font-size:12px; background:var(--bg-surface); color:var(--blue-mid); border:1px solid var(--border-mid);" onclick="showLightbox('${escHtml(item.document_url)}')">
+              <i data-lucide="image" style="width:13px;height:13px;"></i> Lihat Dokumen / Foto Bukti
+            </button>
+          </div>` : ''}
+
+        ${item.mentor_comment ? `
+          <div class="mentor-comment-box">
+            <div class="mentor-comment-header">
+              <i data-lucide="message-square" style="width:13px;height:13px;"></i>
+              Catatan Mentor / Staff (${escHtml(item.reviewed_by || 'Staff')})
+            </div>
+            <div class="mentor-comment-text">${escHtml(item.mentor_comment)}</div>
+          </div>` : ''}
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-muted);">
+          <div>Diajukan: ${new Date(item.created_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' })}</div>
+          <div style="display:flex; gap:8px;">
+            ${(isOwner && item.status === 'pending') ? `
+              <button style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-weight:600; font-size:12px;" onclick="deletePermission('${item.id}')">
+                <i data-lucide="trash-2" style="width:13px;height:13px;vertical-align:-2px;"></i> Batal / Hapus
+              </button>` : ''}
+            ${isStaff ? `
+              <button class="btn-primary" style="padding:5px 12px; font-size:12px;" onclick='openMentorReviewModal(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                <i data-lucide="message-square" style="width:13px;height:13px;"></i> Review / Tanggapi
+              </button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function handleFileSelect(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  if (file.size > 1 * 1024 * 1024) {
+    alert('Ukuran file terlalu besar. Maksimal ukuran file yang diperbolehkan adalah 1MB.');
+    evt.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedBase64Image = e.target.result;
+    const prev = document.getElementById('filePreview');
+    prev.src = selectedBase64Image;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function openNewPermissionModal() {
+  document.getElementById('newPermModal').classList.add('open');
+}
+function closeNewPermissionModal() {
+  document.getElementById('newPermModal').classList.remove('open');
+  document.getElementById('permForm').reset();
+  document.getElementById('filePreview').style.display = 'none';
+  selectedBase64Image = null;
+}
+
+async function handlePermSubmit(evt) {
+  evt.preventDefault();
+  const btn = document.getElementById('btnSubmitPerm');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  const type = document.getElementById('permType').value;
+  const start_date = document.getElementById('startDate').value;
+  const end_date = document.getElementById('endDate').value;
+  const reason = document.getElementById('permReason').value;
+
+  try {
+    const res = await fetch('/api/permissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, start_date, end_date, reason, document_base64: selectedBase64Image })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menyimpan');
+
+    showToast(data.message || 'Pengajuan berhasil dikirim!');
+    closeNewPermissionModal();
+    loadPermissions();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pengajuan';
+  }
+}
+
+function openMentorReviewModal(item) {
+  document.getElementById('mentorReviewId').value = item.id;
+  document.getElementById('mentorCommentInput').value = item.mentor_comment || '';
+
+  if (item.status === 'rejected') {
+    document.querySelector('input[name="mentorStatus"][value="rejected"]').checked = true;
+  } else {
+    document.querySelector('input[name="mentorStatus"][value="approved"]').checked = true;
+  }
+
+  const detailsElem = document.getElementById('mentorApplicantDetails');
+  detailsElem.innerHTML = `
+    <div style="font-weight:700; font-size:13.5px; margin-bottom:4px;">${escHtml(item.user_name || item.user_email)}</div>
+    <div style="color:var(--text-muted); margin-bottom:8px;">Jenis: <b style="text-transform:capitalize; color:var(--text-primary);">${item.type}</b> | Tanggal: <b>${formatDate(item.start_date)} s/d ${formatDate(item.end_date)}</b></div>
+    <div style="background:var(--bg-card); padding:8px 12px; border-radius:8px; border:1px solid var(--border);">Alasan: ${escHtml(item.reason)}</div>
+  `;
+
+  document.getElementById('mentorReviewModal').classList.add('open');
+}
+
+function closeMentorModal() {
+  document.getElementById('mentorReviewModal').classList.remove('open');
+}
+
+async function handleMentorReviewSubmit(evt) {
+  evt.preventDefault();
+  const id = document.getElementById('mentorReviewId').value;
+  const status = document.querySelector('input[name="mentorStatus"]:checked').value;
+  const mentor_comment = document.getElementById('mentorCommentInput').value;
+
+  const btn = document.getElementById('btnSaveMentorReview');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan...';
+
+  try {
+    const res = await fetch(`/api/permissions/${id}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, mentor_comment })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menyimpan status');
+
+    showToast(data.message || 'Status perizinan diperbarui!');
+    closeMentorModal();
+    loadPermissions();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Keputusan';
+  }
+}
+
+async function deletePermission(id) {
+  if (!confirm('Apakah Anda yakin ingin membatalkan/menghapus pengajuan perizinan ini?')) return;
+  try {
+    const res = await fetch(`/api/permissions/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menghapus');
+    showToast('Perizinan telah dihapus');
+    loadPermissions();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function showLightbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()">✕</button><img src="${src}">`;
+  lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+  document.body.appendChild(lb);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast success';
+  t.style.cssText = 'position:fixed; bottom:20px; right:20px; background:rgba(34,197,94,0.9); color:#fff; padding:10px 18px; border-radius:9px; font-weight:600; font-size:13px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3);';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
