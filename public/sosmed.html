@@ -11,91 +11,58 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-  /* Custom division accent (Yellow per Panduan Sheets) */
-  :root {
-    --accent-sosmed: #d97706;
-  }
 
-  /* Content Planner Section */
+  /* ─── Sosmed Page Premium Dark ─── */
+  :root { --accent-sosmed: #d97706; }
+
+  /* Hero & stats use the shared .page-hero / .pg-stats components in style.css */
   .cp-section { margin-bottom: 40px; }
-  .cp-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
-  }
-  .cp-header h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
-  .cp-header p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
 
-  .btn-add-content {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--accent-sosmed); color: #fff; border: none; border-radius: 10px;
-    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-add-content:hover { filter: brightness(1.15); transform: translateY(-1px); }
-
-  /* Calendar Controls */
-  .cp-controls {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-  }
+  .cp-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
   .cp-btn {
-    background: var(--bg-surface); border: 1px solid var(--border-mid); color: var(--text-secondary);
-    border-radius: 8px; width: 36px; height: 36px; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; transition: all 0.2s;
+    background: #ffffff; border: 1px solid var(--border); color: var(--text-secondary);
+    border-radius: 8px; width: 36px; height: 36px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
   }
   .cp-btn:hover { background: var(--blue-mid); color: #fff; border-color: var(--blue-mid); }
   .cp-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
 
-  /* Calendar Grid */
   .cp-cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
   .cp-cal-header div { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 8px 0; text-transform: uppercase; }
   .cp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
   .cp-day {
     min-height: 90px; background: #ffffff; border: 1px solid var(--border);
     border-radius: 10px; padding: 6px; position: relative; transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
-  .cp-day:hover { border-color: var(--accent-sosmed); }
-  .cp-day.empty { background: rgba(0,0,0,0.01); border-color: transparent; min-height: 40px; }
-  .cp-day.today { border-color: var(--accent-sosmed); box-shadow: 0 0 12px rgba(139,92,246,0.25); background: #fdf4ff; }
+  .cp-day:hover { border-color: rgba(217,119,6,0.4); }
+  .cp-day.empty { background: rgba(15,23,42,0.02); border-color: transparent; min-height: 40px; }
+  .cp-day.today { border-color: rgba(217,119,6,0.5); box-shadow: 0 0 12px rgba(217,119,6,0.15); background: rgba(217,119,6,0.05); }
   .cp-day-num { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-  .cp-day.today .cp-day-num { color: var(--accent-sosmed); font-weight: 700; }
+  .cp-day.today .cp-day-num { color: #b45309; font-weight: 700; }
 
   .cp-item {
     font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
     transition: all 0.15s; font-weight: 600;
   }
-  .cp-item:hover { filter: brightness(0.95); transform: translateY(-1px); }
-  .cp-item.draft { background: rgba(245,158,11,0.18); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
-  .cp-item.ready { background: rgba(59,130,246,0.18); color: #1d4ed8; border: 1px solid rgba(59,130,246,0.25); }
-  .cp-item.published { background: rgba(34,197,94,0.18); color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
-
+  .cp-item:hover { filter: brightness(1.2); transform: translateY(-1px); }
+  .cp-item.draft     { background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+  .cp-item.ready     { background: rgba(59,130,246,0.1);  color: #1d4ed8; border: 1px solid rgba(59,130,246,0.25); }
+  .cp-item.published { background: rgba(34,197,94,0.1);   color: #15803d; border: 1px solid rgba(34,197,94,0.25); }
   .platform-icon { font-size: 10px; margin-right: 2px; }
 
-  /* Stats Cards */
-  .cp-stats {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px; margin-bottom: 24px;
-  }
-  .cp-stat-card {
-    background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 12px;
-    padding: 16px; text-align: center;
-  }
-  .cp-stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--text-primary); }
-  .cp-stat-card .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-  /* Modals */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.3s ease;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    z-index: 2000; opacity: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-box {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+    background: rgba(255,255,255,0.98); border: 1px solid var(--border-mid); border-radius: 22px; padding: 32px;
     width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
     transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 24px 64px rgba(15,23,42,0.18);
+    scrollbar-width: thin; scrollbar-color: rgba(15,23,42,0.14) transparent;
   }
   .modal-overlay.open .modal-box { transform: translateY(0); }
   .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
@@ -103,65 +70,65 @@
   .form-group { margin-bottom: 14px; }
   .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
   .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-mid);
-    border-radius: 8px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
-    box-sizing: border-box;
+    width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
+    box-sizing: border-box; outline: none; transition: all 0.2s;
   }
   .form-group textarea { min-height: 80px; resize: vertical; }
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    outline: none; border-color: var(--accent-sosmed);
+    border-color: #d97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.1);
   }
+  .form-group select option { background: #ffffff; color: var(--text-primary); }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   .btn-cancel {
-    padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border-mid);
+    padding: 10px 20px; background: rgba(148,163,184,0.06); border: 1px solid var(--border);
     color: var(--text-secondary); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+    transition: all 0.15s; font-family: 'Inter', sans-serif;
   }
+  .btn-cancel:hover { background: rgba(148,163,184,0.1); color: var(--text-primary); }
   .btn-submit {
-    padding: 10px 20px; background: var(--accent-sosmed); border: none;
-    color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+    padding: 10px 20px; background: linear-gradient(135deg, #b45309, #d97706);
+    border: none; color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+    font-family: 'Inter', sans-serif; box-shadow: 0 3px 12px rgba(217,119,6,0.3); transition: all 0.2s;
   }
-  .btn-submit:hover { filter: brightness(1.1); }
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(217,119,6,0.45); }
 
-  /* List View */
-  .cp-list-wrapper {
-    margin-top: 32px; background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px;
-  }
+  .cp-list-wrapper { margin-top: 32px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
   .cp-list-wrapper h3 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 16px; }
   .cp-list-item {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border);
+    padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border);
     border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
   }
-  .cp-list-item:hover { border-color: var(--accent-sosmed); }
+  .cp-list-item:hover { border-color: rgba(217,119,6,0.35); background: rgba(217,119,6,0.04); }
   .cp-list-left { flex: 1; min-width: 0; }
   .cp-list-title { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
   .cp-list-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 12px; }
 
   .badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-  .badge-draft { background: rgba(245,158,11,0.15); color: var(--yellow); }
-  .badge-ready { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
-  .badge-published { background: rgba(34,197,94,0.15); color: var(--green); }
-
-  .badge-ig { background: rgba(236,72,153,0.15); color: #ec4899; }
-  .badge-tiktok { background: rgba(0,0,0,0.3); color: #fff; }
-  .badge-linkedin { background: rgba(59,130,246,0.15); color: #0a66c2; }
-  .badge-twitter { background: rgba(29,155,240,0.15); color: #1d9bf0; }
-  .badge-facebook { background: rgba(59,89,152,0.15); color: #3b5998; }
+  .badge-draft     { background: rgba(245,158,11,0.12); color: #b45309; }
+  .badge-ready     { background: rgba(59,130,246,0.1);  color: #1d4ed8; }
+  .badge-published { background: rgba(34,197,94,0.1);   color: #15803d; }
+  .badge-ig       { background: rgba(236,72,153,0.1); color: #be185d; }
+  .badge-tiktok   { background: rgba(15,23,42,0.05); color: var(--text-muted); }
+  .badge-linkedin { background: rgba(14,165,233,0.1); color: #0369a1; }
+  .badge-twitter  { background: rgba(29,155,240,0.1); color: #0369a1; }
+  .badge-facebook { background: rgba(59,89,152,0.1);  color: #1d4ed8; }
 
   .status-select {
     padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600;
-    border: none; cursor: pointer; background: var(--bg-surface); color: var(--text-primary);
+    border: 1px solid var(--border); cursor: pointer; background: var(--bg-input); color: var(--text-primary);
+    outline: none;
   }
 
   @media (max-width: 768px) {
     .cp-cal-grid { grid-template-columns: repeat(7, 1fr); overflow-x: auto; }
     .cp-day { min-height: 60px; }
-    .cp-stats { grid-template-columns: repeat(2, 1fr); }
     .form-row { grid-template-columns: 1fr; }
   }
+
 </style>
 </head>
 <body>
@@ -179,18 +146,20 @@
 
       <!-- Content Planner Section -->
       <div class="cp-section">
-        <div class="cp-header">
-          <div>
-            <h2><i data-lucide="calendar-heart" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px;color:var(--accent-sosmed);"></i> Content Planner</h2>
-            <p>Rencanakan jadwal konten sosial media bulanan</p>
+        <div class="page-hero ph-sosmed">
+          <div class="page-hero-c">
+            <h1><i data-lucide="calendar-heart" style="width:24px;height:24px;"></i> Content Planner</h1>
+            <p>Rencanakan jadwal konten sosial media bulanan — susun draft, tandai siap tayang, dan pantau yang sudah dipublikasikan.</p>
           </div>
-          <button class="btn-add-content" id="btnAddContent" onclick="openAddContentModal()">
-            <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah Konten
-          </button>
+          <div class="page-hero-actions">
+            <button class="btn-ph" id="btnAddContent" onclick="openAddContentModal()">
+              <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah Konten
+            </button>
+          </div>
         </div>
 
         <!-- Stats -->
-        <div class="cp-stats" id="cpStats"></div>
+        <div class="pg-stats" id="cpStats"></div>
 
         <!-- Calendar Controls -->
         <div class="cp-controls">
@@ -305,7 +274,7 @@
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
       <h3 id="detCpTitle" style="margin:0; padding-right:20px;">Detail Konten</h3>
-      <button onclick="closeDetailContentModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;">✕</button>
+      <button onclick="closeDetailContentModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
     </div>
     <div id="detCpBadges" style="margin-bottom:16px;"></div>
     <div id="detCpBody" style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-mid); margin-bottom:16px;"></div>
@@ -382,11 +351,24 @@
     const ready = cpPlans.filter(p => p.status === 'ready').length;
     const published = cpPlans.filter(p => p.status === 'published').length;
     document.getElementById('cpStats').innerHTML = `
-      <div class="cp-stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Konten</div></div>
-      <div class="cp-stat-card"><div class="stat-num" style="color:var(--yellow);">${draft}</div><div class="stat-label">Draft</div></div>
-      <div class="cp-stat-card"><div class="stat-num" style="color:var(--blue-mid);">${ready}</div><div class="stat-label">Ready</div></div>
-      <div class="cp-stat-card"><div class="stat-num" style="color:var(--green);">${published}</div><div class="stat-label">Published</div></div>
+      <div class="pg-stat-card st-amber">
+        <div class="pg-stat-icon"><i data-lucide="layout-grid" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${total}</b><span>Total Konten</span></div>
+      </div>
+      <div class="pg-stat-card st-amber">
+        <div class="pg-stat-icon"><i data-lucide="pencil-line" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${draft}</b><span>Draft</span></div>
+      </div>
+      <div class="pg-stat-card st-blue">
+        <div class="pg-stat-icon"><i data-lucide="send" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${ready}</b><span>Ready</span></div>
+      </div>
+      <div class="pg-stat-card st-green">
+        <div class="pg-stat-icon"><i data-lucide="check-circle-2" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${published}</b><span>Published</span></div>
+      </div>
     `;
+    if (window.lucide) window.lucide.createIcons();
   }
 
   function renderCalendar() {

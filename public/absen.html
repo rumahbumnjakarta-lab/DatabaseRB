@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0d1421">
+<meta name="theme-color" content="#f4f6fb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Absensi — Rumah BUMN Jakarta</title>
@@ -15,67 +15,56 @@
 <style>
 /* ─── Absen Page Specific ─── */
 .absen-container {
-  max-width: 480px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 16px;
   padding-bottom: 90px; /* room for bottom nav */
 }
 
-/* Date & Greeting */
-.absen-greeting {
-  background: linear-gradient(135deg, rgba(8,87,195,0.2), rgba(48,127,226,0.08));
-  border: 1px solid rgba(48,127,226,0.2);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
+/* Two-column workspace: capture tools on the left, status & history on the
+   right. Collapses to the original single column on narrow screens. */
+.absen-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
+  align-items: start;
 }
-.absen-greeting::before {
-  content: '';
-  position: absolute;
-  top: -20px; right: -20px;
-  width: 80px; height: 80px;
-  background: radial-gradient(circle, rgba(113,197,232,0.15), transparent);
-  border-radius: 50%;
+.absen-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* Hero greeting + live clock */
+.absen-hero-date {
+  font-size: 12.5px; color: rgba(255,255,255,0.75);
+  margin-bottom: 6px; font-weight: 500;
 }
-.absen-greeting-date {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
+.absen-hero-clock {
+  position: relative; z-index: 1;
+  text-align: right; flex-shrink: 0;
 }
-.absen-greeting-name {
-  font-family: 'Inter', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.absen-greeting-sub {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-.absen-time {
-  font-size: 28px;
-  font-weight: 700;
+.ahc-time {
   font-family: 'JetBrains Mono', monospace;
-  color: var(--blue-mid);
-  margin-top: 10px;
+  font-size: clamp(28px, 4vw, 38px); font-weight: 700;
+  color: #fff; line-height: 1; letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.ahc-label {
+  font-size: 11px; color: rgba(255,255,255,0.7);
+  margin-top: 6px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
 }
 
 /* Status today */
 .absen-status-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 16px;
 }
 .absen-status-card {
   flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 18px 14px;
   text-align: center;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 .absen-status-card.filled {
   border-color: rgba(34,197,94,0.3);
@@ -94,7 +83,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
 }
 .gps-header {
   display: flex;
@@ -128,7 +117,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
 }
 .camera-header {
   padding: 14px 16px;
@@ -204,7 +193,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 20px;
 }
 .btn-absen {
   padding: 16px;
@@ -246,6 +234,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
 }
 .today-log-header {
   padding: 14px 16px;
@@ -263,7 +252,7 @@
   gap: 5px;
   font-size: 10px;
   font-weight: 700;
-  color: #4ade80;
+  color: #15803d;
   background: rgba(34,197,94,0.1);
   border: 1px solid rgba(34,197,94,0.2);
   padding: 2px 8px;
@@ -381,8 +370,13 @@
   animation: spin 0.8s linear infinite;
   margin: 0 auto 16px;
 }
-.submit-success { font-size: 40px; margin-bottom: 12px; }
+.submit-success { margin-bottom: 12px; display: flex; justify-content: center; }
 .submit-msg { font-size: 14px; color: var(--text-secondary); }
+@media (max-width: 900px) {
+  /* Back to the original single-column flow on narrow screens */
+  .absen-grid { grid-template-columns: 1fr; gap: 16px; }
+  .absen-hero-clock { text-align: left; }
+}
 </style>
 </head>
 <body>
@@ -397,7 +391,7 @@
       </button>
       <div class="topbar-title">
           Absensi
-          <small>Check-in &amp; Check-out harian</small>
+          <small id="topbarSub">Check-in &amp; Check-out harian</small>
         </div>
       <div class="topbar-actions">
         <span class="live-badge"><span class="live-dot"></span>LIVE</span>
@@ -409,21 +403,21 @@
       <div class="absen-container">
 
         <!-- Greeting & Clock -->
-        <div class="absen-greeting">
-          <div class="absen-greeting-date" id="greetDate">Memuat tanggal...</div>
-          <div class="absen-greeting-name" id="greetName">Halo! 👋</div>
-          <div class="absen-greeting-sub" id="greetSub">Selamat bekerja hari ini</div>
-          <div class="absen-time" id="liveClock">--:--:--</div>
-        </div>
-
-        <!-- Today Status -->
-        <div class="absen-status-row">
-          <div class="absen-status-card" id="statusClockIn" style="width: 100%; flex: none;">
-            <div class="absen-status-icon"><i data-lucide="clock" style="color:var(--blue-mid);width:22px;height:22px;"></i></div>
-            <div class="absen-status-label">Status Absensi Hari Ini</div>
-            <div class="absen-status-time" id="timeClockIn">Belum Absen</div>
+        <div class="page-hero ph-blue">
+          <div class="page-hero-c">
+            <div class="absen-hero-date" id="greetDate">Memuat tanggal...</div>
+            <h1><span id="greetIconWrap"></span> <span id="greetName">Halo!</span></h1>
+            <p id="greetSub">Selamat bekerja hari ini</p>
+          </div>
+          <div class="absen-hero-clock">
+            <div class="ahc-time" id="liveClock">--:--:--</div>
+            <div class="ahc-label">Waktu Sekarang</div>
           </div>
         </div>
+
+        <div class="absen-grid" id="absenGrid">
+        <!-- LEFT: capture tools -->
+        <div class="absen-col" id="absenLeftCol">
 
         <!-- GPS & Map -->
         <div class="gps-card">
@@ -460,14 +454,22 @@
           </div>
         </div>
 
-        <!-- Absen Buttons -->
-        <div class="absen-actions" style="display: block;">
-          <button class="btn-absen btn-clock-in" id="btnClockIn" onclick="submitAbsen('clock_in')" style="width: 100%;">
-            <span class="btn-absen-icon"><i data-lucide="check-circle-2" style="width:24px;height:24px;"></i></span>
-            <span class="btn-absen-text">Absen Sekarang</span>
-            <span class="btn-absen-sub">Kirim Foto &amp; Lokasi GPS</span>
-          </button>
+        </div><!-- /.absen-col LEFT -->
+
+        <!-- RIGHT: status, action & history -->
+        <div class="absen-col">
+
+        <!-- Today Status -->
+        <div class="absen-status-row" id="absenStatusRow">
+          <div class="absen-status-card" id="statusClockIn" style="width: 100%; flex: none;">
+            <div class="absen-status-icon"><i data-lucide="clock" style="color:var(--blue-mid);width:22px;height:22px;"></i></div>
+            <div class="absen-status-label">Status Absensi Hari Ini</div>
+            <div class="absen-status-time" id="timeClockIn">Belum Absen</div>
+          </div>
         </div>
+
+        <!-- Absen Buttons -->
+        <div class="absen-actions" id="absenActionsWrap" style="display: block;"></div>
 
         <!-- Quick Link Perizinan -->
         <div id="quickLinkPerizinan" style="margin-top: 16px; text-align: center; background: rgba(48,127,226,0.08); border: 1px solid rgba(48,127,226,0.2); border-radius: 14px; padding: 16px;">
@@ -485,6 +487,18 @@
           </div>
           <div id="logList"><div class="log-empty">Memuat data absensi...</div></div>
         </div>
+
+        <!-- WFH Management (Staff only) -->
+        <div class="today-log" id="wfhManageCard" style="display:none;">
+          <div class="today-log-header">
+            <span>Kelola Izin WFH Intern</span>
+            <input type="date" id="wfhDate" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-primary);font-family:'Inter',sans-serif;">
+          </div>
+          <div id="wfhInternList"><div class="log-empty">Memuat data intern...</div></div>
+        </div>
+
+        </div><!-- /.absen-col RIGHT -->
+        </div><!-- /.absen-grid -->
 
       </div><!-- .absen-container -->
     </div><!-- #appContent -->
@@ -533,7 +547,13 @@ initAppShell('absen', function(user) {
   const firstName = user.name ? user.name.split(' ')[0] : 'Pengguna';
   const hour = now.getHours();
   const greeting = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
-  document.getElementById('greetName').textContent = `${greeting}, ${firstName}! ${hour < 11 ? '☀️' : hour < 18 ? '🌤️' : '🌙'}`;
+  document.getElementById('greetName').textContent = `${greeting}, ${firstName}!`;
+  // Time-of-day icon, rendered into its own wrapper so setting the greeting
+  // text above can never wipe it out.
+  const greetIcon = hour < 11 ? 'sun' : hour < 18 ? 'cloud-sun' : 'moon';
+  document.getElementById('greetIconWrap').innerHTML =
+    `<i data-lucide="${greetIcon}" style="width:24px;height:24px;"></i>`;
+  if (typeof renderIcons === 'function') renderIcons();
   document.getElementById('greetSub').textContent = user.role === 'staff' ? 'Selamat bekerja, Staff Rumah BUMN!' : 'Semangat magang hari ini!';
 
   if (user.role === 'staff') {
@@ -541,20 +561,163 @@ initAppShell('absen', function(user) {
     if (ql) ql.style.display = 'none';
   }
 
+  applyStaffLayout(user);
+  initWfhManage(user);
+
   // Live clock
   updateClock();
   setInterval(updateClock, 1000);
 
-  // Init map
-  initMap();
-
-  // Get GPS
-  getLocation();
+  if (user.role !== 'staff') {
+    renderAbsenButtons(user);
+    initMap();
+    getLocation();
+  }
 
   // Load today's log
   loadTodayLog();
   setInterval(loadTodayLog, 30000); // Realtime poll every 30s
 });
+
+// ─── Absen Buttons ───
+// Staff selalu bebas pilih WFO/WFH sendiri. Intern hanya boleh WFH kalau
+// sudah diizinkan staff untuk hari ini (lihat /api/wfh-assignments/mine).
+async function renderAbsenButtons(user) {
+  const wrap = document.getElementById('absenActionsWrap');
+  if (!wrap) return;
+
+  let wfhAllowed = true;
+  if (user.role !== 'staff') {
+    try {
+      const res = await fetch('/api/wfh-assignments/mine');
+      const data = await res.json();
+      wfhAllowed = !!data.allowed;
+    } catch (e) {
+      wfhAllowed = false;
+    }
+  }
+
+  if (wfhAllowed) {
+    wrap.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button class="btn-absen btn-clock-in" id="btnWFO" onclick="submitAbsen('wfo')">
+          <span class="btn-absen-icon"><i data-lucide="building-2" style="width:24px;height:24px;"></i></span>
+          <span class="btn-absen-text">Absen WFO</span>
+          <span class="btn-absen-sub">Wajib di lokasi kantor</span>
+        </button>
+        <button class="btn-absen" id="btnWFH" onclick="submitAbsen('wfh')" style="background:linear-gradient(135deg,#307fe2,#1e5bb8);color:#fff;box-shadow:0 4px 16px rgba(48,127,226,0.35);">
+          <span class="btn-absen-icon"><i data-lucide="home" style="width:24px;height:24px;"></i></span>
+          <span class="btn-absen-text">Absen WFH</span>
+          <span class="btn-absen-sub">Lokasi bebas</span>
+        </button>
+      </div>`;
+  } else {
+    wrap.innerHTML = `
+      <button class="btn-absen btn-clock-in" id="btnWFO" onclick="submitAbsen('wfo')" style="width: 100%;">
+        <span class="btn-absen-icon"><i data-lucide="check-circle-2" style="width:24px;height:24px;"></i></span>
+        <span class="btn-absen-text">Absen Sekarang</span>
+        <span class="btn-absen-sub">Kirim Foto &amp; Lokasi GPS</span>
+      </button>
+      <div style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:8px;">WFH belum diizinkan staff untuk hari ini.</div>`;
+  }
+  if (typeof renderIcons === 'function') renderIcons();
+}
+
+// ─── Staff tidak perlu absen sendiri — sembunyikan GPS, kamera, dan tombol absen ───
+function applyStaffLayout(user) {
+  if (user.role !== 'staff') return;
+
+  const grid = document.getElementById('absenGrid');
+  const leftCol = document.getElementById('absenLeftCol');
+  const statusRow = document.getElementById('absenStatusRow');
+  const actionsWrap = document.getElementById('absenActionsWrap');
+  const topbarSub = document.getElementById('topbarSub');
+
+  if (grid) grid.style.gridTemplateColumns = '1fr';
+  if (leftCol) leftCol.style.display = 'none';
+  if (statusRow) statusRow.style.display = 'none';
+  if (actionsWrap) actionsWrap.style.display = 'none';
+  if (topbarSub) topbarSub.textContent = 'Pantau kehadiran & kelola WFH intern';
+}
+
+// ─── WFH Management (Staff only) — pilih intern mana yang boleh WFH per tanggal ───
+function initWfhManage(user) {
+  const card = document.getElementById('wfhManageCard');
+  if (!card) return;
+  if (user.role !== 'staff') { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const dateInput = document.getElementById('wfhDate');
+  const todayStr = new Date().toLocaleDateString('sv-SE'); // yyyy-mm-dd lokal
+  dateInput.value = todayStr;
+  dateInput.addEventListener('change', () => loadWfhManage(dateInput.value));
+
+  loadWfhManage(todayStr);
+}
+
+async function loadWfhManage(date) {
+  const listEl = document.getElementById('wfhInternList');
+  listEl.innerHTML = '<div class="log-empty">Memuat data intern...</div>';
+  try {
+    const [usersRes, assignRes] = await Promise.all([
+      fetch('/api/users'),
+      fetch(`/api/wfh-assignments?date=${date}`)
+    ]);
+    const users = await usersRes.json();
+    const assignments = await assignRes.json();
+    const interns = (users || []).filter(u => u.role === 'internship');
+    const assignedIds = new Set((assignments || []).map(a => a.user_id));
+
+    if (!interns.length) {
+      listEl.innerHTML = '<div class="log-empty">Belum ada akun intern.</div>';
+      return;
+    }
+
+    const rows = interns.map(u => {
+      const allowed = assignedIds.has(u.id);
+      const initial = (u.name || u.email || '?').charAt(0).toUpperCase();
+      return `<div class="log-item">
+        <div class="log-avatar">
+          ${u.avatar_url && u.avatar_url.startsWith('http') ? `<img src="${u.avatar_url}" alt="" onerror="this.style.display='none'">` : initial}
+        </div>
+        <div class="log-info">
+          <div class="log-name">${escHtml(u.name || u.email)}</div>
+          <div class="log-type-time">${escHtml(u.email)}</div>
+        </div>
+        <span class="log-type-badge" style="background:${allowed ? 'rgba(48,127,226,0.08)' : 'rgba(107,114,128,0.08)'};color:${allowed ? '#307fe2' : '#6b7280'};border:1px solid ${allowed ? 'rgba(48,127,226,0.15)' : 'rgba(107,114,128,0.15)'};">${allowed ? 'WFH Diizinkan' : 'WFO'}</span>
+      </div>`;
+    }).join('');
+
+    listEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;">
+        <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;">${assignedIds.size} dari ${interns.length} intern diizinkan WFH</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="bulkSetWfh(true)" style="font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#307fe2,#1e5bb8);color:#fff;cursor:pointer;font-family:'Inter',sans-serif;">Izinkan Semua WFH</button>
+          <button onclick="bulkSetWfh(false)" style="font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;">Cabut Semua</button>
+        </div>
+      </div>
+      ${rows}`;
+    if (typeof renderIcons === 'function') renderIcons();
+  } catch (e) {
+    listEl.innerHTML = '<div class="log-empty">Gagal memuat data.</div>';
+  }
+}
+
+async function bulkSetWfh(allowed) {
+  const date = document.getElementById('wfhDate').value;
+  try {
+    const res = await fetch('/api/wfh-assignments/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, allowed })
+    });
+    const data = await res.json();
+    showToastMsg(data.message || (allowed ? 'Semua intern diizinkan WFH.' : 'Izin WFH dicabut.'), !res.ok);
+    loadWfhManage(date);
+  } catch (e) {
+    showToastMsg('Gagal memperbarui izin WFH.', true);
+  }
+}
 
 function updateClock() {
   const now = new Date();
@@ -580,11 +743,11 @@ function getLocation() {
   const addressEl = document.getElementById('gpsAddress');
 
   if (!navigator.geolocation) {
-    statusEl.textContent = '❌ GPS tidak didukung browser ini';
+    setStatusIcon(statusEl, 'x-circle', '#dc2626', 'GPS tidak didukung browser ini');
     return;
   }
 
-  statusEl.textContent = '📡 Mendapatkan lokasi...';
+  setStatusIcon(statusEl, 'radio', 'var(--blue-mid)', 'Mendapatkan lokasi...');
 
   navigator.geolocation.watchPosition(
     (pos) => {
@@ -593,18 +756,18 @@ function getLocation() {
       gpsData.accuracy = Math.round(pos.coords.accuracy);
 
       var distance = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
-      var btnIn = document.getElementById('btnClockIn');
-      var btnOut = document.getElementById('btnClockOut');
+      // btnWFO wajib dalam radius kantor. btnWFH selalu boleh, lokasi bebas.
+      var btnWFO = document.getElementById('btnWFO');
+      var btnWFH = document.getElementById('btnWFH');
 
       if (distance <= MAX_RADIUS) {
-        statusEl.innerHTML = `✅ <span style="color:#059669;font-weight:700;">Jarak: ${distance}m (Dalam Area)</span> — ±${gpsData.accuracy}m`;
-        if (btnIn) btnIn.disabled = false;
-        if (btnOut) btnOut.disabled = false;
+        setStatusIcon(statusEl, 'check-circle-2', '#059669', `<span style="color:#059669;font-weight:700;">Jarak: ${distance}m (Dalam Area)</span> — ±${gpsData.accuracy}m`);
+        if (btnWFO) btnWFO.disabled = false;
       } else {
-        statusEl.innerHTML = `⚠️ <span style="color:#dc2626;font-weight:700;">Jarak: ${distance}m (Di luar area - Maks ${MAX_RADIUS}m)</span>`;
-        if (btnIn) btnIn.disabled = true;
-        if (btnOut) btnOut.disabled = true;
+        setStatusIcon(statusEl, 'alert-triangle', '#dc2626', `<span style="color:#dc2626;font-weight:700;">Jarak: ${distance}m (Di luar area - Maks ${MAX_RADIUS}m)</span>`);
+        if (btnWFO) btnWFO.disabled = true;
       }
+      if (btnWFH) btnWFH.disabled = false;
 
       coordsEl.textContent = `${gpsData.lat.toFixed(6)}, ${gpsData.lng.toFixed(6)}`;
 
@@ -644,7 +807,7 @@ function getLocation() {
       }
     },
     (err) => {
-      statusEl.textContent = '⚠️ Akses lokasi ditolak — GPS diperlukan untuk absen';
+      setStatusIcon(statusEl, 'alert-triangle', '#dc2626', 'Akses lokasi ditolak — GPS diperlukan untuk absen');
       coordsEl.textContent = 'Izinkan akses lokasi di browser';
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
@@ -713,20 +876,23 @@ function retakeSelfie() {
 }
 
 // ─── Submit Absen ───
-async function submitAbsen(type) {
+// mode: 'wfo' (wajib di lokasi kantor) atau 'wfh' (lokasi bebas, staff only)
+async function submitAbsen(mode) {
   if (!gpsData.lat || !gpsData.lng) {
-    showToastMsg('⚠️ GPS belum terdeteksi. Mohon aktifkan & izinkan akses lokasi.', true);
+    showToastMsg('GPS belum terdeteksi. Mohon aktifkan & izinkan akses lokasi.', true);
     return;
   }
-  
-  var distance = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
-  if (distance > MAX_RADIUS) {
-    showToastMsg(`⚠️ Absensi ditolak: Jarak Anda ${distance}m (Maksimal ${MAX_RADIUS}m).`, true);
-    return;
+
+  if (mode !== 'wfh') {
+    var distance = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
+    if (distance > MAX_RADIUS) {
+      showToastMsg(`Absensi ditolak: Jarak Anda ${distance}m (Maksimal ${MAX_RADIUS}m).`, true);
+      return;
+    }
   }
-  
+
   if (!selfieBase64) {
-    showToastMsg('⚠️ Foto selfie wajib diambil sebelum absen.', true);
+    showToastMsg('Foto selfie wajib diambil sebelum absen.', true);
     return;
   }
 
@@ -745,7 +911,8 @@ async function submitAbsen(type) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        type,
+        type: 'clock_in',
+        work_mode: mode,
         photo_base64: selfieBase64,
         latitude: gpsData.lat,
         longitude: gpsData.lng,
@@ -755,11 +922,12 @@ async function submitAbsen(type) {
     const data = await res.json();
 
     overlay.querySelector('.submit-box').innerHTML = `
-      <div class="submit-success">${res.ok ? '✅' : '❌'}</div>
+      <div class="submit-success"><i data-lucide="${res.ok ? 'check-circle-2' : 'x-circle'}" style="width:52px;height:52px;color:${res.ok ? '#16a34a' : '#dc2626'};"></i></div>
       <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
         ${res.ok ? 'Berhasil!' : 'Gagal!'}
       </div>
       <div class="submit-msg">${data.message || data.error}</div>`;
+    if (typeof renderIcons === 'function') renderIcons();
 
     setTimeout(() => {
       overlay.remove();
@@ -767,7 +935,7 @@ async function submitAbsen(type) {
     }, 2000);
   } catch (err) {
     overlay.remove();
-    showToastMsg('❌ Koneksi gagal. Coba lagi.', true);
+    showToastMsg('Koneksi gagal. Coba lagi.', true);
   }
 }
 
@@ -812,6 +980,8 @@ function renderLog(records) {
     const time = new Date(r.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}).replace(/\./g, ':');
     const label = r.type === 'clock_in' ? 'Clock In' : 'Clock Out';
     const mapsUrl = `https://www.google.com/maps?q=${r.latitude},${r.longitude}`;
+    const modeLabel = r.work_mode === 'wfh' ? 'WFH' : (r.work_mode === 'wfo' ? 'WFO' : '');
+    const modeBadge = modeLabel ? `<span class="log-type-badge" style="background:${r.work_mode === 'wfh' ? 'rgba(48,127,226,0.08)' : 'rgba(107,114,128,0.08)'};color:${r.work_mode === 'wfh' ? '#307fe2' : '#6b7280'};border:1px solid ${r.work_mode === 'wfh' ? 'rgba(48,127,226,0.15)' : 'rgba(107,114,128,0.15)'};">${modeLabel}</span>` : '';
 
     return `<div class="log-item">
       <div class="log-avatar">
@@ -821,6 +991,7 @@ function renderLog(records) {
         <div class="log-name">${escHtml(r.user_name || r.user_email)}</div>
         <div class="log-type-time">${time} · ${r.address ? escHtml(r.address.substring(0,40)) : 'Lokasi tercatat'}</div>
       </div>
+      ${modeBadge}
       <span class="log-type-badge ${r.type}">${label}</span>
       ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="log-photo-thumb" src="${r.photo_url}" onclick="showLightbox('${r.photo_url}')" alt="Selfie">` : ''}
       <a class="log-map-btn" href="${mapsUrl}" target="_blank" title="Lihat di Maps"><i data-lucide="map-pin" style="width:16px;height:16px;color:var(--blue-mid);"></i></a>
@@ -831,9 +1002,17 @@ function renderLog(records) {
 function showLightbox(src) {
   const lb = document.createElement('div');
   lb.className = 'lightbox';
-  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()">✕</button><img src="${src}">`;
+  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:18px;height:18px;"></i></button><img src="${src}">`;
   lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
   document.body.appendChild(lb);
+  if (typeof renderIcons === 'function') renderIcons();
+}
+
+// Renders a lucide icon inline ahead of a status message.
+function setStatusIcon(el, icon, color, html) {
+  if (!el) return;
+  el.innerHTML = `<i data-lucide="${icon}" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;color:${color};"></i>${html}`;
+  if (typeof renderIcons === 'function') renderIcons();
 }
 
 function showToastMsg(msg, isError) {

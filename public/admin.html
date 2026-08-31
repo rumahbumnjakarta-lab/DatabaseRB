@@ -6,6 +6,18 @@
 <title>Admin — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Database admin operasional Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="style.css">
+<style>
+  .btn-rekap-export {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-admin); color: #fff; text-decoration: none;
+    padding: 10px 18px; border-radius: 11px;
+    font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 3px 12px rgba(8,145,178,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-rekap-export:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(8,145,178,0.42); }
+</style>
 </head>
 <body>
 
@@ -19,29 +31,47 @@
       <div class="topbar-title">Admin <small>Database dokumen &amp; data operasional</small></div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
-      <div class="division-header">
-        <div class="division-header-icon" style="background:rgba(5,150,105,0.1); color:var(--accent-admin);"><i data-lucide="file-text"></i></div>
-        <div class="division-header-text">
-          <h1>Admin</h1>
-          <p>Dokumen administrasi, surat-menyurat, absensi, inventaris, dan data operasional.</p>
-        </div>
-        <div class="division-stats">
-          <div class="division-stat"><b id="stat-total">0</b><span>Total Item</span></div>
-          <div class="division-stat"><b id="stat-cat">0</b><span>Kategori</span></div>
+      <div class="page-hero ph-admin">
+        <div class="page-hero-c">
+          <h1><i data-lucide="file-text" style="width:24px;height:24px;"></i> Admin</h1>
+          <p>Dokumen administrasi, surat-menyurat, absensi, inventaris, dan data operasional dalam satu pusat arsip.</p>
         </div>
       </div>
-      
-      <!-- Rekap Absensi Section -->
-      <div style="background:#ffffff; border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:32px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 16px rgba(15,23,42,0.03);">
-        <div>
-          <h2 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0 0 6px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="calendar-clock" style="color:var(--accent-admin);"></i> Rekap Absensi
-          </h2>
-          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Download data absensi harian (seluruh divisi) ke format CSV/Excel.</p>
+
+      <div class="pg-stats">
+        <div class="pg-stat-card st-blue">
+          <div class="pg-stat-icon"><i data-lucide="layers" style="width:21px;height:21px;"></i></div>
+          <div class="pg-stat-text"><b id="stat-total">0</b><span>Total Item</span></div>
         </div>
-        <a href="/api/absen/export" target="_blank" style="display:inline-flex; align-items:center; gap:8px; background:var(--accent-admin); color:#fff; text-decoration:none; padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; transition:all 0.2s;">
-          <i data-lucide="download" style="width:16px;height:16px;"></i> Export to CSV
-        </a>
+        <div class="pg-stat-card st-purple">
+          <div class="pg-stat-icon"><i data-lucide="folder" style="width:21px;height:21px;"></i></div>
+          <div class="pg-stat-text"><b id="stat-cat">0</b><span>Kategori</span></div>
+        </div>
+        <div class="pg-stat-card st-green">
+          <div class="pg-stat-icon"><i data-lucide="link" style="width:21px;height:21px;"></i></div>
+          <div class="pg-stat-text"><b id="stat-link">0</b><span>Dokumen &amp; Tautan</span></div>
+        </div>
+        <div class="pg-stat-card st-red">
+          <div class="pg-stat-icon"><i data-lucide="key-round" style="width:21px;height:21px;"></i></div>
+          <div class="pg-stat-text"><b id="stat-cred">0</b><span>Kredensial</span></div>
+        </div>
+      </div>
+
+      <!-- Rekap Absensi Section (staff only — /api/absen/export is staff-gated) -->
+      <div class="pg-panel" id="rekapPanel" style="display:none;">
+        <div class="pg-panel-head">
+          <div class="pph-icon" style="background:var(--icon-bg-blue); color:var(--accent-admin);">
+            <i data-lucide="calendar-clock" style="width:18px;height:18px;"></i>
+          </div>
+          <div>
+            <h2>Rekap Absensi</h2>
+            <p>Download data absensi harian seluruh divisi ke format CSV/Excel.</p>
+          </div>
+          <div class="pph-spacer"></div>
+          <a class="btn-rekap-export" href="/api/absen/export" target="_blank" rel="noopener noreferrer">
+            <i data-lucide="download" style="width:16px;height:16px;"></i> Export to CSV
+          </a>
+        </div>
       </div>
 
       <div class="controls">
@@ -67,11 +97,28 @@
 <script>
 // Admin page: accessible by all logged-in users
 initAppShell('admin', function(user) {
+  // /api/absen/export is staff-gated, so only surface the panel to staff —
+  // otherwise the link just opens a tab with a 403 JSON body.
+  if (user && user.role === 'staff') {
+    const panel = document.getElementById('rekapPanel');
+    if (panel) panel.style.display = 'block';
+  }
+
   fetch('/api/items?division=admin')
     .then(r => r.json())
-    .then(items => initDivisionPage(items))
-    .catch(() => initDivisionPage([]));
+    .then(items => renderAdmin(items))
+    .catch(() => renderAdmin([]));
 });
+
+function renderAdmin(items) {
+  const list = Array.isArray(items) ? items : [];
+  // initDivisionPage fills stat-total / stat-cat; the type breakdown is ours.
+  const linkEl = document.getElementById('stat-link');
+  const credEl = document.getElementById('stat-cred');
+  if (linkEl) animateCount(linkEl, list.filter(i => i.type !== 'cred').length);
+  if (credEl) animateCount(credEl, list.filter(i => i.type === 'cred').length);
+  initDivisionPage(list);
+}
 </script>
 </body>
 </html>

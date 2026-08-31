@@ -38,7 +38,7 @@
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
   display: flex;
   flex-direction: column;
-  box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+  box-shadow: -10px 0 40px rgba(15,23,42,0.12);
   margin: 0;
   overflow: hidden; /* Fix footer push-out */
 }
@@ -279,7 +279,7 @@
   width: 90%;
   max-width: 420px;
   text-align: center;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+  box-shadow: 0 15px 40px rgba(15,23,42,0.16);
   transform: scale(0.9);
   transition: transform 0.2s ease;
 }
@@ -361,20 +361,32 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div style="display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;margin-left:4px;">
-        <button class="manage-btn" onclick="openCreateDrawer()" style="flex-shrink:0;padding:8px 12px;font-size:12px;background:var(--blue-mid);color:#fff;border:none;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Tambah Akun Baru
-        </button>
-      </div>
+      <!-- .topbar-title's flex:1 pushes search/notif/profile to the right
+           edge — every other page has one; this page didn't, so that
+           cluster (and the cram-in "Tambah Akun Baru" button) sat bunched
+           up on the left instead of right-aligned. -->
+      <div class="topbar-title">Kelola Akun <small>Pendaftaran &amp; profil Staff/Intern</small></div>
     </div>
 
     <!-- Page Content -->
     <div id="appContent" class="app-content" style="display:none;">
-      
+
       <!-- Main Content Area -->
       <div class="dash-content" style="width: 100%; max-width: 100%; margin: 24px 0 60px; padding: 0 24px;">
-        
+
+        <!-- Hero -->
+        <div class="page-hero ph-navy">
+          <div class="page-hero-c">
+            <h1><i data-lucide="users" style="width:24px;height:24px;"></i> Kelola Akun</h1>
+            <p>Daftarkan anggota tim baru dan kelola profil Staff maupun Intern.</p>
+          </div>
+          <div class="page-hero-actions">
+            <button class="btn-ph" onclick="openCreateDrawer()">
+              <i data-lucide="user-plus" style="width:16px;height:16px;"></i> Tambah Akun Baru
+            </button>
+          </div>
+        </div>
+
         <!-- Cards header -->
         <div class="table-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:0 4px 20px var(--card-shadow);">
           <div class="table-card-header" style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
@@ -403,7 +415,70 @@
   </main>
 </div>
 
-<!-- ─── Add/Edit User slide-in Drawer ─── -->
+<!-- ─── Add/Edit User slide-in Drawer ───
+     This markup — and the shared.js include below — had gone missing from
+     the page entirely (the CSS for .drawer/.modal-overlay etc. was still
+     here, and the JS still called document.getElementById('drawerOverlay')
+     and friends, but none of those elements existed). The page could never
+     get past its own "Memeriksa izin akses..." loading screen as a result,
+     since initAppShell — which only shared.js defines — was undefined. -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this) closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <h3 id="drawerTitle">Tambah Akun Baru</h3>
+      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+    </div>
+    <div class="drawer-body">
+      <form id="userForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="userId" value="">
+        <div class="form-field">
+          <label for="userName">Nama Lengkap</label>
+          <input type="text" id="userName" placeholder="Contoh: John Doe" required>
+        </div>
+        <div class="form-field">
+          <label for="userEmail">Email Perusahaan</label>
+          <input type="email" id="userEmail" placeholder="nama@staff.rbjakarta.id" required>
+        </div>
+        <div class="form-field">
+          <label for="userRole">Peran</label>
+          <select id="userRole" required>
+            <option value="internship">Internship</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="userDivisi">Divisi</label>
+          <select id="userDivisi" required></select>
+        </div>
+        <div class="form-field" id="passwordFieldGroup">
+          <label for="userPassword">Kata Sandi</label>
+          <input type="password" id="userPassword" placeholder="Minimal 6 karakter" minlength="6">
+        </div>
+      </form>
+    </div>
+    <div class="drawer-footer">
+      <button type="button" class="btn-drawer-cancel" onclick="closeDrawer()">Batal</button>
+      <button type="button" class="btn-drawer-save" id="btnSave" onclick="submitForm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Delete Confirmation Modal ─── -->
+<div class="modal-overlay" id="deleteModal" onclick="if(event.target===this) closeDeleteModal()">
+  <div class="modal-box">
+    <div class="modal-icon"><i data-lucide="trash-2" style="width:32px;height:32px;color:#DC2626;"></i></div>
+    <h3>Hapus Akun Ini?</h3>
+    <p>Akun <strong id="deleteUserEmail"></strong> akan dihapus permanen dan tidak bisa dikembalikan.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
+      <button class="btn-modal-delete" id="btnConfirmDelete" onclick="confirmDelete()">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
 <script>
 var allUsers = [];
 var deleteTargetId = null;

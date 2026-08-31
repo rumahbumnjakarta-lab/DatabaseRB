@@ -16,33 +16,9 @@
     --accent-design: #d946ef;
   }
 
-  /* Design Request Section */
+  /* Design Request Section — hero & stats use the shared
+     .page-hero / .pg-stats components defined in style.css */
   .dr-section { margin-bottom: 40px; }
-  .dr-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
-  }
-  .dr-header h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
-  .dr-header p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
-
-  .btn-request-design {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--accent-design); color: #fff; border: none; border-radius: 10px;
-    padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .btn-request-design:hover { filter: brightness(1.15); transform: translateY(-1px); }
-
-  /* Stats */
-  .dr-stats {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px; margin-bottom: 24px;
-  }
-  .dr-stat-card {
-    background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 12px;
-    padding: 16px; text-align: center;
-  }
-  .dr-stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--text-primary); }
-  .dr-stat-card .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
   /* Filter Chips */
   .dr-filters {
@@ -73,7 +49,7 @@
     background: var(--bg-app); padding: 2px 8px; border-radius: 10px;
     font-size: 11px; color: var(--text-muted); font-weight: 600;
   }
-  .kanban-col.pending .kanban-col-header { border-bottom-color: var(--yellow); }
+  .kanban-col.pending .kanban-col-header { border-bottom-color: var(--amber); }
   .kanban-col.in-progress .kanban-col-header { border-bottom-color: var(--blue-mid); }
   .kanban-col.done .kanban-col-header { border-bottom-color: var(--green); }
 
@@ -91,28 +67,28 @@
   .badge-normal { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
   .badge-low { background: rgba(148,163,184,0.15); color: var(--text-muted); }
 
-  .badge-pending { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-pending { background: rgba(245,158,11,0.15); color: var(--amber); }
   .badge-in_progress { background: rgba(59,130,246,0.15); color: var(--blue-mid); }
   .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
   .badge-rejected { background: rgba(239,68,68,0.15); color: var(--red); }
 
   .div-badge {
     padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
-    background: rgba(255,255,255,0.08); color: var(--text-secondary);
+    background: rgba(15,23,42,0.05); color: var(--text-secondary);
   }
 
   /* Modals */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
     z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
     transition: opacity 0.3s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-box {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+    background: rgba(255,255,255,0.98); border: 1px solid var(--border-mid); border-radius: 22px; padding: 32px;
     width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
     transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 24px 64px rgba(15,23,42,0.18);
   }
   .modal-overlay.open .modal-box { transform: translateY(0); }
   .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
@@ -120,12 +96,14 @@
   .form-group { margin-bottom: 14px; }
   .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
   .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-mid);
-    border-radius: 8px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
-    box-sizing: border-box;
+    width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
+    box-sizing: border-box; outline: none; transition: all 0.2s;
   }
   .form-group textarea { min-height: 80px; resize: vertical; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent-design); }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #d946ef; box-shadow: 0 0 0 3px rgba(217,70,239,0.1);
+  }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
@@ -143,7 +121,6 @@
 
   @media (max-width: 768px) {
     .kanban-board { grid-template-columns: 1fr; }
-    .dr-stats { grid-template-columns: repeat(2, 1fr); }
     .form-row { grid-template-columns: 1fr; }
   }
 </style>
@@ -163,18 +140,20 @@
 
       <!-- Design Request Section -->
       <div class="dr-section">
-        <div class="dr-header">
-          <div>
-            <h2><i data-lucide="palette" style="width:22px;height:22px;vertical-align:-4px;margin-right:6px;color:var(--accent-design);"></i> Design Request</h2>
-            <p>Kelola permintaan desain dari seluruh divisi</p>
+        <div class="page-hero ph-design">
+          <div class="page-hero-c">
+            <h1><i data-lucide="palette" style="width:24px;height:24px;"></i> Design Request</h1>
+            <p>Kelola permintaan desain dari seluruh divisi — pantau antrean, progres pengerjaan, dan hasil akhir dalam satu papan.</p>
           </div>
-          <button class="btn-request-design" onclick="openRequestModal()">
-            <i data-lucide="plus" style="width:16px;height:16px;"></i> Ajukan Request
-          </button>
+          <div class="page-hero-actions">
+            <button class="btn-ph" onclick="openRequestModal()">
+              <i data-lucide="plus" style="width:16px;height:16px;"></i> Ajukan Request
+            </button>
+          </div>
         </div>
 
         <!-- Stats -->
-        <div class="dr-stats" id="drStats"></div>
+        <div class="pg-stats" id="drStats"></div>
 
         <!-- Filters -->
         <div class="dr-filters" id="drFilters">
@@ -188,7 +167,7 @@
         <!-- Kanban Board -->
         <div class="kanban-board" id="kanbanBoard">
           <div class="kanban-col pending">
-            <div class="kanban-col-header"><i data-lucide="clock" style="width:16px;height:16px;color:var(--yellow);margin-right:2px;"></i> Pending <span class="col-count" id="countPending">0</span></div>
+            <div class="kanban-col-header"><i data-lucide="clock" style="width:16px;height:16px;color:var(--amber);margin-right:2px;"></i> Pending <span class="col-count" id="countPending">0</span></div>
             <div id="colPending"></div>
           </div>
           <div class="kanban-col in-progress">
@@ -305,7 +284,7 @@
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
       <h3 id="detDrTitle" style="margin:0; padding-right:20px;">Detail Request</h3>
-      <button onclick="closeDetailRequestModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;">✕</button>
+      <button onclick="closeDetailRequestModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
     </div>
     <div id="detDrBadges" style="margin-bottom:16px;"></div>
     <div id="detDrBody" style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-mid); margin-bottom:16px;"></div>
@@ -378,10 +357,22 @@
     const inProg = allRequests.filter(r => r.status === 'in_progress').length;
     const done = allRequests.filter(r => r.status === 'done').length;
     document.getElementById('drStats').innerHTML = `
-      <div class="dr-stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Request</div></div>
-      <div class="dr-stat-card"><div class="stat-num" style="color:var(--yellow);">${pending}</div><div class="stat-label">Pending</div></div>
-      <div class="dr-stat-card"><div class="stat-num" style="color:var(--blue-mid);">${inProg}</div><div class="stat-label">Dikerjakan</div></div>
-      <div class="dr-stat-card"><div class="stat-num" style="color:var(--green);">${done}</div><div class="stat-label">Selesai</div></div>
+      <div class="pg-stat-card st-purple">
+        <div class="pg-stat-icon"><i data-lucide="layers" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${total}</b><span>Total Request</span></div>
+      </div>
+      <div class="pg-stat-card st-amber">
+        <div class="pg-stat-icon"><i data-lucide="clock" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${pending}</b><span>Pending</span></div>
+      </div>
+      <div class="pg-stat-card st-blue">
+        <div class="pg-stat-icon"><i data-lucide="wrench" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${inProg}</b><span>Dikerjakan</span></div>
+      </div>
+      <div class="pg-stat-card st-green">
+        <div class="pg-stat-icon"><i data-lucide="check-circle-2" style="width:21px;height:21px;"></i></div>
+        <div class="pg-stat-text"><b>${done}</b><span>Selesai</span></div>
+      </div>
     `;
   }
 

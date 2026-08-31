@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#0d1421">
+<meta name="theme-color" content="#f4f6fb">
 <title>Rekap Absensi — Rumah BUMN Jakarta</title>
 <meta name="description" content="Dashboard rekap absensi seluruh anggota Rumah BUMN Jakarta.">
 <link rel="manifest" href="/manifest.json">
@@ -104,7 +104,7 @@
   cursor: pointer;
 }
 .attendance-row:last-child { border-bottom: none; }
-.attendance-row:hover { background: rgba(255,255,255,0.02); }
+.attendance-row:hover { background: rgba(15,23,42,0.025); }
 
 .att-avatar {
   width: 44px; height: 44px;
@@ -180,8 +180,8 @@
   padding: 1px 7px; border-radius: 20px;
   text-transform: uppercase; letter-spacing: 0.04em;
 }
-.role-badge.staff { background: rgba(5,150,105,0.15); color: #34d399; }
-.role-badge.internship { background: rgba(48,127,226,0.15); color: #71c5e8; }
+.role-badge.staff { background: rgba(5,150,105,0.12); color: #047857; }
+.role-badge.internship { background: rgba(48,127,226,0.12); color: var(--blue-text); }
 
 .empty-state {
   padding: 60px 20px;
@@ -215,7 +215,7 @@
 #detailMap { height: 160px; border-radius: 10px; overflow: hidden; }
 .detail-close {
   width: 100%; padding: 12px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(15,23,42,0.04);
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text-secondary);
@@ -226,7 +226,7 @@
   font-family: 'Inter', sans-serif;
   transition: background 0.15s;
 }
-.detail-close:hover { background: rgba(255,255,255,0.09); }
+.detail-close:hover { background: rgba(15,23,42,0.08); }
 </style>
 </head>
 <body>
@@ -238,9 +238,9 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div class="topbar-title">Rekap Absensi <small>🔒 Staff Only · Data real-time</small></div>
+      <div class="topbar-title">Rekap Absensi <small><i data-lucide="lock" style="width:12px;height:12px;vertical-align:-1px;margin-right:4px;"></i>Staff Only · Data real-time</small></div>
       <div class="topbar-actions">
-        <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.2);font-weight:700;">● LIVE</span>
+        <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(34,197,94,0.1);color:#15803d;border:1px solid rgba(34,197,94,0.25);font-weight:700;">● LIVE</span>
       </div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
@@ -322,7 +322,7 @@ async function loadData() {
     const dateLabel = date ? new Date(date + 'T00:00:00').toLocaleDateString('id-ID', {weekday:'long',year:'numeric',month:'long',day:'numeric'}) : 'Semua Waktu';
     document.getElementById('rekapTitle').textContent = `Absensi — ${dateLabel}`;
   } catch (e) {
-    document.getElementById('rekapList').innerHTML = '<div class="empty-state">❌ Gagal memuat data.</div>';
+    document.getElementById('rekapList').innerHTML = '<div class="empty-state">'+'<i data-lucide="x-circle" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;color:#dc2626;"></i>'+'Gagal memuat data.</div>';
   }
 }
 
@@ -335,7 +335,7 @@ function renderSummary(data) {
 function renderList(data) {
   const list = document.getElementById('rekapList');
   if (!data.length) {
-    list.innerHTML = '<div class="empty-state">📭 Tidak ada data absensi untuk filter ini.</div>';
+    list.innerHTML = '<div class="empty-state">'+'<i data-lucide="inbox" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;"></i>'+'Tidak ada data absensi untuk filter ini.</div>';
     return;
   }
 
@@ -349,7 +349,7 @@ function renderList(data) {
       <div class="att-avatar">
         ${r.user_avatar && r.user_avatar.startsWith('http') ? `<img src="${r.user_avatar}" alt="" onerror="this.style.display='none'">` : initial}
         <span class="att-avatar-badge ${r.type}">
-          ${r.type === 'clock_in' ? '✓' : '✗'}
+          ${r.type === 'clock_in' ? '<i data-lucide="check" style="width:12px;height:12px;"></i>' : '<i data-lucide="x" style="width:12px;height:12px;"></i>'}
         </span>
       </div>
       <div class="att-info">
@@ -376,16 +376,16 @@ function showDetail(r) {
   const mapsUrl = r.latitude ? `https://www.google.com/maps?q=${r.latitude},${r.longitude}` : '#';
 
   box.innerHTML = `
-    ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="detail-photo" src="${r.photo_url}" alt="Selfie">` : '<div style="height:100px;background:var(--bg-app);display:flex;align-items:center;justify-content:center;font-size:40px;">📷</div>'}
+    ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="detail-photo" src="${r.photo_url}" alt="Selfie">` : '<div style="height:100px;background:var(--bg-app);display:flex;align-items:center;justify-content:center;color:var(--text-muted);"><i data-lucide="camera" style="width:32px;height:32px;opacity:0.5;"></i></div>'}
     <div class="detail-body">
       <div class="detail-name">${escHtml(r.user_name || r.user_email)}</div>
       <div class="detail-meta">
-        ${r.type === 'clock_in' ? '✅ Clock In' : '🏁 Clock Out'} · ${time}<br>
-        📍 ${escHtml(r.address || 'Lokasi tercatat')}
+        ${r.type === 'clock_in' ? '<i data-lucide="log-in" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i>Clock In' : '<i data-lucide="log-out" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i>Clock Out'} · ${time}<br>
+        <i data-lucide="map-pin" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i>${escHtml(r.address || 'Lokasi tercatat')}
       </div>
       ${r.latitude ? `<div id="detailMap"></div>
       <a href="${mapsUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:8px;background:var(--blue-subtle);border:1px solid var(--border-mid);border-radius:8px;font-size:13px;color:var(--blue-mid);text-decoration:none;font-weight:600;">
-        🗺️ Buka di Google Maps
+        <i data-lucide="map" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;"></i>Buka di Google Maps
       </a>` : ''}
       <button class="detail-close" onclick="closeDetail()">Tutup</button>
     </div>`;

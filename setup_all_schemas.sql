@@ -10,11 +10,11 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS divisi text;
 CREATE TABLE IF NOT EXISTS public.bd_partnerships (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at timestamptz DEFAULT now() NOT NULL,
-  
+
   -- Info Outreach & Kerja Sama
   tanggal_dihubungi date NOT NULL,
   tanggal_kerjasama date,
-  
+
   -- Info Komunitas
   nama_komunitas text NOT NULL,
   linkedin text,
@@ -24,12 +24,12 @@ CREATE TABLE IF NOT EXISTS public.bd_partnerships (
   nama_cp text,
   kontak_cp text,
   jumlah_anggota text,
-  
+
   -- Status & Tracking
   status text NOT NULL DEFAULT 'Approach',
   via text,
   template_approach text,
-  
+
   -- Relasi
   created_by uuid REFERENCES public.users(id)
 );
@@ -109,3 +109,80 @@ CREATE POLICY "design_requests_update" ON public.design_requests FOR UPDATE USIN
 
 DROP POLICY IF EXISTS "design_requests_delete" ON public.design_requests;
 CREATE POLICY "design_requests_delete" ON public.design_requests FOR DELETE USING (true);
+
+-- ==============================================================================
+-- 5. Schema Fitur Chat Internal
+-- ==============================================================================
+
+-- Tabel Ruang Obrolan
+CREATE TABLE IF NOT EXISTS public.chat_rooms (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  type       TEXT NOT NULL,                 -- 'global' | 'division' | 'dm'
+  name       TEXT,                          -- nama tampilan (global/division)
+  division   TEXT,                          -- diisi hanya untuk type='division'
+  dm_key     TEXT,                          -- diisi hanya untuk type='dm'
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Batasan Unik agar tidak ada ruang ganda
+CREATE UNIQUE INDEX IF NOT EXISTS chat_rooms_global_uniq
+  ON public.chat_rooms (type) WHERE type = 'global';
+CREATE UNIQUE INDEX IF NOT EXISTS chat_rooms_division_uniq
+  ON public.chat_rooms (division) WHERE type = 'division';
+CREATE UNIQUE INDEX IF NOT EXISTS chat_rooms_dm_uniq
+  ON public.chat_rooms (dm_key) WHERE type = 'dm';
+
+-- Tabel Pesan Chat
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  room_id     UUID NOT NULL REFERENCES public.chat_rooms(id) ON DELETE CASCADE,
+  sender_id   UUID NOT NULL,
+  sender_name TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index mempercepat loading pesan
+CREATE INDEX IF NOT EXISTS chat_messages_room_time_idx
+  ON public.chat_messages (room_id, created_at);
+
+-- Tabel Notifikasi/Tandai Sudah Dibaca
+CREATE TABLE IF NOT EXISTS public.chat_reads (
+  room_id      UUID NOT NULL REFERENCES public.chat_rooms(id) ON DELETE CASCADE,
+  user_id      UUID NOT NULL,
+  last_read_at TIMESTAMPTZ DEFAULT now(),
+  PRIMARY KEY (room_id, user_id)
+);
+
+-- Matikan RLS untuk chat karena diamankan dari sisi backend Express (server.js)
+ALTER TABLE public.chat_rooms    DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_reads    DISABLE ROW LEVEL SECURITY;
+
+-- ==============================================================================
+-- 6. TAMBAHAN BARU: Chat v2 — kartu Agenda, tag/@mention, forward, edit & hapus
+-- Aman dijalankan berkali-kali (semua kolom pakai IF NOT EXISTS). Kalau
+-- section 5 di atas sudah pernah dijalankan sebelumnya, cukup jalankan
+-- section 6 ini saja.
+-- ==============================================================================
+
+-- 'text'   → pesan teks biasa
+-- 'agenda' → kartu acara yang dibagikan dari Agenda & Event Hub (detail
+--            acaranya disimpan di kolom meta sebagai JSON)
+ALTER TABLE public.chat_messages ADD COLUMN IF NOT EXISTS msg_type TEXT DEFAULT 'text';
+
+-- Payload tambahan per jenis pesan:
+--   agenda   → {"event_id","title","event_date","location","category"}
+--   forward  → ditambahkan ke meta pesan apa pun: {"forwarded": true}
+ALTER TABLE public.chat_messages ADD COLUMN IF NOT EXISTS meta JSONB;
+
+-- user_id anggota yang di-tag pakai @Nama di badan pesan.
+ALTER TABLE public.chat_messages ADD COLUMN IF NOT EXISTS mentions UUID[] DEFAULT '{}';
+
+-- Diisi saat pesan diedit — dipakai untuk menampilkan label "(diedit)".
+ALTER TABLE public.chat_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMPTZ;
+
+-- Soft delete: baris tetap ada (supaya urutan & status baca tidak berubah),
+-- tapi body dikosongkan di response API dan bubble tampil sebagai
+-- "Pesan ini telah dihapus".
+ALTER TABLE public.chat_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;

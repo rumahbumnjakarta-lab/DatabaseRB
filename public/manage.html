@@ -63,131 +63,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   border-bottom-color: var(--topbar-active-color);
 }
 
-/* ─── Dashboard Header ─── */
-.dash-header {
-  background: linear-gradient(135deg, var(--navy-deep) 0%, #1a3a5c 100%);
-  padding: 36px 32px 40px;
-  position: relative;
-  overflow: hidden;
-}
-.dash-header::before {
-  content: '';
-  position: absolute;
-  top: -60px; right: -80px;
-  width: 280px; height: 280px;
-  background: radial-gradient(circle, rgba(48,127,226,0.15) 0%, transparent 70%);
-  pointer-events: none;
-}
-.dash-header-inner {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-.dash-header-text .eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold-bright);
-  opacity: 0.9;
-  margin-bottom: 6px;
-}
-.dash-header-text h1 {
-  font-family: 'Inter', sans-serif;
-  font-size: 30px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 6px;
-  line-height: 1.2;
-}
-.dash-header-text p {
-  color: rgba(255,255,255,0.6);
-  font-size: 14px;
-  margin: 0;
-}
-.dash-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.btn-view-hub {
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.85);
-  border: 1px solid rgba(255,255,255,0.2);
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-.btn-view-hub:hover { background: rgba(255,255,255,0.18); color: #fff; }
-.btn-add-new {
-  background: var(--gold);
-  color: #0E1620;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(48,127,226,0.35);
-}
-.btn-add-new:hover { background: var(--gold-bright); transform: translateY(-1px); }
-
-/* ─── Stats Row ─── */
-.dash-stats {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 24px 24px 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
-}
-.stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: box-shadow 0.2s, transform 0.2s, background 0.3s, border-color 0.3s;
-  cursor: default;
-}
-.stat-card:hover { box-shadow: 0 6px 20px var(--card-shadow); transform: translateY(-2px); }
-.stat-card-icon {
-  width: 42px; height: 42px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.stat-card-text b {
-  display: block;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.1;
-  font-family: 'Inter', sans-serif;
-}
-.stat-card-text span {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
+/* Hero & stats use the shared .page-hero / .pg-stats components in style.css */
 
 /* ─── Main Content Area ─── */
 .dash-content {
@@ -207,24 +83,25 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 .div-pill {
   padding: 8px 16px;
   border-radius: 50px;
-  border: 1.5px solid var(--border-mid);
+  border: 1.5px solid var(--border);
   background: var(--bg-card);
   font-size: 12.5px;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.18s ease;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.div-pill:hover { border-color: var(--gold); color: var(--gold); }
+.div-pill:hover { border-color: var(--blue-mid); color: var(--blue-mid); transform: translateY(-1px); }
 .div-pill.active {
-  background: var(--blue-mid);
-  border-color: var(--blue-mid);
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+  border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 3px 10px rgba(48,127,226,0.25);
+  box-shadow: 0 3px 12px rgba(21,94,239,0.3);
 }
+.div-pill.active:hover { transform: none; }
 .div-pill .pill-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
@@ -416,7 +293,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
   display: flex;
   flex-direction: column;
-  box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+  box-shadow: -10px 0 40px rgba(15,23,42,0.12);
   margin: 0;
   overflow: hidden; /* Fix footer push-out */
 }
@@ -597,7 +474,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   max-width: 420px;
   width: 92%;
   padding: 28px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  box-shadow: 0 20px 48px rgba(15,23,42,0.18);
   transform: scale(0.92) translateY(16px);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
 }
@@ -674,7 +551,7 @@ body { background: var(--bg); color: var(--text-primary); transition: background
   border: 1px solid var(--border-mid);
   border-left: 4px solid var(--gold);
   font-size: 13.5px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.14);
   transform: translateY(20px);
   opacity: 0;
   transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -711,14 +588,6 @@ body { background: var(--bg); color: var(--text-primary); transition: background
 
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
-  .dash-header { padding: 24px 16px 28px; }
-  .dash-stats { 
-    padding: 16px 16px 0; 
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .stat-card { padding: 14px; }
-  .stat-card-value { font-size: 22px; }
   .dash-content { padding: 16px 16px; margin: 16px auto 40px; }
   .table-card-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .table-search-wrap { width: 100%; }
@@ -752,35 +621,45 @@ body { background: var(--bg); color: var(--text-primary); transition: background
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div style="display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;margin-left:4px;">
-        <button class="manage-btn" id="btnOpenDrawer" onclick="openDrawer()" style="flex-shrink:0;padding:8px 12px;font-size:12px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Tambah Item
-        </button>
-      </div>
+      <!-- .topbar-title's flex:1 is what pushes search/notif/profile to the
+           right edge — every other page has one; this page didn't, so that
+           cluster sat bunched up on the left instead of right-aligned. -->
+      <div class="topbar-title">Kelola Data <small>Database dokumen, link &amp; kredensial divisi</small></div>
     </div>
 
     <!-- Page content -->
     <div id="appContent" class="app-content" style="display:none;">
 
+<!-- ─── Hero ─── -->
+<div class="page-hero ph-navy">
+  <div class="page-hero-c">
+    <h1><i data-lucide="settings" style="width:24px;height:24px;"></i> Kelola Data</h1>
+    <p>Satu pusat untuk mengelola dokumen, link, dan kredensial seluruh divisi.</p>
+  </div>
+  <div class="page-hero-actions">
+    <button class="btn-ph" id="btnOpenDrawer" onclick="openDrawer()">
+      <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah Item
+    </button>
+  </div>
+</div>
 
 <!-- ─── Stat Cards ─── -->
-<div class="dash-stats" id="dashStats">
-  <div class="stat-card">
-    <div class="stat-card-icon" style="background:#EBF3FF; color:var(--blue-mid);"><i data-lucide="layers"></i></div>
-    <div class="stat-card-text"><b id="statTotal">–</b><span>Total Item</span></div>
+<div class="pg-stats" id="dashStats">
+  <div class="pg-stat-card st-blue">
+    <div class="pg-stat-icon"><i data-lucide="layers" style="width:21px;height:21px;"></i></div>
+    <div class="pg-stat-text"><b id="statTotal">–</b><span>Total Item</span></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-card-icon" style="background:#F0FDF4; color:var(--green-staff);"><i data-lucide="tag"></i></div>
-    <div class="stat-card-text"><b id="statCat">–</b><span>Kategori</span></div>
+  <div class="pg-stat-card st-green">
+    <div class="pg-stat-icon"><i data-lucide="tag" style="width:21px;height:21px;"></i></div>
+    <div class="pg-stat-text"><b id="statCat">–</b><span>Kategori</span></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-card-icon" style="background:#FFF7ED; color:#f59e0b;"><i data-lucide="link"></i></div>
-    <div class="stat-card-text"><b id="statLinks">–</b><span>Link</span></div>
+  <div class="pg-stat-card st-amber">
+    <div class="pg-stat-icon"><i data-lucide="link" style="width:21px;height:21px;"></i></div>
+    <div class="pg-stat-text"><b id="statLinks">–</b><span>Link</span></div>
   </div>
-  <div class="stat-card">
-    <div class="stat-card-icon" style="background:#FFF3E0; color:#ef4444;"><i data-lucide="key"></i></div>
-    <div class="stat-card-text"><b id="statCreds">–</b><span>Kredensial</span></div>
+  <div class="pg-stat-card st-red">
+    <div class="pg-stat-icon"><i data-lucide="key" style="width:21px;height:21px;"></i></div>
+    <div class="pg-stat-text"><b id="statCreds">–</b><span>Kredensial</span></div>
   </div>
 </div>
 
@@ -1185,11 +1064,17 @@ function updateManageDivisiOptions(role, selectedVal = '') {
   });
 }
 
-// Bind email input keyup/change to detect role
-document.getElementById('manageRegEmail').addEventListener('input', (e) => {
-  const email = e.target.value.toLowerCase().trim();
-  const role = email.endsWith('@staff.rbjakarta.id') ? 'staff' : 'internship';
-  updateManageDivisiOptions(role);
+// Bind email input keyup/change to detect role.
+// The input lives further down the document, so wait for the DOM to finish
+// parsing — binding inline here ran before the element existed and threw.
+document.addEventListener('DOMContentLoaded', () => {
+  const emailInput = document.getElementById('manageRegEmail');
+  if (!emailInput) return;
+  emailInput.addEventListener('input', (e) => {
+    const email = e.target.value.toLowerCase().trim();
+    const role = email.endsWith('@staff.rbjakarta.id') ? 'staff' : 'internship';
+    updateManageDivisiOptions(role);
+  });
 });
 
 // ─── Register ───
@@ -1234,7 +1119,8 @@ async function handleManageRegister(e) {
     showToast('Koneksi terputus. Coba lagi.', true);
   } finally {
     btn.disabled = false;
-    btn.textContent = '👤 Buat Akun';
+    btn.innerHTML = '<i data-lucide="user-plus" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;"></i>Buat Akun';
+    if (typeof renderIcons === 'function') renderIcons();
   }
 }
 
@@ -1271,7 +1157,7 @@ initAppShell('manage', function(user) {
   <div class="drawer" id="formDrawer">
     <div class="drawer-header">
       <h3 id="drawerTitle">Tambah Item Baru</h3>
-      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup">✕</button>
+      <button class="btn-close-drawer" onclick="closeDrawer()" title="Tutup"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
     </div>
 
     <div class="drawer-body">
@@ -1360,7 +1246,7 @@ initAppShell('manage', function(user) {
 <!-- ─── Delete Confirmation Modal ─── -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
-    <div class="modal-icon">🗑️</div>
+    <div class="modal-icon"><i data-lucide="trash-2" style="width:30px;height:30px;"></i></div>
     <h3>Hapus Item?</h3>
     <p>Anda akan menghapus item <strong id="deleteItemName"></strong>. Tindakan ini tidak dapat dibatalkan.</p>
     <div class="modal-actions">
@@ -1375,7 +1261,7 @@ initAppShell('manage', function(user) {
   <div class="drawer">
     <div class="drawer-header">
       <h3 style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin:0;">Daftar Akun Baru</h3>
-      <button class="btn-close-drawer" onclick="closeRegisterModal()" title="Tutup">✕</button>
+      <button class="btn-close-drawer" onclick="closeRegisterModal()" title="Tutup"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
     </div>
 
     <div class="drawer-body">
@@ -1415,7 +1301,7 @@ initAppShell('manage', function(user) {
     <div class="drawer-footer">
       <button type="button" class="btn-drawer-cancel" onclick="closeRegisterModal()">Batal</button>
       <button type="button" class="btn-drawer-save" id="btnManageReg" onclick="document.getElementById('manageRegisterForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}))">
-        👤 Buat Akun
+        <i data-lucide="user-plus" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;"></i>Buat Akun
       </button>
     </div>
   </div>

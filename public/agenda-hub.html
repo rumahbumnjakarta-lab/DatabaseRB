@@ -3,47 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda & Event Hub — Rumah BUMN Jakarta</title>
+<title>Silabus — Rumah BUMN Jakarta</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .agenda-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  .agenda-header h2 {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-primary);
-  }
-  .agenda-header p {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 4px 0 0;
-  }
-  
-  .btn-add-agenda {
-    background: linear-gradient(135deg, #307fe2 0%, #1e5bb8 100%);
-    color: #ffffff;
-    font-weight: 700;
-    border-radius: 9px;
-    padding: 10px 18px;
-    box-shadow: 0 4px 14px rgba(48,127,226,0.3);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .btn-add-agenda:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(48,127,226,0.4);
-  }
+  /* Page header uses the shared .page-hero component in style.css */
 
   /* Calendar Controls */
   .cal-controls {
@@ -82,12 +45,12 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(15,23,42,0.07);
   }
   .cal-header-row {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: rgba(255,255,255,0.02);
+    background: rgba(15,23,42,0.02);
     border-bottom: 1px solid var(--border);
   }
   .cal-header-cell {
@@ -123,7 +86,7 @@
     border-right: none;
   }
   .cal-cell.empty {
-    background: rgba(255,255,255,0.01);
+    background: rgba(15,23,42,0.015);
   }
   .cal-cell:hover:not(.empty) {
     background: var(--bg-surface);
@@ -202,7 +165,7 @@
     background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
     width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto;
     transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 48px rgba(15,23,42,0.18);
     position: relative;
   }
   .modal-overlay.open .modal-box { transform: translateY(0); }
@@ -247,7 +210,7 @@
   .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
   .modal-actions button { padding: 10px 18px; border-radius: 9px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; }
   .btn-cancel { background: transparent; color: var(--text-secondary); }
-  .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+  .btn-cancel:hover { background: rgba(15,23,42,0.05); }
   .btn-submit { background: var(--blue-mid); color: #fff; }
   .btn-submit:hover { background: var(--blue-dark); }
   
@@ -258,7 +221,7 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(15,23,42,0.07);
   }
   .agenda-list-wrapper h3 {
     margin: 0 0 16px 0;
@@ -327,14 +290,16 @@
 
     <div id="appContent" class="app-content" style="display:none;">
       
-      <div class="agenda-header">
-        <div>
-          <h2>Agenda & Event Hub</h2>
-          <p>Kalender jadwal kegiatan, silabus, dan acara mendatang.</p>
+      <div class="page-hero ph-blue">
+        <div class="page-hero-c">
+          <h1><i data-lucide="calendar-days" style="width:24px;height:24px;"></i> Silabus</h1>
+          <p>Kalender jadwal kegiatan, silabus, dan acara mendatang — semua agenda divisi dalam satu tampilan bulanan.</p>
         </div>
-        <button id="btnAddAgenda" class="btn-add-agenda" style="display:none;" onclick="openAddModal()">
-          <i data-lucide="plus"></i> Tambah Agenda
-        </button>
+        <div class="page-hero-actions">
+          <button id="btnAddAgenda" class="btn-ph" style="display:none;" onclick="openAddModal()">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah Silabus
+          </button>
+        </div>
       </div>
 
       <!-- Calendar UI -->
@@ -377,7 +342,7 @@
 <!-- Modal Tambah Agenda -->
 <div class="modal-overlay" id="addModalOverlay" onclick="if(event.target===this) closeAddModal()">
   <div class="modal-box">
-    <h3>Tambah Agenda Baru</h3>
+    <h3>Tambah Silabus Baru</h3>
     <form id="addForm" onsubmit="submitAgenda(event)">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
         <!-- Kolom Kiri: Info Dasar & Waktu -->
@@ -483,19 +448,19 @@
 
           <h4 style="margin-top:24px; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="link" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tautan (Opsional)</h4>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkZoom" name="link_zoom" placeholder="🔗 Link Zoom">
+            <input type="url" id="linkZoom" name="link_zoom" placeholder="Link Zoom">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkUmkm" name="link_umkm" placeholder="🔗 Link Pendataan UMKM">
+            <input type="url" id="linkUmkm" name="link_umkm" placeholder="Link Pendataan UMKM">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkGform" name="link_pendaftaran_gform" placeholder="🔗 Link GForm Pendaftaran">
+            <input type="url" id="linkGform" name="link_pendaftaran_gform" placeholder="Link GForm Pendaftaran">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkSheets" name="spreadsheets_data_peserta" placeholder="🔗 Link Spreadsheet Data">
+            <input type="url" id="linkSheets" name="spreadsheets_data_peserta" placeholder="Link Spreadsheet Data">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="text" id="captionSosmed" name="caption_sosmed" placeholder="📝 Caption Sosmed Singkat">
+            <input type="text" id="captionSosmed" name="caption_sosmed" placeholder="Caption Sosmed Singkat">
           </div>
         </div>
       </div>
@@ -513,7 +478,7 @@
   <div class="modal-box">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
       <h3 id="detTitle" style="margin:0; font-size:22px; padding-right:20px;">Judul Acara</h3>
-      <button onclick="closeDetailModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;">✕</button>
+      <button onclick="closeDetailModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
     </div>
     
     <div style="margin-bottom:20px;">
@@ -566,6 +531,9 @@
 
     <div class="modal-actions">
       <button type="button" class="btn-cancel" onclick="closeDetailModal()">Tutup</button>
+      <button type="button" class="btn-cancel" onclick="shareAgendaToChat()" style="display:flex;align-items:center;gap:6px;">
+        <i data-lucide="send" style="width:14px;height:14px;"></i> Bagikan ke Chat
+      </button>
       <button type="button" class="btn-submit" id="btnUpdateChecklist" onclick="openChecklistModal()" style="display:none;">Update Kelengkapan</button>
     </div>
   </div>
@@ -576,7 +544,7 @@
   <div class="modal-box" style="max-width:400px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
       <h3 style="margin:0; font-size:18px;">Update Kelengkapan</h3>
-      <button onclick="closeChecklistModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;">✕</button>
+      <button onclick="closeChecklistModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
     </div>
     <form id="checklistForm" onsubmit="submitChecklist(event)">
       <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 13px; margin-bottom: 24px;">
@@ -606,6 +574,7 @@
 <script src="shared.js"></script>
 <script>
   let currentDate = new Date();
+  let isStaffUser = false; // set in initAppShell — checklist updates stay Staff Only
   let currentEvents = [];
 
   const monthNames = [
@@ -874,7 +843,7 @@
       clFields.forEach(f => {
         if(ev[f]) {
            const label = f.replace(/_/g, ' ').toUpperCase();
-           html += `<div><span style="color:#22c55e;">✓</span> ${label}</div>`;
+           html += `<div><i data-lucide="check" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;color:#22c55e;"></i>${label}</div>`;
         }
       });
       document.getElementById('detChecklist').innerHTML = html;
@@ -888,16 +857,30 @@
     // Store active event ID globally for updates, and show button if staff
     window.currentActiveEvent = ev;
     const btnUpdate = document.getElementById('btnUpdateChecklist');
-    // Assuming if they can see the 'Add Agenda' button, they are staff and can update checklists
-    const btnAdd = document.getElementById('btnAddAgenda');
-    if(btnAdd && btnAdd.style.display !== 'none') {
-      btnUpdate.style.display = 'inline-flex';
-    } else {
-      btnUpdate.style.display = 'none';
-    }
+    // Checklist updates hit a Staff Only endpoint — gate on the user's
+    // actual role, not on "Tambah Agenda" visibility (that button is now
+    // shown to everyone too).
+    btnUpdate.style.display = isStaffUser ? 'inline-flex' : 'none';
   }
   function closeDetailModal() {
     document.getElementById('detailModalOverlay').classList.remove('open');
+  }
+
+  // Menaruh detail acara di sessionStorage lalu pindah ke Chat, di sana
+  // dibaca via ?share_agenda=1 dan langsung membuka picker "kirim ke mana".
+  // Pakai sessionStorage (bukan query string panjang) supaya judul/lokasi
+  // yang berisi karakter aneh tidak perlu di-encode manual di URL.
+  function shareAgendaToChat() {
+    const ev = window.currentActiveEvent;
+    if (!ev) return;
+    sessionStorage.setItem('rb_share_agenda', JSON.stringify({
+      event_id: ev.id,
+      title: ev.title,
+      event_date: ev.event_date,
+      location: ev.location || '',
+      category: ev.category || ''
+    }));
+    window.location.href = '/chat.html?share_agenda=1';
   }
 
   function openChecklistModal() {
@@ -966,11 +949,11 @@
     .then(r => r.json())
     .then(res => {
       btn.disabled = false;
-      btn.textContent = 'Simpan Agenda';
+      btn.textContent = 'Simpan Silabus';
       if (res.error) {
         showSwalToast(res.error, 'error');
       } else {
-        showSwalToast('Agenda berhasil disimpan!', 'success');
+        showSwalToast('Silabus berhasil disimpan!', 'success');
         closeAddModal();
         // Reload current month
         fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
@@ -978,16 +961,17 @@
     })
     .catch(err => {
       btn.disabled = false;
-      btn.textContent = 'Simpan Agenda';
+      btn.textContent = 'Simpan Silabus';
       showSwalToast('Terjadi kesalahan koneksi server', 'error');
     });
   }
 
   initAppShell('agenda', function(user) {
-    document.getElementById('topbarContainer').innerHTML = buildTopbar('Agenda & Event Hub');
-    if (user.role === 'staff') {
-      document.getElementById('btnAddAgenda').style.display = 'flex';
-    }
+    document.getElementById('topbarContainer').innerHTML = buildTopbar('Silabus');
+    isStaffUser = user.role === 'staff';
+    // Menambah agenda terbuka untuk semua user login (lihat pembatasan
+    // per-kategori di server.js POST /api/events) — bukan cuma Staff.
+    document.getElementById('btnAddAgenda').style.display = 'flex';
     // Render initial calendar
     fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
   });

@@ -3,6 +3,36 @@
 //   Odoo-style sidebar + auth guard
 // ============================================
 
+// ─── Pages the topbar search can jump to (mirrors the sidebar + Kelola popup) ───
+const SEARCH_PAGES = [
+  { href: '/index.html', icon: 'layout-dashboard', label: 'Dashboard' },
+  { href: '/chat.html', icon: 'message-circle', label: 'Chat' },
+  { href: '/agenda-hub.html', icon: 'calendar-days', label: 'Silabus' },
+  { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya' },
+  { href: '/perizinan.html', icon: 'file-check-2', label: 'Izin & Sakit' },
+  { href: '/business-development.html', icon: 'trending-up', label: 'Business Dev' },
+  { href: '/sosmed.html', icon: 'share-2', label: 'Social Media' },
+  { href: '/design.html', icon: 'palette', label: 'Design' },
+  { href: '/event-hub.html', icon: 'calendar', label: 'Event Hub' },
+  { href: '/admin.html', icon: 'file-text', label: 'Admin' },
+  { href: '/manage.html', icon: 'database', label: 'Kelola Data' },
+  { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', staffOnly: true },
+  { href: '/email.html', icon: 'mail', label: 'Akun Email', staffOnly: true },
+  { href: '/manage-users.html', icon: 'users', label: 'Kelola Akun', staffOnly: true },
+  { href: '/rekap-absen.html', icon: 'bar-chart-3', label: 'Rekap Absensi', staffOnly: true },
+];
+
+// Which page shows a given data item, by items.division value.
+const SEARCH_ITEM_PAGE = {
+  bd: { href: '/business-development.html', label: 'Business Dev' },
+  sosmed: { href: '/sosmed.html', label: 'Social Media' },
+  design: { href: '/design.html', label: 'Design' },
+  event: { href: '/event.html', label: 'Event' },
+  admin: { href: '/admin.html', label: 'Admin' },
+  administrasi: { href: '/administrasi.html', label: 'Administrasi' },
+  email: { href: '/email.html', label: 'Akun Email' },
+};
+
 // ─── Build Sidebar HTML ───
 function buildSidebar(user, activePage) {
   const isStaff = user && user.role === 'staff';
@@ -12,7 +42,9 @@ function buildSidebar(user, activePage) {
 
   const navItems = [
     { href: '/index.html', icon: 'layout-dashboard', label: 'Dashboard', key: 'dashboard' },
-    { href: '/agenda-hub.html', icon: 'calendar-days', label: 'Agenda & Event', key: 'agenda' },
+    { href: '/chat.html', icon: 'message-circle', label: 'Chat', key: 'chat' },
+    { divider: true, label: 'Silabus' },
+    { href: '/agenda-hub.html', icon: 'calendar-days', label: 'Silabus', key: 'agenda' },
     { divider: true, label: 'Absensi' },
     { href: '/absen.html', icon: 'map-pin', label: 'Absen Saya', key: 'absen' },
     { href: '/perizinan.html', icon: 'file-check-2', label: 'Izin & Sakit', key: 'perizinan' },
@@ -39,39 +71,46 @@ function buildSidebar(user, activePage) {
     if (item.internOnly && isStaff) return;
     const isActive = (item.key === activePage || (item.key === 'manage' && (activePage === 'manage' || activePage === 'manage-users' || activePage === 'rekap-absen'))) ? ' active' : '';
     const onclickAttr = item.onclick ? `onclick="${item.onclick}"` : '';
+    // The Chat link gets an empty badge placeholder — the global unread
+    // poller (see initChatNotifier below) fills it in after the sidebar
+    // itself has already been rendered.
+    const badgeHTML = item.key === 'chat'
+      ? `<span class="sidebar-link-badge" id="sidebarChatBadge" style="display:none;"></span>` : '';
     navHTML += `
-      <a href="${item.href}" ${onclickAttr} class="sidebar-link${isActive}">
+      <a href="${item.href}" ${onclickAttr} class="sidebar-link${isActive}" title="${item.label}">
         <span class="sidebar-icon"><i data-lucide="${item.icon}" style="width:17px;height:17px;"></i></span>
-        ${item.label}
+        <span class="sidebar-link-label">${item.label}</span>
+        ${badgeHTML}
       </a>`;
   });
 
-  const avatarHTML = (user && user.avatar) 
-    ? `<img src="${user.avatar}" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">` 
+  const avatarHTML = (user && user.avatar)
+    ? `<img src="${user.avatar}" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
     : initial;
 
   return `
     <div class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="/index.html">
-        <img src="/FOTO/LOGO.png" alt="Logo" onerror="this.style.display='none'">
-        <div class="sidebar-brand-text">
-          <span class="sidebar-brand-name">Rumah BUMN</span>
-          <span class="sidebar-brand-sub">Jakarta · Internal Hub</span>
-        </div>
-      </a>
+      <div class="sidebar-header">
+        <a class="sidebar-brand" href="/index.html">
+          <img src="/FOTO/LOGO.png" alt="Logo" onerror="this.style.display='none'">
+          <div class="sidebar-brand-text">
+            <span class="sidebar-brand-name">Rumah BUMN</span>
+            <span class="sidebar-brand-sub">Jakarta · Internal Hub</span>
+          </div>
+        </a>
+        <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Ciutkan sidebar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
       <nav class="sidebar-nav">
         ${navHTML}
       </nav>
       <div class="sidebar-footer">
-        <div class="sidebar-user-info" style="cursor:pointer;" onclick="openProfileDrawer()" title="Buka Setelan Profil">
-          <div class="sidebar-avatar" id="sidebarAvatar">${avatarHTML}</div>
-          <div class="sidebar-user-details" style="flex:1; min-width:0;">
-            <div class="sidebar-user-name" id="sidebarName" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${user ? (user.name || user.email) : '...'}</div>
-            <span class="sidebar-user-role ${roleClass}">${roleLabel}</span>
-          </div>
-          <button class="sidebar-logout-btn" onclick="event.stopPropagation(); doLogout();" title="Keluar">
-            <i data-lucide="log-out" style="width:16px;height:16px;"></i>
-          </button>
+        <div class="sidebar-help-card">
+          <div class="shc-icon"><i data-lucide="life-buoy" style="width:15px;height:15px;"></i></div>
+          <h5>Butuh Bantuan?</h5>
+          <p>Lihat panduan atau hubungi admin untuk bantuan.</p>
+          <button onclick="showHelpInfo()">Pusat Bantuan <i data-lucide="arrow-right" style="width:12px;height:12px;"></i></button>
         </div>
       </div>
     </div><!-- Close sidebar -->
@@ -126,6 +165,466 @@ function toggleSidebar() {
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.toggle('open');
   if (overlay) overlay.classList.toggle('open');
+}
+
+// ─── Sidebar collapse (desktop icon-rail) — persisted across page loads ───
+function applySidebarCollapsePref() {
+  const collapsed = localStorage.getItem('sidebar_collapsed') === '1';
+  document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.toggle('collapsed', collapsed);
+}
+function toggleSidebarCollapse() {
+  const collapsed = !document.getElementById('sidebar').classList.contains('collapsed');
+  localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+  document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+  document.getElementById('sidebar').classList.toggle('collapsed', collapsed);
+}
+
+// ─── Sidebar "Butuh Bantuan?" card ───
+function showHelpInfo() {
+  if (window.Swal) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Pusat Bantuan',
+      html: 'Untuk kendala teknis atau pertanyaan seputar sistem, silakan hubungi <b>Admin Rumah BUMN Jakarta</b> melalui divisi Administrasi atau email operasional internal.',
+      confirmButtonColor: '#155eef',
+      confirmButtonText: 'Mengerti'
+    });
+  } else {
+    alert('Untuk kendala teknis, silakan hubungi Admin Rumah BUMN Jakarta.');
+  }
+}
+
+// ─── Topbar right-side controls: search, notifications, profile menu ───
+// Injected into whatever ".app-topbar" already exists on the page (whether
+// built via buildTopbar() or hardcoded per-page), so every page gets the
+// same controls without needing per-page HTML changes.
+function buildTopbarActionsHTML(user) {
+  const isStaff = user && user.role === 'staff';
+  const roleLabel = isStaff ? 'Staff' : 'Internship';
+  const initial = (user && user.name) ? user.name.charAt(0).toUpperCase() : '?';
+  const avatarHTML = (user && user.avatar)
+    ? `<img src="${user.avatar}" alt="">`
+    : initial;
+  const displayName = user ? (user.name || user.email) : '...';
+
+  return `
+    <button class="topbar-search-mobile-btn" id="topbarSearchMobileBtn" onclick="toggleMobileSearch()" title="Cari">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <div class="topbar-search" id="topbarSearchWrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="topbarSearchInput" placeholder="Cari menu, data, atau agenda..." autocomplete="off">
+      <kbd>⌘K</kbd>
+      <button class="topbar-search-mobile-close" id="topbarSearchMobileClose" onclick="toggleMobileSearch()" title="Tutup">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="topbar-search-results" id="topbarSearchResults"></div>
+    </div>
+    <button class="topbar-notif-btn" id="topbarNotifBtn" onclick="toggleTopbarNotif(event)" title="Notifikasi">
+      <i data-lucide="bell" style="width:18px;height:18px;"></i>
+      <span class="topbar-notif-dot" id="topbarNotifDot" style="display:none;">0</span>
+      <div class="topbar-dropdown topbar-notif-dropdown" id="topbarNotifDropdown">
+        <div class="topbar-dropdown-header"><span class="name">Notifikasi</span></div>
+        <div id="topbarNotifList">
+          <div class="topbar-notif-empty">
+            <i data-lucide="bell-off" style="width:26px;height:26px;"></i><br>
+            Tidak ada notifikasi baru.
+          </div>
+        </div>
+      </div>
+    </button>
+    <div class="topbar-profile" id="topbarProfile">
+      <button class="topbar-profile-trigger" onclick="toggleTopbarProfile(event)">
+        <div class="topbar-profile-avatar" id="topbarProfileAvatar">${avatarHTML}</div>
+        <div class="topbar-profile-text">
+          <div class="topbar-profile-name">${escHtml(displayName)}</div>
+          <div class="topbar-profile-role">${roleLabel === 'Staff' ? 'Administrator' : 'Internship'}</div>
+        </div>
+        <svg class="topbar-profile-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="topbar-dropdown" id="topbarProfileDropdown">
+        <div class="topbar-dropdown-header">
+          <div class="name">${escHtml(displayName)}</div>
+          <div class="email">${escHtml(user ? user.email : '')}</div>
+        </div>
+        <button class="topbar-dropdown-item" onclick="closeTopbarDropdowns(); openProfileDrawer();">
+          <i data-lucide="user-cog" style="width:16px;height:16px;"></i> Edit Profil
+        </button>
+        <button class="topbar-dropdown-item danger" onclick="doLogout();">
+          <i data-lucide="log-out" style="width:16px;height:16px;"></i> Keluar
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function injectTopbarActions(user) {
+  const topbar = document.querySelector('.app-topbar');
+  if (!topbar || document.getElementById('topbarProfile')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'topbar-actions';
+  wrap.innerHTML = buildTopbarActionsHTML(user);
+  topbar.appendChild(wrap);
+
+  initTopbarSearch(user);
+  initChatNotifier(user);
+
+  // Cmd/Ctrl+K focuses search
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      const input = document.getElementById('topbarSearchInput');
+      if (input) input.focus();
+    }
+  });
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.topbar-profile')) {
+      const d = document.getElementById('topbarProfileDropdown');
+      const p = document.getElementById('topbarProfile');
+      if (d) d.classList.remove('open');
+      if (p) p.classList.remove('open');
+    }
+    if (!e.target.closest('#topbarNotifBtn')) {
+      const nd = document.getElementById('topbarNotifDropdown');
+      if (nd) nd.classList.remove('open');
+    }
+    if (!e.target.closest('.topbar-search')) {
+      const rd = document.getElementById('topbarSearchResults');
+      if (rd) rd.classList.remove('open');
+    }
+  });
+}
+
+// ─── Topbar global search: menu pages + database items + upcoming agenda ───
+// Data & agenda results are fetched once per page load and cached — typing
+// re-filters in memory instead of re-querying on every keystroke.
+let _searchDataCache = null;   // Promise<items[]>
+let _searchAgendaCache = null; // Promise<events[]>
+let _searchResultsFlat = [];   // last rendered results, for Enter-to-open
+
+// Di layar sempit (<480px) .topbar-search disembunyikan lewat CSS dan diganti
+// tombol ikon ini — tap untuk buka overlay full-width, tap X/tombol lagi untuk tutup.
+function toggleMobileSearch() {
+  const wrap = document.getElementById('topbarSearchWrap');
+  const input = document.getElementById('topbarSearchInput');
+  if (!wrap) return;
+  const isOpen = wrap.classList.toggle('mobile-open');
+  if (isOpen) {
+    setTimeout(() => { if (input) input.focus(); }, 60);
+  } else {
+    if (input) input.value = '';
+    const box = document.getElementById('topbarSearchResults');
+    if (box) { box.classList.remove('open'); box.innerHTML = ''; }
+  }
+}
+
+function initTopbarSearch(user) {
+  const input = document.getElementById('topbarSearchInput');
+  const box = document.getElementById('topbarSearchResults');
+  if (!input || !box) return;
+
+  const isStaff = user && user.role === 'staff';
+  let debounceTimer = null;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+    debounceTimer = setTimeout(() => runTopbarSearch(q, isStaff), 150);
+  });
+
+  input.addEventListener('focus', () => {
+    if (input.value.trim() && box.innerHTML) box.classList.add('open');
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { box.classList.remove('open'); input.blur(); }
+    if (e.key === 'Enter' && _searchResultsFlat[0]) {
+      e.preventDefault();
+      navigateFromSearch(_searchResultsFlat[0].href);
+    }
+  });
+}
+
+function runTopbarSearch(query, isStaff) {
+  const box = document.getElementById('topbarSearchResults');
+  if (!box) return;
+  box.classList.add('open');
+  box.innerHTML = `<div class="tsr-loading">Mencari...</div>`;
+
+  if (!_searchDataCache) {
+    _searchDataCache = fetch('/api/items').then(r => r.json()).catch(() => []);
+  }
+  if (!_searchAgendaCache) {
+    _searchAgendaCache = fetch('/api/events/upcoming').then(r => r.json()).catch(() => []);
+  }
+
+  Promise.all([_searchDataCache, _searchAgendaCache]).then(([items, agenda]) => {
+    // A stale response for an already-replaced query shouldn't clobber newer results.
+    const input = document.getElementById('topbarSearchInput');
+    if (!input || input.value.trim() !== query) return;
+
+    const q = query.toLowerCase();
+
+    const menuResults = SEARCH_PAGES
+      .filter(p => (!p.staffOnly || isStaff) && p.label.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map(p => ({ type: 'menu', icon: p.icon, title: p.label, sub: 'Buka halaman', href: p.href }));
+
+    const dataResults = (Array.isArray(items) ? items : [])
+      .filter(i => [i.title, i.cat, i.note].filter(Boolean).join(' ').toLowerCase().includes(q))
+      .slice(0, 6)
+      .map(i => {
+        const page = SEARCH_ITEM_PAGE[i.division] || {};
+        return {
+          type: 'data',
+          icon: i.type === 'cred' ? 'key-round' : 'link',
+          title: i.title,
+          sub: [page.label, i.cat].filter(Boolean).join(' · '),
+          href: page.href || '#'
+        };
+      });
+
+    const agendaResults = (Array.isArray(agenda) ? agenda : [])
+      .filter(ev => [ev.title, ev.category, ev.location].filter(Boolean).join(' ').toLowerCase().includes(q))
+      .slice(0, 6)
+      .map(ev => ({
+        type: 'agenda',
+        icon: 'calendar-days',
+        title: ev.title,
+        sub: [formatSearchDate(ev.event_date), ev.category].filter(Boolean).join(' · '),
+        href: '/agenda-hub.html'
+      }));
+
+    renderTopbarSearchResults(menuResults, dataResults, agendaResults);
+  });
+}
+
+function formatSearchDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch (e) { return dateStr; }
+}
+
+function renderTopbarSearchResults(menuResults, dataResults, agendaResults) {
+  const box = document.getElementById('topbarSearchResults');
+  if (!box) return;
+
+  _searchResultsFlat = [...menuResults, ...dataResults, ...agendaResults];
+
+  if (!_searchResultsFlat.length) {
+    box.innerHTML = `
+      <div class="tsr-empty">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><br>
+        Tidak ada hasil ditemukan.
+      </div>`;
+    return;
+  }
+
+  const group = (label, items) => {
+    if (!items.length) return '';
+    return `<div class="tsr-group-label">${label}</div>` + items.map(r => `
+      <a class="tsr-item" href="${r.href}" onclick="return handleSearchResultClick(event, '${r.href}')">
+        <div class="tsr-item-icon"><i data-lucide="${r.icon}" style="width:15px;height:15px;"></i></div>
+        <div class="tsr-item-text">
+          <div class="tsr-item-title">${escHtml(r.title)}</div>
+          <div class="tsr-item-sub">${escHtml(r.sub)}</div>
+        </div>
+      </a>`).join('');
+  };
+
+  box.innerHTML =
+    group('Menu', menuResults) +
+    group('Data', dataResults) +
+    group('Silabus', agendaResults);
+
+  renderIcons();
+}
+
+function handleSearchResultClick(e, href) {
+  e.preventDefault();
+  navigateFromSearch(href);
+  return false;
+}
+
+function navigateFromSearch(href) {
+  if (href && href !== '#') window.location.href = href;
+}
+
+// ─── Chat: notifikasi lintas-halaman (toast + suara + badge sidebar) ───
+// chat.html sudah polling ruangnya sendiri setiap 4 detik dan menampilkan
+// semuanya langsung di layar, jadi poller ini SENGAJA tidak jalan di sana —
+// cukup di halaman lain, supaya orang tetap tahu ada pesan masuk walau
+// sedang buka Absensi/Agenda/dsb.
+const CHAT_NOTIF_INTERVAL = 12000;
+const CHAT_NOTIF_WATERMARK_KEY = 'rb_chat_notif_watermark';
+let _chatNotifTimer = null;
+
+function initChatNotifier(user) {
+  if (!user || !user.loggedIn) return;
+  if (/\/chat\.html$/.test(window.location.pathname)) return; // chat.html punya pollingnya sendiri
+  if (_chatNotifTimer) return; // sudah jalan (mis. dua kali initAppShell)
+
+  pollChatNotifications();
+  _chatNotifTimer = setInterval(pollChatNotifications, CHAT_NOTIF_INTERVAL);
+}
+
+function pollChatNotifications() {
+  fetch('/api/chat/rooms')
+    .then(r => r.json())
+    .then(rooms => {
+      if (!Array.isArray(rooms)) return;
+
+      const totalUnread = rooms.reduce((sum, r) => sum + (r.unread || 0), 0);
+      updateSidebarChatBadge(totalUnread);
+      updateTopbarNotifications(rooms);
+
+      let watermark = localStorage.getItem(CHAT_NOTIF_WATERMARK_KEY);
+      if (!watermark) {
+        // Baru pertama kali berjalan di browser ini — jangan banjiri toast
+        // untuk riwayat pesan yang sudah lama menumpuk sebelum fitur ini ada.
+        localStorage.setItem(CHAT_NOTIF_WATERMARK_KEY, new Date().toISOString());
+        return;
+      }
+
+      const fresh = rooms
+        .filter(r => r.last_at && new Date(r.last_at) > new Date(watermark) && r.unread > 0)
+        .sort((a, b) => new Date(a.last_at) - new Date(b.last_at));
+
+      if (fresh.length) {
+        fresh.slice(-3).forEach(r => showChatNotifToast(r));
+        playChatNotifSound();
+        const newest = fresh[fresh.length - 1].last_at;
+        localStorage.setItem(CHAT_NOTIF_WATERMARK_KEY, newest);
+      }
+    })
+    .catch(() => {});
+}
+
+function updateSidebarChatBadge(count) {
+  const badge = document.getElementById('sidebarChatBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// Mengisi icon lonceng topbar dengan pesan chat yang belum dibaca — dipanggil
+// dari poller lintas-halaman (di sini) dan dari chat.html sendiri (loadRooms),
+// supaya bell selalu menampilkan data terbaru di halaman manapun.
+function updateTopbarNotifications(rooms) {
+  const dot = document.getElementById('topbarNotifDot');
+  const list = document.getElementById('topbarNotifList');
+  if (!dot || !list) return;
+
+  const unreadRooms = (Array.isArray(rooms) ? rooms : [])
+    .filter(r => r.unread > 0)
+    .sort((a, b) => new Date(b.last_at || 0) - new Date(a.last_at || 0));
+
+  const total = unreadRooms.reduce((sum, r) => sum + r.unread, 0);
+  if (total > 0) {
+    dot.textContent = total > 99 ? '99+' : String(total);
+    dot.style.display = 'flex';
+  } else {
+    dot.style.display = 'none';
+  }
+
+  if (!unreadRooms.length) {
+    list.innerHTML = `
+      <div class="topbar-notif-empty">
+        <i data-lucide="bell-off" style="width:26px;height:26px;"></i><br>
+        Tidak ada notifikasi baru.
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = unreadRooms.slice(0, 8).map(r => {
+    const preview = escHtml((r.last_body || '').slice(0, 60));
+    const title = r.type === 'dm' ? r.label : [r.label, r.last_sender].filter(Boolean).join(' · ');
+    return `
+      <a class="topbar-dropdown-item" href="/chat.html?room=${encodeURIComponent(r.id)}" style="align-items:flex-start;text-decoration:none;">
+        <i data-lucide="message-circle" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;color:var(--blue-mid);"></i>
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(title)}</div>
+          <div style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${preview}</div>
+        </div>
+        <span style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:16px;height:16px;padding:0 3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${r.unread > 9 ? '9+' : r.unread}</span>
+      </a>`;
+  }).join('');
+  renderIcons();
+}
+
+function showChatNotifToast(room) {
+  if (!window.Swal) return;
+  const preview = (room.last_body || '').slice(0, 80);
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 5000,
+    timerProgressBar: true,
+    icon: 'info',
+    title: room.type === 'dm' ? room.label : `${room.label} · ${room.last_sender || ''}`,
+    text: preview,
+    didOpen: (el) => { el.style.cursor = 'pointer'; el.onclick = () => { window.location.href = '/chat.html'; }; }
+  });
+}
+
+// Dua nada pendek lewat Web Audio API — tidak perlu file audio eksternal.
+// Dipakai baik oleh notifier lintas-halaman ini maupun oleh chat.html sendiri
+// saat pesan baru masuk ke ruang yang sedang dibuka.
+function playChatNotifSound() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    [880, 1108].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.1;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.24);
+    });
+    setTimeout(() => ctx.close(), 500);
+  } catch (e) { /* Audio tidak tersedia — abaikan, jangan sampai memutus fitur lain. */ }
+}
+
+function toggleTopbarProfile(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('topbarProfileDropdown');
+  const wrap = document.getElementById('topbarProfile');
+  const notif = document.getElementById('topbarNotifDropdown');
+  if (notif) notif.classList.remove('open');
+  dropdown.classList.toggle('open');
+  wrap.classList.toggle('open');
+}
+function toggleTopbarNotif(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('topbarNotifDropdown');
+  const profileDropdown = document.getElementById('topbarProfileDropdown');
+  const profileWrap = document.getElementById('topbarProfile');
+  if (profileDropdown) profileDropdown.classList.remove('open');
+  if (profileWrap) profileWrap.classList.remove('open');
+  dropdown.classList.toggle('open');
+}
+function closeTopbarDropdowns() {
+  const d = document.getElementById('topbarProfileDropdown');
+  const p = document.getElementById('topbarProfile');
+  if (d) d.classList.remove('open');
+  if (p) p.classList.remove('open');
 }
 
 // ─── Frontend Idle Logout Timer (10 Mins) ───
@@ -234,12 +733,10 @@ function showSwalConfirm(title, text, confirmButtonText, onConfirm) {
       text: text,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#307fe2',
-      cancelButtonColor: '#ef4444',
+      confirmButtonColor: '#155eef',
+      cancelButtonColor: '#dc2626',
       confirmButtonText: confirmButtonText,
-      cancelButtonText: 'Batal',
-      background: '#0f172a',
-      color: '#fff'
+      cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) onConfirm();
     });
@@ -307,6 +804,13 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
     sidebarContainer.innerHTML = buildSidebar(user, activePage);
   }
 
+  // Apply saved sidebar collapse preference (before reveal, to avoid a layout flash)
+  applySidebarCollapsePref();
+
+  // Inject topbar search / notification / profile controls (works on every
+  // page's .app-topbar, whether built via buildTopbar() or hardcoded)
+  injectTopbarActions(user);
+
   // Hide loading
   const loading = document.getElementById('authLoading');
   if (loading) loading.style.display = 'none';
@@ -315,7 +819,6 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
   const content = document.getElementById('appContent');
   if (content) {
     content.style.display = 'block';
-    content.classList.add('fade-in-pjax');
   }
 
   // Inject global manage popup overlay
@@ -330,7 +833,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
       .manage-popup-overlay.open { opacity: 1; pointer-events: auto; }
       .manage-popup-box {
         background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
-        width: 90%; max-width: 520px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        width: 90%; max-width: 520px; text-align: center; box-shadow: 0 20px 48px rgba(15,23,42,0.16);
         transform: translateY(20px); transition: transform 0.3s ease;
       }
       .manage-popup-overlay.open .manage-popup-box { transform: translateY(0); }
@@ -416,7 +919,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
         position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 92vw; background: var(--bg-card);
         border-left: 1px solid var(--border); z-index: 1501; transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
-        display: flex; flex-direction: column; box-shadow: -10px 0 50px rgba(0,0,0,0.3);
+        display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(15,23,42,0.12);
       }
       .profile-drawer-overlay.open .profile-drawer { transform: translateX(0); }
       .profile-drawer-header {
@@ -448,7 +951,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
       <div class="profile-drawer">
         <div class="profile-drawer-header">
           <h3>Setelan Profil</h3>
-          <button class="btn-close-drawer" onclick="closeProfileDrawer()" title="Tutup">✕</button>
+          <button class="btn-close-drawer" onclick="closeProfileDrawer()" title="Tutup"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
         </div>
         
         <div class="profile-drawer-body">
@@ -456,7 +959,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
             <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 16px;">
               <div class="profile-avatar-large" id="profileDrawerAvatarLarge" style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #fff; overflow: hidden; background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid)); border: 4px solid var(--bg-card); box-shadow: 0 8px 24px rgba(48,127,226,0.2);">?</div>
               <label style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--blue-mid); border: 3px solid var(--bg-card); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); transition: transform 0.2s;" for="profileDrawerAvatarInput" title="Ubah Foto">
-                📷
+                <i data-lucide="camera" style="width:15px;height:15px;"></i>
                 <input type="file" id="profileDrawerAvatarInput" accept="image/*" style="display:none;" onchange="previewDrawerAvatar(this)">
               </label>
             </div>
@@ -471,7 +974,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
 
         <div class="profile-drawer-footer">
           <button type="button" class="btn-drawer-cancel" onclick="closeProfileDrawer()">Batal</button>
-          <button type="button" class="btn-drawer-save" id="btnSaveDrawerProfile" onclick="saveDrawerProfile()">💾 Simpan</button>
+          <button type="button" class="btn-drawer-save" id="btnSaveDrawerProfile" onclick="saveDrawerProfile()"><i data-lucide="save" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;"></i>Simpan</button>
         </div>
       </div>
     `;
@@ -505,7 +1008,8 @@ function iconSvg(name) {
 function copyToClipboard(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
     const original = btn.innerHTML;
-    btn.innerHTML = '✓ Tersalin';
+    btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>Tersalin';
+    renderIcons();
     btn.classList.add('copied');
     showSwalToast('Tersalin ke clipboard!', 'success');
     setTimeout(() => { btn.innerHTML = original; btn.classList.remove('copied'); }, 1600);
@@ -620,7 +1124,7 @@ function initDivisionPage(items) {
             <button class="btn btn-copy" data-copy="${escHtml(item.pass)}" title="Salin Sandi">${iconSvg('copy')}</button>
           </div>
         </div>
-        <div class="warn-tag">⚠ Jaga kerahasiaan kredensial ini</div>`;
+        <div class="warn-tag"><i data-lucide="alert-triangle" style="width:12px;height:12px;vertical-align:-2px;margin-right:4px;"></i>Jaga kerahasiaan kredensial ini</div>`;
     }
     return card;
   }
@@ -782,12 +1286,14 @@ async function saveDrawerProfile() {
     } else {
       showSwalToast(data.error || 'Gagal menyimpan profil.', 'error');
       btn.disabled = false;
-      btn.textContent = '💾 Simpan';
+      btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;"></i>Simpan';
+      renderIcons();
     }
   } catch (err) {
     showSwalToast('Terjadi kesalahan koneksi server.', 'error');
     btn.disabled = false;
-    btn.textContent = '💾 Simpan';
+    btn.innerHTML = '<i data-lucide="save" style="width:15px;height:15px;vertical-align:-3px;margin-right:5px;"></i>Simpan';
+    renderIcons();
   }
 }
 

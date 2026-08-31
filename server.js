@@ -230,6 +230,7 @@ app.get('/api/me', (req, res) => {
   if (req.session && req.session.user) {
     res.json({
       loggedIn: true,
+      id: req.session.user.id,
       name: req.session.user.name,
       email: req.session.user.email,
       role: req.session.user.role,
@@ -382,6 +383,35 @@ app.delete('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
 });
 
 
+// ─── Protected HTML Pages ─────────────────────────────────────────────────────
+// Must be registered BEFORE express.static below. express.static ends the
+// request as soon as it finds a matching file and never calls next(), so any
+// route guard for an existing .html file placed after it never runs — these
+// pages would always be served unguarded straight off disk. (That's exactly
+// what had silently happened here: this whole block used to sit after the
+// static mount, so even the pre-existing manage-users.html guard never
+// actually fired — anyone logged in could open it directly.)
+function sendGuardedHtml(res, filename) {
+  // Bypassing express.static here also means bypassing its no-cache header
+  // for HTML (see the static config below) — replicate it so a stale
+  // cached copy of one of these pages can't linger in the browser.
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'public', filename));
+}
+app.get('/manage', requireAuth, (req, res) => sendGuardedHtml(res, 'manage.html'));
+app.get('/manage.html', requireAuth, (req, res) => sendGuardedHtml(res, 'manage.html'));
+app.get('/manage-users', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'manage-users.html'));
+app.get('/manage-users.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'manage-users.html'));
+app.get('/agenda-hub.html', requireAuth, (req, res) => sendGuardedHtml(res, 'agenda-hub.html'));
+// administrasi.html, email.html, dan rekap-absen.html sebelumnya diserve
+// begitu saja lewat express.static tanpa penjaga sama sekali — intern yang
+// tahu/menebak URL-nya bisa langsung membuka halaman dan (untuk email.html)
+// melihat kredensial staff. Tambahkan guard yang sama seperti manage-users.
+app.get('/administrasi.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'administrasi.html'));
+app.get('/email.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'email.html'));
+app.get('/rekap-absen.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'rekap-absen.html'));
+app.get('/chat.html', requireAuth, (req, res) => sendGuardedHtml(res, 'chat.html'));
+
 // ─── Static Files ─────────────────────────────────────────────────────────────
 app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/lucide/dist/umd')));
 app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist')));
@@ -389,38 +419,44 @@ app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules
 app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist')));
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
+    // No-cache for HTML, and for the shared app-shell JS/CSS — these change
+    // often during active development and a stale cached copy (e.g. an old
+    // sidebar/topbar in shared.js) can silently linger in the browser.
+    if (path.endsWith('.html') || path.endsWith('shared.js') || path.endsWith('style.css')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
   }
 }));
 
-// ─── Protected HTML Pages ─────────────────────────────────────────────────────
-app.get('/manage', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'manage.html'));
-});
-app.get('/manage.html', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'manage.html'));
-});
-app.get('/manage-users', requireAuth, requireStaff, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'manage-users.html'));
-});
-app.get('/manage-users.html', requireAuth, requireStaff, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'manage-users.html'));
-});
-app.get('/agenda-hub.html', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'agenda-hub.html'));
-});
-
 // ─── API: Items (CRUD) — Memerlukan Login ─────────────────────────────────────
-// GET /api/items — Semua user yang login bisa baca
+// 'administrasi' dan 'email' menyimpan kredensial staff (termasuk password
+// dalam bentuk plaintext di kolom `pass`) — POST/PUT/DELETE items sudah
+// menolak intern untuk divisi ini, tapi GET sebelumnya tidak, jadi intern
+// yang tahu/menebak URL (mis. /email.html) bisa membaca kredensial itu
+// langsung. Terapkan batasan yang sama di sini juga.
+const ITEMS_STAFF_ONLY_DIVISIONS = ['administrasi', 'email'];
+
+// GET /api/items — Semua user yang login bisa baca, kecuali divisi Staff Only di atas
 app.get('/api/items', requireAuth, async (req, res) => {
   const { division } = req.query;
+  const isStaff = req.session.user.role === 'staff';
+
+  if (division && !isStaff && ITEMS_STAFF_ONLY_DIVISIONS.includes(division)) {
+    return res.status(403).json({ error: 'Forbidden: Divisi ini hanya dapat diakses oleh Staff.' });
+  }
+
   try {
     let query = supabase.from('items').select('*').order('created_at', { ascending: true });
     if (division) query = query.eq('division', division);
-    const { data, error } = await query;
+    let { data, error } = await query;
     if (error) throw error;
+
+    // No division filter = "semua divisi" (dipakai Kelola Data & pencarian
+    // global) — buang divisi Staff Only dari hasilnya untuk intern.
+    if (!division && !isStaff) {
+      data = (data || []).filter(i => !ITEMS_STAFF_ONLY_DIVISIONS.includes(i.division));
+    }
+
     res.json(data || []);
   } catch (err) {
     console.error('Error fetching data:', err);
@@ -454,7 +490,7 @@ app.post('/api/items', requireAuth, async (req, res) => {
 
   // Check permission: Interns can't write to administrasi/email
   const isStaff = req.session.user.role === 'staff';
-  const staffOnlyDivisions = ['administrasi', 'email'];
+  const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
   if (!isStaff && staffOnlyDivisions.includes(division)) {
     return res.status(403).json({ error: 'Forbidden: Intern tidak bisa mengelola divisi ini' });
   }
@@ -477,7 +513,7 @@ app.put('/api/items/:id', requireAuth, async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
   const { id } = req.params;
   const isStaff = req.session.user.role === 'staff';
-  const staffOnlyDivisions = ['administrasi', 'email'];
+  const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
 
   try {
     const { data: currentItem, error: getError } = await supabase
@@ -516,7 +552,7 @@ app.put('/api/items/:id', requireAuth, async (req, res) => {
 app.delete('/api/items/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const isStaff = req.session.user.role === 'staff';
-  const staffOnlyDivisions = ['administrasi', 'email'];
+  const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
   try {
     const { data: currentItem, error: getError } = await supabase
       .from('items').select('*').eq('id', id).single();
@@ -633,18 +669,37 @@ app.get('/api/events/month', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/events — Menambah acara baru (Staff Only)
-app.post('/api/events', requireAuth, requireStaff, upload.single('cvNarsum'), async (req, res) => {
-  const { 
+// This endpoint is shared by two forms with very different intent:
+//   - Agenda & Event Hub's "Tambah Agenda" (calendar/silabus entries) — any
+//     logged-in user, interns included.
+//   - Event Hub's "Tambah Event" (narasumber & partnership tracking, with CV
+//     upload) — Staff only, since it drives official outreach documents.
+// Both write to the same `events` table, so the category value is what
+// tells them apart. Gate on that instead of the route as a whole, so an
+// intern can't just replay an Event Hub payload with a relabeled category.
+const AGENDA_ONLY_CATEGORIES = [
+  'Silabus BD', 'UMIBA', 'GBKP Moria', 'Event', 'Audiensi',
+  'Design', 'Sosmed', 'Admin', 'Lainnya'
+];
+
+// POST /api/events — Menambah acara baru (semua user login untuk kategori
+// agenda; kategori event/narasumber tetap Staff Only)
+app.post('/api/events', requireAuth, upload.single('cvNarsum'), async (req, res) => {
+  const {
     category, title, event_date, start_time, end_time, location, speaker_name, pic_name,
     kelas, jenis_pelatihan, mc, jumlah_peserta,
     link_zoom, link_umkm, caption_sosmed, link_pendaftaran_gform, spreadsheets_data_peserta
   } = req.body;
-  
+
   if (!category || !title || !event_date) {
     return res.status(400).json({ error: 'Kategori, Judul, dan Tanggal acara wajib diisi.' });
   }
-  
+
+  const isStaff = req.session.user.role === 'staff';
+  if (!isStaff && !AGENDA_ONLY_CATEGORIES.includes(category)) {
+    return res.status(403).json({ error: 'Forbidden: kategori ini hanya bisa ditambahkan oleh Staff.' });
+  }
+
   let cvUrl = null;
   if (req.file) {
     try {
@@ -755,6 +810,125 @@ app.put('/api/events/:id/checklist', requireAuth, requireStaff, async (req, res)
   } catch (err) {
     console.error('Error updating checklist:', err);
     res.status(500).json({ error: err.message || 'Gagal memperbarui checklist acara.' });
+  }
+});
+
+// PUT /api/events/:id — Edit data acara (Staff Only)
+app.put('/api/events/:id', requireAuth, requireStaff, upload.single('cvNarsum'), async (req, res) => {
+  const eventId = req.params.id;
+  const {
+    category, title, event_date, start_time, end_time, location, speaker_name, pic_name,
+    kelas, jenis_pelatihan, mc, jumlah_peserta,
+    link_zoom, link_umkm, caption_sosmed, link_pendaftaran_gform, spreadsheets_data_peserta
+  } = req.body;
+
+  if (!category || !title || !event_date) {
+    return res.status(400).json({ error: 'Kategori, Judul, dan Tanggal acara wajib diisi.' });
+  }
+
+  const updatedData = {
+    category,
+    title,
+    event_date,
+    start_time: start_time || null,
+    end_time: end_time || null,
+    location: location || null,
+    speaker_name: speaker_name || null,
+    pic_name: pic_name || null,
+    kelas: kelas || null,
+    jenis_pelatihan: jenis_pelatihan || null,
+    mc: mc || null,
+    jumlah_peserta: jumlah_peserta ? parseInt(jumlah_peserta, 10) : null,
+    link_zoom: link_zoom || null,
+    link_umkm: link_umkm || null,
+    caption_sosmed: caption_sosmed || null,
+    link_pendaftaran_gform: link_pendaftaran_gform || null,
+    spreadsheets_data_peserta: spreadsheets_data_peserta || null,
+  };
+
+  // Jika ada file CV baru yang diunggah, upload ke storage
+  if (req.file) {
+    try {
+      const { originalname, buffer, mimetype } = req.file;
+      const filename = `${Date.now()}_${originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+      const { data, error } = await supabase.storage.from('cv_narasumber').upload(filename, buffer, { contentType: mimetype });
+      if (error) {
+        console.error('Storage Error:', error);
+        return res.status(500).json({ error: 'Gagal mengunggah CV: ' + error.message });
+      }
+      const { data: publicUrlData } = supabase.storage.from('cv_narasumber').getPublicUrl(filename);
+      updatedData.cv_narasumber_url = publicUrlData.publicUrl;
+    } catch (err) {
+      console.error('Upload error:', err);
+      return res.status(500).json({ error: 'Terjadi kesalahan saat mengunggah CV.' });
+    }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .update(updatedData)
+      .eq('id', eventId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase update event error:', error);
+      return res.status(500).json({ error: error.message || 'Gagal memperbarui data acara.' });
+    }
+    res.json({ message: 'Data acara berhasil diperbarui!', data });
+  } catch (err) {
+    console.error('Error updating event:', err);
+    res.status(500).json({ error: err.message || 'Gagal memperbarui data acara.' });
+  }
+});
+
+// PUT /api/events/:id/status — Ubah status acara: upcoming / done (Staff Only)
+app.put('/api/events/:id/status', requireAuth, requireStaff, async (req, res) => {
+  const eventId = req.params.id;
+  const { status } = req.body;
+
+  if (!['upcoming', 'done'].includes(status)) {
+    return res.status(400).json({ error: 'Status tidak valid. Gunakan "upcoming" atau "done".' });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .update({ status })
+      .eq('id', eventId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase status update error:', error);
+      return res.status(500).json({ error: error.message || 'Gagal mengubah status acara.' });
+    }
+    res.json({ message: `Status acara berhasil diubah menjadi "${status}".`, data });
+  } catch (err) {
+    console.error('Error updating event status:', err);
+    res.status(500).json({ error: err.message || 'Gagal mengubah status acara.' });
+  }
+});
+
+// DELETE /api/events/:id — Hapus acara (Staff Only)
+app.delete('/api/events/:id', requireAuth, requireStaff, async (req, res) => {
+  const eventId = req.params.id;
+
+  try {
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', eventId);
+
+    if (error) {
+      console.error('Supabase delete event error:', error);
+      return res.status(500).json({ error: error.message || 'Gagal menghapus acara.' });
+    }
+    res.json({ message: 'Acara berhasil dihapus.' });
+  } catch (err) {
+    console.error('Error deleting event:', err);
+    res.status(500).json({ error: err.message || 'Gagal menghapus acara.' });
   }
 });
 
@@ -1017,6 +1191,25 @@ const TARGET_LAT = -6.185582350879704;
 const TARGET_LNG = 106.79652101747172;
 const MAX_RADIUS = 50; // meters
 
+// --- Sinkron real-time ke Google Sheets (via Apps Script Web App) ---
+// Diisi setelah setup di Google Sheets selesai (lihat panduan). Kalau kosong,
+// sinkronisasi otomatis dilewati (tidak error) — absen tetap tersimpan normal.
+const ABSEN_SHEETS_WEBHOOK_URL = process.env.ABSEN_SHEETS_WEBHOOK_URL || '';
+const ABSEN_SHEETS_SECRET = process.env.ABSEN_SHEETS_SECRET || '';
+
+// Fire-and-forget: tidak pernah membuat submit absen gagal walau Sheets/Drive
+// sedang error atau lambat — hanya dicatat di log server.
+function syncAbsenToSheets(payload) {
+  if (!ABSEN_SHEETS_WEBHOOK_URL) return;
+  fetch(ABSEN_SHEETS_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, secret: ABSEN_SHEETS_SECRET }),
+  })
+    .then(r => { if (!r.ok) console.error('Sync absen ke Sheets gagal, status:', r.status); })
+    .catch(err => console.error('Sync absen ke Sheets gagal:', err.message));
+}
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3; // metres
   const p1 = lat1 * Math.PI/180;
@@ -1031,9 +1224,49 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 
+// ─── Cleanup absensi lama — data lengkap sudah ke-backup di Google Sheets/Drive,
+// jadi aman dibersihkan dari Supabase (DB + Storage) biar kuota tidak penuh ───
+const ATTENDANCE_RETENTION_DAYS = 60;
+
+function extractStoragePath(photoUrl) {
+  if (!photoUrl || !photoUrl.startsWith('http')) return null;
+  const marker = '/attendance-photos/';
+  const idx = photoUrl.indexOf(marker);
+  if (idx === -1) return null;
+  return photoUrl.substring(idx + marker.length);
+}
+
+async function cleanupOldAttendance() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ATTENDANCE_RETENTION_DAYS);
+
+  try {
+    const { data: oldRecords, error: fetchError } = await supabase
+      .from('attendance')
+      .select('id, photo_url')
+      .lt('timestamp', cutoff.toISOString());
+    if (fetchError) throw fetchError;
+    if (!oldRecords || !oldRecords.length) return;
+
+    const paths = oldRecords.map(r => extractStoragePath(r.photo_url)).filter(Boolean);
+    if (paths.length) {
+      const { error: storageError } = await supabase.storage.from('attendance-photos').remove(paths);
+      if (storageError) console.warn('Cleanup: gagal hapus sebagian foto lama di Storage:', storageError.message);
+    }
+
+    const ids = oldRecords.map(r => r.id);
+    const { error: deleteError } = await supabase.from('attendance').delete().in('id', ids);
+    if (deleteError) throw deleteError;
+
+    console.log(`🧹 Cleanup absensi: ${ids.length} data lebih dari ${ATTENDANCE_RETENTION_DAYS} hari dihapus (${paths.length} foto ikut dihapus dari Storage).`);
+  } catch (err) {
+    console.error('Cleanup absensi lama gagal:', err.message);
+  }
+}
+
 // POST /api/absen — Submit absensi (semua user yang login)
 app.post('/api/absen', requireAuth, async (req, res) => {
-  const { type, photo_base64, latitude, longitude, address } = req.body;
+  const { type, photo_base64, latitude, longitude, address, work_mode } = req.body;
   const user = req.session.user;
 
   if (!type || !['clock_in', 'clock_out'].includes(type)) {
@@ -1043,10 +1276,27 @@ app.post('/api/absen', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Data GPS diperlukan untuk absensi.' });
   }
 
-  // Validasi Geofencing
-  const distance = calculateDistance(latitude, longitude, TARGET_LAT, TARGET_LNG);
-  if (distance > MAX_RADIUS) {
-    return res.status(403).json({ error: `Absensi ditolak: Anda berada ${distance} meter di luar area kantor (Maksimal ${MAX_RADIUS}m).` });
+  const mode = work_mode === 'wfh' ? 'wfh' : 'wfo';
+
+  // Intern hanya boleh WFH kalau sudah diizinkan staff untuk hari ini. Staff bebas pilih sendiri.
+  if (mode === 'wfh' && user.role !== 'staff') {
+    const { data: assignment } = await supabase
+      .from('wfh_assignments')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('work_date', todayDateStr())
+      .maybeSingle();
+    if (!assignment) {
+      return res.status(403).json({ error: 'Absen WFH belum diizinkan oleh staff untuk hari ini.' });
+    }
+  }
+
+  // Validasi Geofencing — dilewati kalau lagi WFH
+  if (mode === 'wfo') {
+    const distance = calculateDistance(latitude, longitude, TARGET_LAT, TARGET_LNG);
+    if (distance > MAX_RADIUS) {
+      return res.status(403).json({ error: `Absensi ditolak: Anda berada ${distance} meter di luar area kantor (Maksimal ${MAX_RADIUS}m).` });
+    }
   }
 
   try {
@@ -1080,6 +1330,7 @@ app.post('/api/absen', requireAuth, async (req, res) => {
       user_email: user.email,
       user_role: user.role,
       type,
+      work_mode: mode,
       photo_url,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
@@ -1087,10 +1338,158 @@ app.post('/api/absen', requireAuth, async (req, res) => {
     }]).select().single();
 
     if (error) throw error;
-    res.status(201).json({ message: `Absensi ${type === 'clock_in' ? 'Clock In' : 'Clock Out'} berhasil!`, data });
+
+    // Sinkron real-time ke Google Sheets (tidak menunggu/tidak memblokir response)
+    syncAbsenToSheets({
+      user_name: user.name,
+      user_email: user.email,
+      user_role: user.role,
+      type,
+      work_mode: mode,
+      address: address || '',
+      latitude,
+      longitude,
+      photo_base64: photo_base64 || '',
+    });
+
+    res.status(201).json({ message: `Absensi ${mode === 'wfh' ? 'WFH' : 'WFO'} berhasil!`, data });
   } catch (err) {
     console.error('Absen error:', err);
     res.status(500).json({ error: 'Gagal menyimpan absensi: ' + err.message });
+  }
+});
+
+function todayDateStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// ─── WFH Assignment — staff menentukan intern mana yang boleh WFH per tanggal ───
+
+// GET /api/wfh-assignments?date=YYYY-MM-DD — daftar intern yang diizinkan WFH pada tanggal tsb (Staff only)
+app.get('/api/wfh-assignments', requireAuth, requireStaff, async (req, res) => {
+  const date = req.query.date || todayDateStr();
+  try {
+    const { data: assignments, error } = await supabase
+      .from('wfh_assignments')
+      .select('id, user_id, work_date')
+      .eq('work_date', date);
+    if (error) throw error;
+
+    const userIds = [...new Set((assignments || []).map(a => a.user_id))];
+    let userMap = {};
+    if (userIds.length) {
+      const { data: users } = await supabase.from('users').select('id, name, email').in('id', userIds);
+      (users || []).forEach(u => { userMap[u.id] = u; });
+    }
+
+    res.json((assignments || []).map(a => ({
+      ...a,
+      user_name: userMap[a.user_id]?.name || 'Unknown',
+      user_email: userMap[a.user_id]?.email || '',
+    })));
+  } catch (err) {
+    console.error('List wfh assignments error:', err);
+    res.status(500).json({ error: 'Gagal mengambil data assignment WFH: ' + err.message });
+  }
+});
+
+// POST /api/wfh-assignments — staff mengizinkan seorang intern WFH pada tanggal tertentu
+app.post('/api/wfh-assignments', requireAuth, requireStaff, async (req, res) => {
+  const { user_id, date } = req.body;
+  const work_date = date || todayDateStr();
+  if (!user_id) return res.status(400).json({ error: 'user_id wajib diisi.' });
+
+  try {
+    const { data, error } = await supabase
+      .from('wfh_assignments')
+      .upsert({ user_id, work_date, assigned_by: req.session.user.id }, { onConflict: 'user_id,work_date' })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Create wfh assignment error:', err);
+    res.status(500).json({ error: 'Gagal menyimpan assignment WFH: ' + err.message });
+  }
+});
+
+// DELETE /api/wfh-assignments — staff mencabut izin WFH intern pada tanggal tertentu
+app.delete('/api/wfh-assignments', requireAuth, requireStaff, async (req, res) => {
+  const { user_id, date } = req.body;
+  const work_date = date || todayDateStr();
+  if (!user_id) return res.status(400).json({ error: 'user_id wajib diisi.' });
+
+  try {
+    const { error } = await supabase
+      .from('wfh_assignments')
+      .delete()
+      .eq('user_id', user_id)
+      .eq('work_date', work_date);
+    if (error) throw error;
+    res.json({ message: 'Assignment WFH dicabut.' });
+  } catch (err) {
+    console.error('Delete wfh assignment error:', err);
+    res.status(500).json({ error: 'Gagal menghapus assignment WFH: ' + err.message });
+  }
+});
+
+// POST /api/wfh-assignments/bulk — staff mengizinkan/mencabut WFH untuk SEMUA intern sekaligus pada tanggal tertentu
+app.post('/api/wfh-assignments/bulk', requireAuth, requireStaff, async (req, res) => {
+  const { date, allowed } = req.body;
+  const work_date = date || todayDateStr();
+
+  try {
+    const { data: interns, error: internErr } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'internship');
+    if (internErr) throw internErr;
+
+    const internIds = (interns || []).map(u => u.id);
+    if (!internIds.length) return res.json({ message: 'Belum ada akun intern.', count: 0 });
+
+    if (allowed) {
+      const rows = internIds.map(id => ({ user_id: id, work_date, assigned_by: req.session.user.id }));
+      const { error } = await supabase.from('wfh_assignments').upsert(rows, { onConflict: 'user_id,work_date' });
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('wfh_assignments').delete().eq('work_date', work_date).in('user_id', internIds);
+      if (error) throw error;
+    }
+
+    res.json({ message: allowed ? 'Semua intern diizinkan WFH.' : 'Izin WFH semua intern dicabut.', count: internIds.length });
+  } catch (err) {
+    console.error('Bulk wfh assignment error:', err);
+    res.status(500).json({ error: 'Gagal memperbarui assignment WFH: ' + err.message });
+  }
+});
+
+// GET /api/wfh-assignments/mine — cek apakah user saat ini boleh absen WFH pada tanggal tsb (default hari ini)
+app.get('/api/wfh-assignments/mine', requireAuth, async (req, res) => {
+  const date = req.query.date || todayDateStr();
+  const user = req.session.user;
+
+  // Staff selalu bebas memilih WFO/WFH sendiri.
+  if (user.role === 'staff') {
+    return res.json({ allowed: true });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('wfh_assignments')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('work_date', date)
+      .maybeSingle();
+    if (error) throw error;
+    res.json({ allowed: !!data });
+  } catch (err) {
+    console.error('Check wfh assignment error:', err);
+    res.status(500).json({ error: 'Gagal memeriksa assignment WFH: ' + err.message });
   }
 });
 
@@ -1371,6 +1770,536 @@ app.delete('/api/permissions/:id', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Chat (Global / Divisi / Personal) ───────────────────────────────────────
+// Keanggotaan ruang tidak disimpan di tabel terpisah — dihitung dari
+// users.divisi dan dm_key, lalu diperiksa di setiap request. Dengan begitu
+// mengubah divisi seorang user lewat menu Kelola langsung memindahkan
+// akses ruang divisinya tanpa perlu sinkronisasi tambahan.
+
+const CHAT_DIVISIONS = [
+  'Business Development',
+  'Social Media',
+  'Design Graphic',
+  'Event & Partnerships',
+  'General Administration'
+];
+const CHAT_MSG_MAX = 4000;
+
+// Session dibuat saat login dan belum tentu memuat divisi (kolom divisi bisa
+// berubah setelah user login), jadi selalu ambil versi terbaru dari database.
+async function getChatUser(req) {
+  const sessionUser = req.session.user;
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, email, role, divisi, avatar_url')
+    .eq('id', sessionUser.id)
+    .single();
+  if (error || !data) return null;
+  return data;
+}
+
+// Kunci DM yang stabil: urutkan kedua id agar pasangan yang sama selalu
+// menghasilkan kunci identik, siapa pun yang memulai percakapan.
+function dmKeyFor(idA, idB) {
+  return [String(idA), String(idB)].sort().join(':');
+}
+
+// Ruang global & divisi dibuat saat pertama dibutuhkan, sehingga tidak perlu
+// seeding manual setelah menjalankan schema_chat.sql.
+async function ensureRoom({ type, name, division }) {
+  let query = supabase.from('chat_rooms').select('*').eq('type', type);
+  query = division ? query.eq('division', division) : query;
+  const { data: existing } = await query.maybeSingle();
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from('chat_rooms')
+    .insert([{ type, name, division: division || null }])
+    .select()
+    .single();
+
+  if (error) {
+    // Unique index bisa menolak insert saat dua request bersamaan membuat
+    // ruang yang sama — ambil saja baris yang sudah menang.
+    let retry = supabase.from('chat_rooms').select('*').eq('type', type);
+    retry = division ? retry.eq('division', division) : retry;
+    const { data: raced } = await retry.maybeSingle();
+    if (raced) return raced;
+    throw error;
+  }
+  return data;
+}
+
+// Daftar ruang yang boleh diakses user + id-nya, dipakai sebagai penjaga akses.
+async function roomsVisibleTo(user) {
+  const rooms = [];
+
+  rooms.push(await ensureRoom({ type: 'global', name: 'Semua Anggota' }));
+
+  if (user.divisi && CHAT_DIVISIONS.includes(user.divisi)) {
+    rooms.push(await ensureRoom({ type: 'division', name: user.divisi, division: user.divisi }));
+  }
+
+  // Staff mengawasi seluruh divisi, jadi diberi akses ke semua ruang divisi.
+  if (user.role === 'staff') {
+    for (const div of CHAT_DIVISIONS) {
+      if (div === user.divisi) continue;
+      rooms.push(await ensureRoom({ type: 'division', name: div, division: div }));
+    }
+  }
+
+  const { data: dms } = await supabase
+    .from('chat_rooms')
+    .select('*')
+    .eq('type', 'dm')
+    .like('dm_key', `%${user.id}%`);
+
+  // `like` bisa ikut menangkap id yang hanya kebetulan mengandung substring,
+  // jadi saring lagi berdasarkan potongan kunci yang persis.
+  (dms || []).forEach(r => {
+    if (String(r.dm_key).split(':').includes(String(user.id))) rooms.push(r);
+  });
+
+  return rooms;
+}
+
+async function canAccessRoom(user, roomId) {
+  const rooms = await roomsVisibleTo(user);
+  return rooms.find(r => String(r.id) === String(roomId)) || null;
+}
+
+// Anggota sebenarnya dari sebuah ruang — dipakai untuk membatasi siapa yang
+// bisa di-@tag di ruang itu (mis. ruang divisi Design tidak boleh menawarkan
+// orang dari divisi Sosmed di autocomplete-nya).
+//   global   → semua user
+//   division → intern divisi itu + semua staff (staff memang mengawasi semua ruang divisi)
+//   dm       → dua orang di dm_key itu saja
+async function getRoomMembers(room) {
+  if (room.type === 'global') {
+    const { data } = await supabase.from('users').select('id, name, email, role, divisi, avatar_url');
+    return data || [];
+  }
+  if (room.type === 'division') {
+    const { data } = await supabase.from('users').select('id, name, email, role, divisi, avatar_url')
+      .or(`divisi.eq.${room.division},role.eq.staff`);
+    return data || [];
+  }
+  if (room.type === 'dm') {
+    const ids = String(room.dm_key).split(':');
+    const { data } = await supabase.from('users').select('id, name, email, role, divisi, avatar_url').in('id', ids);
+    return data || [];
+  }
+  return [];
+}
+
+// GET /api/chat/rooms/:id/members — anggota ruang, dipakai composer untuk
+// membatasi daftar autocomplete @tag sesuai ruang yang sedang dibuka.
+app.get('/api/chat/rooms/:id/members', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    const members = await getRoomMembers(room);
+    res.json(members.filter(m => String(m.id) !== String(user.id)));
+  } catch (err) {
+    console.error('Room members error:', err);
+    res.status(500).json({ error: 'Gagal memuat anggota ruang: ' + err.message });
+  }
+});
+
+// GET /api/chat/rooms — daftar ruang + pesan terakhir + jumlah belum dibaca
+app.get('/api/chat/rooms', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const rooms = await roomsVisibleTo(user);
+    if (!rooms.length) return res.json([]);
+
+    const roomIds = rooms.map(r => r.id);
+
+    const { data: reads } = await supabase
+      .from('chat_reads')
+      .select('room_id, last_read_at')
+      .eq('user_id', user.id)
+      .in('room_id', roomIds);
+    const readMap = {};
+    (reads || []).forEach(r => { readMap[r.room_id] = r.last_read_at; });
+
+    // Ambil pesan tiap ruang sekaligus, lalu hitung di memori — jauh lebih
+    // hemat daripada dua query per ruang.
+    const { data: msgs } = await supabase
+      .from('chat_messages')
+      .select('room_id, sender_id, sender_name, body, created_at, msg_type, meta, deleted_at')
+      .in('room_id', roomIds)
+      .order('created_at', { ascending: false })
+      .limit(1500);
+
+    const lastMap = {};
+    const unreadMap = {};
+    (msgs || []).forEach(m => {
+      if (!lastMap[m.room_id]) lastMap[m.room_id] = m;
+      const readAt = readMap[m.room_id];
+      const isMine = String(m.sender_id) === String(user.id);
+      if (!isMine && (!readAt || new Date(m.created_at) > new Date(readAt))) {
+        unreadMap[m.room_id] = (unreadMap[m.room_id] || 0) + 1;
+      }
+    });
+
+    // Nama lawan bicara untuk ruang DM.
+    const partnerIds = rooms
+      .filter(r => r.type === 'dm')
+      .map(r => String(r.dm_key).split(':').find(id => id !== String(user.id)))
+      .filter(Boolean);
+
+    let partnerMap = {};
+    if (partnerIds.length) {
+      const { data: partners } = await supabase
+        .from('users')
+        .select('id, name, email, divisi, avatar_url')
+        .in('id', partnerIds);
+      (partners || []).forEach(p => { partnerMap[p.id] = p; });
+    }
+
+    const payload = rooms.map(r => {
+      let label = r.name;
+      let subtitle = '';
+      let partner = null;
+      if (r.type === 'dm') {
+        const pid = String(r.dm_key).split(':').find(id => id !== String(user.id));
+        partner = partnerMap[pid] || null;
+        label = partner ? partner.name : 'Pengguna';
+        subtitle = partner ? (partner.divisi || '') : '';
+      } else if (r.type === 'global') {
+        subtitle = 'Semua divisi';
+      } else {
+        subtitle = 'Ruang divisi';
+      }
+      const last = lastMap[r.id] || null;
+      let lastBody = '';
+      if (last) {
+        if (last.deleted_at) lastBody = 'Pesan telah dihapus';
+        else if (last.msg_type === 'agenda') lastBody = '📅 ' + ((last.meta && last.meta.title) || 'Agenda');
+        else lastBody = last.body;
+      }
+      return {
+        id: r.id,
+        type: r.type,
+        label,
+        subtitle,
+        partner_id: partner ? partner.id : null,
+        avatar: partner ? partner.avatar_url : null,
+        unread: unreadMap[r.id] || 0,
+        last_body: lastBody,
+        last_sender: last ? last.sender_name : '',
+        last_at: last ? last.created_at : null
+      };
+    });
+
+    // Ruang dengan aktivitas terbaru di atas; yang belum ada pesan menyusul.
+    payload.sort((a, b) => {
+      if (a.last_at && b.last_at) return new Date(b.last_at) - new Date(a.last_at);
+      if (a.last_at) return -1;
+      if (b.last_at) return 1;
+      return a.label.localeCompare(b.label);
+    });
+
+    res.json(payload);
+  } catch (err) {
+    console.error('Chat rooms error:', err);
+    res.status(500).json({ error: 'Gagal memuat daftar obrolan: ' + err.message });
+  }
+});
+
+// GET /api/chat/contacts — daftar orang yang bisa diajak chat pribadi
+app.get('/api/chat/contacts', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, name, email, role, divisi, avatar_url')
+      .neq('id', user.id)
+      .order('name', { ascending: true });
+    if (error) throw error;
+
+    res.json(data || []);
+  } catch (err) {
+    console.error('Chat contacts error:', err);
+    res.status(500).json({ error: 'Gagal memuat kontak: ' + err.message });
+  }
+});
+
+// POST /api/chat/dm — buka (atau buat) ruang obrolan pribadi dengan seseorang
+app.post('/api/chat/dm', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const targetId = (req.body.user_id || '').trim();
+    if (!targetId) return res.status(400).json({ error: 'user_id wajib diisi.' });
+    if (String(targetId) === String(user.id)) {
+      return res.status(400).json({ error: 'Tidak bisa memulai obrolan dengan diri sendiri.' });
+    }
+
+    const { data: target } = await supabase
+      .from('users').select('id, name').eq('id', targetId).maybeSingle();
+    if (!target) return res.status(404).json({ error: 'Pengguna tidak ditemukan.' });
+
+    const key = dmKeyFor(user.id, target.id);
+    const { data: existing } = await supabase
+      .from('chat_rooms').select('*').eq('type', 'dm').eq('dm_key', key).maybeSingle();
+    if (existing) return res.json({ room_id: existing.id, label: target.name });
+
+    const { data, error } = await supabase
+      .from('chat_rooms')
+      .insert([{ type: 'dm', dm_key: key, name: null }])
+      .select()
+      .single();
+    if (error) {
+      const { data: raced } = await supabase
+        .from('chat_rooms').select('*').eq('type', 'dm').eq('dm_key', key).maybeSingle();
+      if (raced) return res.json({ room_id: raced.id, label: target.name });
+      throw error;
+    }
+
+    res.json({ room_id: data.id, label: target.name });
+  } catch (err) {
+    console.error('Chat DM error:', err);
+    res.status(500).json({ error: 'Gagal membuka obrolan: ' + err.message });
+  }
+});
+
+// GET /api/chat/rooms/:id/messages — riwayat, atau pesan baru saja bila ?after=
+const CHAT_MSG_COLUMNS = 'id, sender_id, sender_name, body, created_at, msg_type, meta, mentions, edited_at, deleted_at';
+const CHAT_MENTIONS_MAX = 20;
+
+// Deleted messages keep their row (for ordering/unread integrity) but the
+// body is never sent back over the API once deleted_at is set.
+function serializeChatMessage(m, myId) {
+  const isDeleted = !!m.deleted_at;
+  return {
+    id: m.id,
+    sender_id: m.sender_id,
+    sender_name: m.sender_name,
+    body: isDeleted ? '' : m.body,
+    created_at: m.created_at,
+    msg_type: m.msg_type || 'text',
+    meta: isDeleted ? null : (m.meta || null),
+    mentions: isDeleted ? [] : (m.mentions || []),
+    edited_at: m.edited_at || null,
+    deleted: isDeleted,
+    mine: String(m.sender_id) === String(myId)
+  };
+}
+
+app.get('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    let query = supabase
+      .from('chat_messages')
+      .select(CHAT_MSG_COLUMNS)
+      .eq('room_id', room.id);
+
+    const after = req.query.after;
+    if (after) {
+      // Polling incremental: hanya pesan setelah timestamp yang klien punya.
+      query = query.gt('created_at', after).order('created_at', { ascending: true });
+    } else {
+      query = query.order('created_at', { ascending: false }).limit(100);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const messages = after ? (data || []) : (data || []).reverse();
+    res.json(messages.map(m => serializeChatMessage(m, user.id)));
+  } catch (err) {
+    console.error('Chat messages error:', err);
+    res.status(500).json({ error: 'Gagal memuat pesan: ' + err.message });
+  }
+});
+
+// POST /api/chat/rooms/:id/messages — kirim pesan (teks biasa, kartu agenda,
+// atau hasil forward — dibedakan lewat msg_type/meta, bukan endpoint terpisah)
+app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    const msgType = req.body.msg_type === 'agenda' ? 'agenda' : 'text';
+    const body = (req.body.body || '').trim();
+
+    if (msgType === 'agenda') {
+      const meta = req.body.meta;
+      if (!meta || !meta.event_id || !meta.title) {
+        return res.status(400).json({ error: 'Data agenda tidak lengkap.' });
+      }
+    } else if (!body) {
+      return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
+    }
+    if (body.length > CHAT_MSG_MAX) {
+      return res.status(400).json({ error: `Pesan maksimal ${CHAT_MSG_MAX} karakter.` });
+    }
+
+    // mentions: hanya id anggota ruang ini (bukan sekadar "user valid mana
+    // pun") — supaya ruang divisi Design, misalnya, tidak bisa dipakai buat
+    // nge-tag orang di divisi Sosmed yang bahkan tidak ada di ruang itu.
+    // Dibatasi jumlahnya juga supaya tidak bisa dipakai nge-tag ratusan orang sekaligus.
+    let mentions = Array.isArray(req.body.mentions) ? req.body.mentions : [];
+    mentions = [...new Set(mentions.map(String))].slice(0, CHAT_MENTIONS_MAX);
+    if (mentions.length) {
+      const members = await getRoomMembers(room);
+      const memberIds = new Set(members.map(m => String(m.id)));
+      mentions = mentions.filter(id => memberIds.has(id));
+    }
+
+    const row = {
+      room_id: room.id,
+      sender_id: user.id,
+      sender_name: user.name,
+      body,
+      msg_type: msgType,
+      meta: msgType === 'agenda' ? req.body.meta : (req.body.meta && req.body.meta.forwarded ? { forwarded: true } : null),
+      mentions
+    };
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert([row])
+      .select(CHAT_MSG_COLUMNS)
+      .single();
+    if (error) throw error;
+
+    // Pengirim otomatis dianggap sudah membaca ruangnya sendiri.
+    await supabase
+      .from('chat_reads')
+      .upsert({ room_id: room.id, user_id: user.id, last_read_at: data.created_at },
+              { onConflict: 'room_id,user_id' });
+
+    res.json(serializeChatMessage(data, user.id));
+  } catch (err) {
+    console.error('Chat send error:', err);
+    res.status(500).json({ error: 'Gagal mengirim pesan: ' + err.message });
+  }
+});
+
+// PUT /api/chat/rooms/:id/messages/:msgId — edit pesan (pengirim asli saja,
+// dan hanya pesan teks — kartu agenda/forward tidak bisa diedit)
+app.put('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    const body = (req.body.body || '').trim();
+    if (!body) return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
+    if (body.length > CHAT_MSG_MAX) {
+      return res.status(400).json({ error: `Pesan maksimal ${CHAT_MSG_MAX} karakter.` });
+    }
+
+    const { data: existing, error: findErr } = await supabase
+      .from('chat_messages').select('sender_id, msg_type, deleted_at')
+      .eq('id', req.params.msgId).eq('room_id', room.id).maybeSingle();
+    if (findErr) throw findErr;
+    if (!existing) return res.status(404).json({ error: 'Pesan tidak ditemukan.' });
+    if (existing.deleted_at) return res.status(400).json({ error: 'Pesan yang sudah dihapus tidak bisa diedit.' });
+    if (existing.msg_type !== 'text') return res.status(400).json({ error: 'Hanya pesan teks yang bisa diedit.' });
+    if (String(existing.sender_id) !== String(user.id)) {
+      return res.status(403).json({ error: 'Anda hanya bisa mengedit pesan Anda sendiri.' });
+    }
+
+    let mentions = Array.isArray(req.body.mentions) ? req.body.mentions : [];
+    mentions = [...new Set(mentions.map(String))].slice(0, CHAT_MENTIONS_MAX);
+    if (mentions.length) {
+      const { data: validUsers } = await supabase.from('users').select('id').in('id', mentions);
+      const validIds = new Set((validUsers || []).map(u => String(u.id)));
+      mentions = mentions.filter(id => validIds.has(id));
+    }
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .update({ body, mentions, edited_at: new Date().toISOString() })
+      .eq('id', req.params.msgId)
+      .select(CHAT_MSG_COLUMNS)
+      .single();
+    if (error) throw error;
+
+    res.json(serializeChatMessage(data, user.id));
+  } catch (err) {
+    console.error('Chat edit error:', err);
+    res.status(500).json({ error: 'Gagal mengedit pesan: ' + err.message });
+  }
+});
+
+// DELETE /api/chat/rooms/:id/messages/:msgId — hapus pesan (pengirim asli saja)
+app.delete('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    const { data: existing, error: findErr } = await supabase
+      .from('chat_messages').select('sender_id, deleted_at')
+      .eq('id', req.params.msgId).eq('room_id', room.id).maybeSingle();
+    if (findErr) throw findErr;
+    if (!existing) return res.status(404).json({ error: 'Pesan tidak ditemukan.' });
+    if (existing.deleted_at) return res.json({ ok: true }); // sudah terhapus, anggap sukses
+    if (String(existing.sender_id) !== String(user.id)) {
+      return res.status(403).json({ error: 'Anda hanya bisa menghapus pesan Anda sendiri.' });
+    }
+
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', req.params.msgId);
+    if (error) throw error;
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Chat delete error:', err);
+    res.status(500).json({ error: 'Gagal menghapus pesan: ' + err.message });
+  }
+});
+
+// POST /api/chat/rooms/:id/read — tandai ruang sudah dibaca
+app.post('/api/chat/rooms/:id/read', requireAuth, async (req, res) => {
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    const { error } = await supabase
+      .from('chat_reads')
+      .upsert({ room_id: room.id, user_id: user.id, last_read_at: new Date().toISOString() },
+              { onConflict: 'room_id,user_id' });
+    if (error) throw error;
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Chat read error:', err);
+    res.status(500).json({ error: 'Gagal menandai dibaca: ' + err.message });
+  }
+});
+
 // ─── Start Server ─────────────────────────────────────────────────────────────
 if (process.env.VERCEL) {
   // Untuk Vercel: Export app sebagai serverless function (tidak menggunakan app.listen)
@@ -1383,5 +2312,9 @@ if (process.env.VERCEL) {
       console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
       console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
     });
+
+    // Cleanup absensi lama (>60 hari) — jalan sesaat setelah start, lalu tiap 24 jam
+    setTimeout(cleanupOldAttendance, 10 * 1000);
+    setInterval(cleanupOldAttendance, 24 * 60 * 60 * 1000);
   });
 }

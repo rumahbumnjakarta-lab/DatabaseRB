@@ -27,7 +27,10 @@
     const tooltip = document.getElementById('themeTooltip');
     if (!btn) return;
     const isDark = theme === 'dark';
-    btn.textContent = isDark ? '☀️' : '🌙';
+    btn.innerHTML = isDark
+      ? '<i data-lucide="sun" style="width:16px;height:16px;"></i>'
+      : '<i data-lucide="moon" style="width:16px;height:16px;"></i>';
+    if (typeof renderIcons === 'function') renderIcons();
     btn.title       = isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap';
     if (tooltip) tooltip.textContent = isDark ? 'Mode Terang' : 'Mode Gelap';
   }
