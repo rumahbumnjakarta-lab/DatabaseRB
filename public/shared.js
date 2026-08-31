@@ -1171,6 +1171,25 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// ─── Sembunyikan bottom nav mobile saat keyboard muncul ───
+// .mobile-bottom-nav pakai position:fixed — di beberapa in-app browser (mis.
+// Instagram/WKWebView) elemen fixed ini ikut "terdorong" ke atas bareng
+// keyboard alih-alih tersembunyi di baliknya, jadi kelihatan mengambang di
+// tengah layar. Cara paling stabil lintas-browser: sembunyikan saja selama
+// ada input/textarea yang fokus (mengetik), munculkan lagi saat selesai.
+document.addEventListener('focusin', (e) => {
+  if (e.target.matches && e.target.matches('input, textarea')) {
+    const nav = document.querySelector('.mobile-bottom-nav');
+    if (nav) nav.style.display = 'none';
+  }
+});
+document.addEventListener('focusout', (e) => {
+  if (e.target.matches && e.target.matches('input, textarea')) {
+    const nav = document.querySelector('.mobile-bottom-nav');
+    if (nav) nav.style.display = '';
+  }
+});
+
 // ─── SPA Visual Transition (Fake SPA) ───
 document.addEventListener('click', e => {
   const a = e.target.closest('a');
