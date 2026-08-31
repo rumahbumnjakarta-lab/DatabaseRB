@@ -27,6 +27,14 @@ if (isInvalidUrl || isInvalidKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// ─── Web Push Init ───────────────────────────────────────────────────────────
+const webpush = require('web-push');
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@rbjakarta.id', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
+
 function mapDbError(err, fallback) {
   if (!err) return fallback;
   const code = err.code || '';
@@ -1892,6 +1900,84 @@ async function getRoomMembers(room) {
   return [];
 }
 
+// ─── Web Push: subscribe/unsubscribe + kirim notifikasi pesan baru ───────────
+
+// GET /api/push/vapid-public-key — key publik dipakai frontend untuk subscribe
+app.get('/api/push/vapid-public-key', requireAuth, (req, res) => {
+  if (!VAPID_PUBLIC_KEY) return res.status(503).json({ error: 'Push notification belum dikonfigurasi.' });
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+// POST /api/push/subscribe — simpan/replace subscription device ini
+app.post('/api/push/subscribe', requireAuth, async (req, res) => {
+  const { endpoint, keys } = req.body;
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+    return res.status(400).json({ error: 'Data subscription tidak lengkap.' });
+  }
+  try {
+    const { error } = await supabase.from('push_subscriptions').upsert({
+      user_id: req.session.user.id,
+      endpoint,
+      p256dh: keys.p256dh,
+      auth: keys.auth,
+    }, { onConflict: 'endpoint' });
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Push subscribe error:', err);
+    res.status(500).json({ error: 'Gagal menyimpan subscription: ' + err.message });
+  }
+});
+
+// POST /api/push/unsubscribe — device ini tidak mau menerima notifikasi lagi
+app.post('/api/push/unsubscribe', requireAuth, async (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) return res.status(400).json({ error: 'endpoint wajib diisi.' });
+  try {
+    await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal menghapus subscription: ' + err.message });
+  }
+});
+
+// Kirim push ke semua anggota ruang selain pengirim — dipanggil fire-and-forget
+// (tidak menunggu/tidak memblokir response kirim pesan).
+async function pushNotifyRoom(room, sender, previewText) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  try {
+    const members = await getRoomMembers(room);
+    const targetIds = members.map(m => m.id).filter(id => String(id) !== String(sender.id));
+    if (!targetIds.length) return;
+
+    const { data: subs } = await supabase.from('push_subscriptions').select('*').in('user_id', targetIds);
+    if (!subs || !subs.length) return;
+
+    const payload = JSON.stringify({
+      title: room.type === 'dm' ? sender.name : `${room.name || 'Ruang'} · ${sender.name}`,
+      body: (previewText || '').slice(0, 120),
+      url: `/chat.html?room=${room.id}`,
+      room_id: room.id,
+    });
+
+    await Promise.all(subs.map(async (sub) => {
+      const pushSub = { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } };
+      try {
+        await webpush.sendNotification(pushSub, payload);
+      } catch (err) {
+        // 404/410 = subscription sudah tidak valid (browser di-uninstall, izin dicabut, dst) — bersihkan.
+        if (err.statusCode === 404 || err.statusCode === 410) {
+          await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        } else {
+          console.warn('Push send gagal:', err.message);
+        }
+      }
+    }));
+  } catch (err) {
+    console.error('pushNotifyRoom error:', err.message);
+  }
+}
+
 // GET /api/chat/rooms/:id/members — anggota ruang, dipakai composer untuk
 // membatasi daftar autocomplete @tag sesuai ruang yang sedang dibuka.
 app.get('/api/chat/rooms/:id/members', requireAuth, async (req, res) => {
@@ -2075,17 +2161,18 @@ app.post('/api/chat/dm', requireAuth, async (req, res) => {
 });
 
 // GET /api/chat/rooms/:id/messages — riwayat, atau pesan baru saja bila ?after=
-const CHAT_MSG_COLUMNS = 'id, sender_id, sender_name, body, created_at, msg_type, meta, mentions, edited_at, deleted_at';
+const CHAT_MSG_COLUMNS = 'id, sender_id, sender_name, body, created_at, msg_type, meta, mentions, edited_at, deleted_at, reply_to';
 const CHAT_MENTIONS_MAX = 20;
 
 // Deleted messages keep their row (for ordering/unread integrity) but the
 // body is never sent back over the API once deleted_at is set.
-function serializeChatMessage(m, myId) {
+function serializeChatMessage(m, myId, avatarMap, replyMap) {
   const isDeleted = !!m.deleted_at;
   return {
     id: m.id,
     sender_id: m.sender_id,
     sender_name: m.sender_name,
+    sender_avatar: (avatarMap && avatarMap[m.sender_id]) || null,
     body: isDeleted ? '' : m.body,
     created_at: m.created_at,
     msg_type: m.msg_type || 'text',
@@ -2093,8 +2180,38 @@ function serializeChatMessage(m, myId) {
     mentions: isDeleted ? [] : (m.mentions || []),
     edited_at: m.edited_at || null,
     deleted: isDeleted,
-    mine: String(m.sender_id) === String(myId)
+    mine: String(m.sender_id) === String(myId),
+    reply_to: m.reply_to || null,
+    reply_preview: (m.reply_to && replyMap && replyMap[m.reply_to]) || null
   };
+}
+
+// Batch lookup avatar_url untuk sekumpulan sender_id sekaligus — dipakai
+// supaya avatar bisa ditampilkan di bubble chat tanpa query per-pesan.
+async function buildAvatarMap(senderIds) {
+  const ids = [...new Set(senderIds.filter(Boolean).map(String))];
+  if (!ids.length) return {};
+  const { data } = await supabase.from('users').select('id, avatar_url').in('id', ids);
+  const map = {};
+  (data || []).forEach(u => { map[u.id] = u.avatar_url || null; });
+  return map;
+}
+
+// Batch lookup pesan yang dibalas (reply_to) — dipakai untuk menampilkan
+// kutipan pengirim + isi pesan asli di dalam bubble balasan.
+async function buildReplyMap(replyToIds) {
+  const ids = [...new Set(replyToIds.filter(Boolean).map(String))];
+  if (!ids.length) return {};
+  const { data } = await supabase.from('chat_messages').select('id, sender_name, body, msg_type, meta, deleted_at').in('id', ids);
+  const map = {};
+  (data || []).forEach(m => {
+    map[m.id] = {
+      sender_name: m.sender_name,
+      body: m.deleted_at ? '' : (m.msg_type === 'agenda' ? '📅 ' + ((m.meta && m.meta.title) || 'Agenda') : m.body),
+      deleted: !!m.deleted_at
+    };
+  });
+  return map;
 }
 
 app.get('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
@@ -2122,7 +2239,9 @@ app.get('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
     if (error) throw error;
 
     const messages = after ? (data || []) : (data || []).reverse();
-    res.json(messages.map(m => serializeChatMessage(m, user.id)));
+    const avatarMap = await buildAvatarMap(messages.map(m => m.sender_id));
+    const replyMap = await buildReplyMap(messages.map(m => m.reply_to));
+    res.json(messages.map(m => serializeChatMessage(m, user.id, avatarMap, replyMap)));
   } catch (err) {
     console.error('Chat messages error:', err);
     res.status(500).json({ error: 'Gagal memuat pesan: ' + err.message });
@@ -2166,6 +2285,17 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       mentions = mentions.filter(id => memberIds.has(id));
     }
 
+    // reply_to harus benar-benar pesan yang ada di ruang yang sama dan belum
+    // dihapus — kalau tidak valid, dilewat saja (bukan error) supaya kirim
+    // pesan tetap jalan meski kutipannya sudah keburu terhapus orang lain.
+    let replyTo = req.body.reply_to || null;
+    if (replyTo) {
+      const { data: replyMsg } = await supabase
+        .from('chat_messages').select('id, room_id, deleted_at')
+        .eq('id', replyTo).maybeSingle();
+      if (!replyMsg || String(replyMsg.room_id) !== String(room.id) || replyMsg.deleted_at) replyTo = null;
+    }
+
     const row = {
       room_id: room.id,
       sender_id: user.id,
@@ -2173,7 +2303,8 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       body,
       msg_type: msgType,
       meta: msgType === 'agenda' ? req.body.meta : (req.body.meta && req.body.meta.forwarded ? { forwarded: true } : null),
-      mentions
+      mentions,
+      reply_to: replyTo
     };
 
     const { data, error } = await supabase
@@ -2189,7 +2320,12 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       .upsert({ room_id: room.id, user_id: user.id, last_read_at: data.created_at },
               { onConflict: 'room_id,user_id' });
 
-    res.json(serializeChatMessage(data, user.id));
+    // Push notification ke anggota lain (tidak menunggu/tidak memblokir response).
+    const pushPreview = msgType === 'agenda' ? `📅 ${req.body.meta.title}` : body;
+    pushNotifyRoom(room, user, pushPreview);
+
+    const replyMap = replyTo ? await buildReplyMap([replyTo]) : {};
+    res.json(serializeChatMessage(data, user.id, { [user.id]: user.avatar_url }, replyMap));
   } catch (err) {
     console.error('Chat send error:', err);
     res.status(500).json({ error: 'Gagal mengirim pesan: ' + err.message });
@@ -2239,7 +2375,8 @@ app.put('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) => 
       .single();
     if (error) throw error;
 
-    res.json(serializeChatMessage(data, user.id));
+    const replyMap = data.reply_to ? await buildReplyMap([data.reply_to]) : {};
+    res.json(serializeChatMessage(data, user.id, { [user.id]: user.avatar_url }, replyMap));
   } catch (err) {
     console.error('Chat edit error:', err);
     res.status(500).json({ error: 'Gagal mengedit pesan: ' + err.message });

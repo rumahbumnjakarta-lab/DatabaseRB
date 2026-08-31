@@ -465,6 +465,88 @@ const CHAT_NOTIF_INTERVAL = 12000;
 const CHAT_NOTIF_WATERMARK_KEY = 'rb_chat_notif_watermark';
 let _chatNotifTimer = null;
 
+// ─── Web Push: notifikasi chat tetap muncul walau tab/web sedang tidak dibuka ───
+const PUSH_BANNER_DISMISSED_KEY = 'rb_push_banner_dismissed';
+
+async function initPushNotifications(user) {
+  if (!user || !user.loggedIn) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+
+    if (Notification.permission === 'granted') {
+      await subscribeToPush(reg);
+    } else if (Notification.permission === 'default' && !localStorage.getItem(PUSH_BANNER_DISMISSED_KEY)) {
+      showPushPermissionBanner(reg);
+    }
+    // permission === 'denied' → tidak bisa apa-apa lagi, biarkan (user harus ubah manual di setelan browser)
+  } catch (e) {
+    console.warn('Push init gagal:', e.message);
+  }
+}
+
+async function subscribeToPush(reg) {
+  try {
+    const keyRes = await fetch('/api/push/vapid-public-key');
+    if (!keyRes.ok) return;
+    const { publicKey } = await keyRes.json();
+    if (!publicKey) return;
+
+    const existing = await reg.pushManager.getSubscription();
+    const sub = existing || await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub),
+    });
+  } catch (e) {
+    console.warn('Push subscribe gagal:', e.message);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+function showPushPermissionBanner(reg) {
+  if (document.getElementById('pushPermBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'pushPermBanner';
+  banner.style.cssText = 'position:fixed;left:16px;right:16px;bottom:16px;max-width:420px;margin:0 auto;background:var(--bg-card,#fff);border:1px solid var(--border-mid,#dde3ee);border-radius:14px;box-shadow:0 16px 40px rgba(15,23,42,0.16);padding:14px 16px;z-index:2000;display:flex;align-items:center;gap:12px;font-family:"Inter",sans-serif;';
+  banner.innerHTML = `
+    <div style="width:38px;height:38px;border-radius:11px;background:rgba(48,127,226,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <i data-lucide="bell-ring" style="width:18px;height:18px;color:var(--blue-mid,#307fe2);"></i>
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:12.5px;font-weight:700;color:var(--text-primary,#0f172a);">Aktifkan notifikasi chat</div>
+      <div style="font-size:11.5px;color:var(--text-muted,#64748b);margin-top:1px;">Biar nggak ketinggalan pesan meski web-nya tidak dibuka.</div>
+    </div>
+    <button id="pushBannerDismiss" style="border:none;background:none;color:var(--text-muted,#64748b);cursor:pointer;padding:6px;flex-shrink:0;font-size:12px;">Nanti</button>
+    <button id="pushBannerEnable" style="border:none;background:var(--blue-mid,#307fe2);color:#fff;font-weight:700;font-size:12px;padding:9px 14px;border-radius:9px;cursor:pointer;flex-shrink:0;">Aktifkan</button>
+  `;
+  document.body.appendChild(banner);
+  if (typeof renderIcons === 'function') renderIcons();
+
+  document.getElementById('pushBannerDismiss').onclick = () => {
+    localStorage.setItem(PUSH_BANNER_DISMISSED_KEY, '1');
+    banner.remove();
+  };
+  document.getElementById('pushBannerEnable').onclick = async () => {
+    banner.remove();
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') await subscribeToPush(reg);
+    else localStorage.setItem(PUSH_BANNER_DISMISSED_KEY, '1');
+  };
+}
+
 function initChatNotifier(user) {
   if (!user || !user.loggedIn) return;
   if (/\/chat\.html$/.test(window.location.pathname)) return; // chat.html punya pollingnya sendiri
@@ -810,6 +892,7 @@ function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
   // Inject topbar search / notification / profile controls (works on every
   // page's .app-topbar, whether built via buildTopbar() or hardcoded)
   injectTopbarActions(user);
+  initPushNotifications(user);
 
   // Hide loading
   const loading = document.getElementById('authLoading');
