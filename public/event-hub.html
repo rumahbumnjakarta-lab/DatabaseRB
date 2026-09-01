@@ -338,6 +338,13 @@ body{background:var(--bg-app);}
 .clitem.chk .clico{background:#059669;border-color:#059669;transform:scale(1.05);}
 .cllbl{font-size:12px;font-weight:500;color:var(--text-primary);transition:color 0.2s;}
 .clitem.chk .cllbl{color:#059669;}
+.cllink{
+  margin-left:auto;flex-shrink:0;width:22px;height:22px;border-radius:7px;
+  border:none;background:rgba(48,127,226,0.1);color:var(--blue-mid);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.15s;
+}
+.cllink:hover{background:var(--blue-mid);color:#fff;transform:scale(1.08);}
 
 /* ── Status Badge Drawer ── */
 .status-badge{
@@ -497,9 +504,6 @@ body{background:var(--bg-app);}
 .ptbl th{background:#1e3a5f;color:#fff;padding:6px 8px;font-size:10pt;text-align:left;border:1px solid #1e3a5f;}
 .ptbl td{padding:5px 8px;border:1px solid #999;font-size:10pt;}
 .ptbl tr:nth-child(even) td{background:#f5f5f5;}
-/* Daftar hadir landscape: 2 kolom agar 30 baris muat 1 halaman */
-.abs-cols{display:flex;gap:14px;align-items:flex-start;margin-bottom:4px;}
-.abs-cols>div{flex:1 1 0;min-width:0;}
 .ptbl.compact{margin-bottom:0;}
 .ptbl.compact th{padding:5px 6px;font-size:9.5pt;}
 .ptbl.compact td{padding:3px 6px;font-size:9.5pt;}
@@ -511,8 +515,8 @@ body{background:var(--bg-app);}
 /* Daftar hadir: dirapatkan agar 30 baris + tanda tangan muat 1 halaman landscape */
 #pAbs{padding:32px 44px 38px;}
 #pAbs .pkop-img{margin-bottom:10px;padding-bottom:4px;}
-#pAbs .pkop-logo-l img{height:40px!important;}
-#pAbs .pkop-logo-r img{height:62px!important;}
+#pAbs .pkop-logo-l img{height:68px!important;}
+#pAbs .pkop-logo-r img{height:110px!important;}
 #pAbs .ptitle{margin:10px 0 2px;}
 #pAbs .psub{margin-bottom:10px;}
 #pAbs .psign{margin-top:14px;}
@@ -1050,49 +1054,24 @@ body{background:var(--bg-app);}
      PDF TEMPLATES (offscreen, each separate)
 ════════════════════════════════════════════════════ -->
 
-<!-- PDF: Daftar Hadir (landscape) -->
+<!-- PDF: Daftar Hadir (portrait, satu kolom memanjang ke bawah) -->
 <div class="pdf-offscreen-container landscape">
   <div id="pAbs" class="pdoc landscape">
     <div class="pkop-img">
       <div class="pkop-row">
-        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.png" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
+        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.webp" style="height:68px;max-width:130px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
         <div class="pkop-txt">
           <div class="l1">PT. BANK RAKYAT INDONESIA (PERSERO) Tbk</div>
           <div class="l2">RUMAH BUMN JAKARTA</div>
           <div class="l3">Jalan Letjen S.Parman No.09 Kemanggisan, Palmerah, Jakarta Barat</div>
           <div class="l4">Telp. 3840802, Instagram: rumahbumn.jakarta, Youtube: Rumah BUMN TV</div>
         </div>
-        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.png" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
+        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.webp" style="height:110px;max-width:150px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
       </div>
     </div>
     <div class="ptitle"><h3>DAFTAR HADIR KEGIATAN</h3></div>
     <div class="psub" id="pAbsSub"></div>
-    <div class="abs-cols">
-      <div>
-        <table class="ptbl compact">
-          <thead><tr>
-            <th style="width:8%;text-align:center;">No</th>
-            <th style="width:31%;">Nama Peserta</th>
-            <th style="width:27%;">Asal / UMKM</th>
-            <th style="width:17%;">No. HP</th>
-            <th style="width:17%;text-align:center;">TTD</th>
-          </tr></thead>
-          <tbody id="pAbsRowsL"></tbody>
-        </table>
-      </div>
-      <div>
-        <table class="ptbl compact">
-          <thead><tr>
-            <th style="width:8%;text-align:center;">No</th>
-            <th style="width:31%;">Nama Peserta</th>
-            <th style="width:27%;">Asal / UMKM</th>
-            <th style="width:17%;">No. HP</th>
-            <th style="width:17%;text-align:center;">TTD</th>
-          </tr></thead>
-          <tbody id="pAbsRowsR"></tbody>
-        </table>
-      </div>
-    </div>
+    <div id="pAbsTablesWrap"></div>
     <div class="psign right"><div class="psb"><p>Jakarta, <span id="pAbsDate"></span></p><p>Mengetahui,</p><div class="pss"></div><p><strong>________________________</strong></p><p>Koordinator Event — Rumah BUMN Jakarta</p></div></div>
   </div>
 </div>
@@ -1122,14 +1101,14 @@ body{background:var(--bg-app);}
   <div id="pSP" class="pdoc">
     <div class="pkop-img">
       <div class="pkop-row">
-        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.png" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
+        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.webp" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
         <div class="pkop-txt">
           <div class="l1">PT. BANK RAKYAT INDONESIA (PERSERO) Tbk</div>
           <div class="l2">RUMAH BUMN JAKARTA</div>
           <div class="l3">Jalan Letjen S.Parman No.09 Kemanggisan, Palmerah, Jakarta Barat</div>
           <div class="l4">Telp. 3840802, Instagram: rumahbumn.jakarta, Youtube: Rumah BUMN TV</div>
         </div>
-        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.png" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
+        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.webp" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
       </div>
     </div>
     <div class="ptitle"><h3>SURAT PERNYATAAN KEGIATAN</h3></div>
@@ -1147,14 +1126,14 @@ body{background:var(--bg-app);}
   <div id="pUnd" class="pdoc">
     <div class="pkop-img">
       <div class="pkop-row">
-        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.png" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
+        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.webp" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
         <div class="pkop-txt">
           <div class="l1">PT. BANK RAKYAT INDONESIA (PERSERO) Tbk</div>
           <div class="l2">RUMAH BUMN JAKARTA</div>
           <div class="l3">Jalan Letjen S.Parman No.09 Kemanggisan, Palmerah, Jakarta Barat</div>
           <div class="l4">Telp. 3840802, Instagram: rumahbumn.jakarta, Youtube: Rumah BUMN TV</div>
         </div>
-        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.png" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
+        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.webp" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
       </div>
     </div>
     <div style="height:14px;"></div>
@@ -1168,14 +1147,14 @@ body{background:var(--bg-app);}
   <div id="pPmh" class="pdoc">
     <div class="pkop-img">
       <div class="pkop-row">
-        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.png" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
+        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.webp" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
         <div class="pkop-txt">
           <div class="l1">PT. BANK RAKYAT INDONESIA (PERSERO) Tbk</div>
           <div class="l2">RUMAH BUMN JAKARTA</div>
           <div class="l3">Jalan Letjen S.Parman No.09 Kemanggisan, Palmerah, Jakarta Barat</div>
           <div class="l4">Telp. 3840802, Instagram: rumahbumn.jakarta, Youtube: Rumah BUMN TV</div>
         </div>
-        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.png" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
+        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.webp" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
       </div>
     </div>
     <div style="height:14px;"></div>
@@ -1214,7 +1193,7 @@ body{background:var(--bg-app);}
 
     <!-- Logo Rumah BUMN Jakarta — di tengah, besar -->
     <div style="text-align:center;margin-bottom:100px;margin-top:20px;">
-      <img src="/FOTO/logos/logo_rbj.png" style="height:130px;object-fit:contain;" alt="Rumah BUMN Jakarta">
+      <img src="/FOTO/logos/logo_rbj.webp" style="height:130px;object-fit:contain;" alt="Rumah BUMN Jakarta">
     </div>
 
     <!-- Judul di tengah -->
@@ -1368,14 +1347,14 @@ body{background:var(--bg-app);}
   <div id="pMoU" class="pdoc" style="font-family:'Times New Roman',Times,serif;padding:46px 56px 56px;color:#000;text-align:justify;line-height:1.5;font-size:12pt;">
     <div class="pkop-img">
       <div class="pkop-row">
-        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.png" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
+        <div class="pkop-logo-l"><img src="/FOTO/logos/logo_rbj.webp" style="height:48px;max-width:90px;object-fit:contain;" alt="Rumah BUMN Jakarta"></div>
         <div class="pkop-txt">
           <div class="l1">PT. BANK RAKYAT INDONESIA (PERSERO) Tbk</div>
           <div class="l2">RUMAH BUMN JAKARTA</div>
           <div class="l3">Jalan Letjen S.Parman No.09 Kemanggisan, Palmerah, Jakarta Barat</div>
           <div class="l4">Telp. 3840802, Instagram: rumahbumn.jakarta, Youtube: Rumah BUMN TV</div>
         </div>
-        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.png" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
+        <div class="pkop-logo-r"><img src="/FOTO/logos/logo_bri_full.webp" style="height:80px;max-width:110px;object-fit:contain;" alt="BRI - Bank Rakyat Indonesia"></div>
       </div>
     </div>
     <!-- HEADER -->
@@ -1452,15 +1431,15 @@ body{background:var(--bg-app);}
 let AE = [], CE = null, CF = 'all', IS = false;
 
 const CLF = [
-  {key:'poster',label:'Poster Kegiatan'},
-  {key:'publikasi',label:'Publikasi Sosmed'},
+  {key:'poster',label:'Poster Kegiatan',link:'design',designType:'Poster'},
+  {key:'publikasi',label:'Publikasi Sosmed',link:'sosmed'},
   {key:'terlaksana',label:'Kegiatan Terlaksana'},
   {key:'cms',label:'Upload CMS'},
   {key:'rb_id',label:'RB ID Terdata'},
   {key:'up_modul',label:'Upload Modul'},
   {key:'cv_expert',label:'CV Expert/CMS'},
-  {key:'flyer_sg_feed',label:'Flyer SG Feed'},
-  {key:'katalog_cv_canva',label:'Katalog CV Canva'},
+  {key:'flyer_sg_feed',label:'Flyer SG Feed',link:'design',designType:'Flyer'},
+  {key:'katalog_cv_canva',label:'Katalog CV Canva',link:'design',designType:'Lainnya'},
   {key:'blast_share_wa',label:'Blast WA'},
   {key:'data_mentor_modul',label:'Data Mentor Modul'},
   {key:'follow_up',label:'Follow Up'},
@@ -1651,9 +1630,10 @@ function openDwr(id) {
     document.getElementById('clSec').style.display = 'block';
     document.getElementById('clGrid').innerHTML = CLF.map(f => {
       const ck = !!ev[f.key];
+      const linkBtn = f.link ? `<button type="button" class="cllink" onclick="event.stopPropagation(); openIntegration('${f.key}')" title="${f.link==='design'?'Buat Design Request':'Buat Rencana Konten'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>` : '';
       return `<label class="clitem${ck?' chk':''}" onclick="tgCL(this)">
         <input type="checkbox" name="${f.key}"${ck?' checked':''}><div class="clico">${ck?'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
-        <span class="cllbl">${f.label}</span>
+        <span class="cllbl">${f.label}</span>${linkBtn}
       </label>`;
     }).join('');
   }
@@ -1668,6 +1648,22 @@ function tgCL(el) {
   el.classList.toggle('chk', cb.checked);
   el.querySelector('.clico').innerHTML = cb.checked
     ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+}
+
+function openIntegration(key) {
+  if (!CE) return;
+  const f = CLF.find(x => x.key === key);
+  if (!f || !f.link) return;
+  const evtTitle = encodeURIComponent(CE.title || '');
+  const evtDate = CE.event_date || '';
+  if (f.link === 'design') {
+    const type = encodeURIComponent(f.designType || 'Lainnya');
+    const desc = encodeURIComponent(`Untuk kegiatan: ${CE.title || ''}${evtDate ? ' (' + fd(evtDate) + ')' : ''}`);
+    window.open(`design.html?prefill=1&title=${evtTitle}&type=${type}&division=Event&desc=${desc}&deadline=${encodeURIComponent(evtDate)}`, '_blank');
+  } else if (f.link === 'sosmed') {
+    const notes = encodeURIComponent(`Untuk kegiatan: ${CE.title || ''}`);
+    window.open(`sosmed.html?prefill=1&title=${evtTitle}&date=${encodeURIComponent(evtDate)}&notes=${notes}`, '_blank');
+  }
 }
 
 function openCL(id) {
@@ -1844,13 +1840,36 @@ function genAbs() {
   if (!CE) return; const ev = CE;
   document.getElementById('pAbsSub').textContent = `${ev.title} | ${fd(ev.event_date)} | ${ev.location || ''}`;
   document.getElementById('pAbsDate').textContent = fd(ev.event_date);
-  // 30 baris dibagi 2 kolom (1–15 kiri, 16–30 kanan) agar muat 1 halaman landscape
+
+  const thead = `<thead><tr>
+    <th style="width:8%;text-align:center;">No</th>
+    <th style="width:31%;">Nama Peserta</th>
+    <th style="width:27%;">Asal / UMKM</th>
+    <th style="width:17%;">No. HP</th>
+    <th style="width:17%;text-align:center;">TTD</th>
+  </tr></thead>`;
   const row = i => `<tr><td style="text-align:center;">${i}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
-  let L = '', R = '';
-  for (let i = 1; i <= 15; i++) L += row(i);
-  for (let i = 16; i <= 30; i++) R += row(i);
-  document.getElementById('pAbsRowsL').innerHTML = L;
-  document.getElementById('pAbsRowsR').innerHTML = R;
+
+  // Satu kolom memanjang ke bawah. 30 baris + logo besar tidak muat di 1
+  // halaman landscape, jadi dipotong jadi 2 tabel: baris 1–18 di halaman 1
+  // (diukur manual sesuai tinggi elemen saat ini), sisanya di halaman 2 —
+  // dengan header kolom (No/Nama/Asal/No.HP/TTD) diulang lagi di situ supaya
+  // tidak nyambung polos tanpa keterangan kolom.
+  const SPLIT_AT = 18;
+  let rowsA = '', rowsB = '';
+  for (let i = 1; i <= 30; i++) { if (i <= SPLIT_AT) rowsA += row(i); else rowsB += row(i); }
+
+  // Jarak atas halaman 2 pakai PADDING pada div pembungkus (bukan margin di
+  // tabelnya) — margin-top di elemen yang kena page-break-before ternyata
+  // tidak konsisten kebawa oleh html2pdf saat memotong ke halaman baru,
+  // hasilnya tabel nempel mepet ke tepi kertas. Padding pada wrapper yang
+  // SAMA dengan pemicu page-break tidak collapse, jadi selalu ikut kepotong ke halaman baru.
+  const tableA = `<table class="ptbl compact">${thead}<tbody>${rowsA}</tbody></table>`;
+  const tableB = rowsB
+    ? `<div style="page-break-before:always;padding-top:32px;"><table class="ptbl compact">${thead}<tbody>${rowsB}</tbody></table></div>`
+    : '';
+  document.getElementById('pAbsTablesWrap').innerHTML = tableA + tableB;
+
   savePdfDoc('pAbs', pn(ev.title,'Absensi'), true);
 }
 
@@ -1872,17 +1891,17 @@ function genSP() {
   document.getElementById('pSpBody').innerHTML = `
     <p class="pp">Yang bertanda tangan di bawah ini:</p>
     <table class="pmeta" style="margin:6px 0 14px 42px;width:auto;">
-      <tr><td class="k" style="font-weight:bold;">Nama</td><td class="s" style="font-weight:bold;">:</td><td style="font-weight:bold;">${ev.pic_name || '____________________'}</td></tr>
+      <tr><td class="k" style="font-weight:bold;">Nama</td><td class="s" style="font-weight:bold;">:</td><td style="font-weight:bold;">${x(ev.pic_name) || '____________________'}</td></tr>
       <tr><td class="k" style="font-weight:bold;">Jabatan</td><td class="s" style="font-weight:bold;">:</td><td style="font-weight:bold;">Divisi Event — Rumah BUMN Jakarta</td></tr>
     </table>
     <p class="pp">Menyatakan dengan sebenarnya bahwa telah dilaksanakan kegiatan dengan rincian sebagai berikut:</p>
     <ul class="plist">
-      <li><span>Nama Kegiatan</span><span>: ${ev.title}</span></li>
+      <li><span>Nama Kegiatan</span><span>: ${x(ev.title)}</span></li>
       <li><span>Tanggal</span><span>: ${fd(ev.event_date)}</span></li>
       <li><span>Waktu</span><span>: ${ft(ev.start_time)} – ${ft(ev.end_time)} WIB</span></li>
-      <li><span>Tempat</span><span>: ${ev.location||'—'}</span></li>
-      <li><span>Narasumber</span><span>: ${ev.speaker_name||'—'}</span></li>
-      <li><span>Jumlah Peserta</span><span>: ${ev.jumlah_peserta||'—'} orang</span></li>
+      <li><span>Tempat</span><span>: ${x(ev.location)||'—'}</span></li>
+      <li><span>Narasumber</span><span>: ${x(ev.speaker_name)||'—'}</span></li>
+      <li><span>Jumlah Peserta</span><span>: ${x(ev.jumlah_peserta)||'—'} orang</span></li>
     </ul>
     <p class="pp ind">Demikian surat pernyataan ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.</p>`;
   savePdfDoc('pSP', pn(ev.title,'SuratPernyataan'), false);
@@ -1919,21 +1938,21 @@ function downloadUndFromModal(e) {
   document.getElementById('pUndTtdNama').textContent = ttdNama;
   document.getElementById('pUndBody').innerHTML = `
     <table class="pmeta">
-      <tr><td class="k">Nomor</td><td class="s">:</td><td>${noSurat}</td></tr>
+      <tr><td class="k">Nomor</td><td class="s">:</td><td>${x(noSurat)}</td></tr>
       <tr><td class="k">Lampiran</td><td class="s">:</td><td>—</td></tr>
-      <tr><td class="k">Perihal</td><td class="s">:</td><td><strong>${perihal}</strong></td></tr>
+      <tr><td class="k">Perihal</td><td class="s">:</td><td><strong>${x(perihal)}</strong></td></tr>
     </table>
-    <div class="pto">Kepada Yth.<br><strong>${kepada}</strong><br>di tempat.</div>
+    <div class="pto">Kepada Yth.<br><strong>${x(kepada)}</strong><br>di tempat.</div>
     <p class="pp">Assalamu'alaikum Wr. Wb.</p>
     <p class="pp ind">Sehubungan dengan akan diselenggarakannya kegiatan Rumah BUMN Jakarta, program kolaborasi PT Bank Rakyat Indonesia (Persero) Tbk, dengan hormat kami bermaksud mengundang Bapak/Ibu untuk berkenan hadir sebagai <strong>Narasumber</strong> pada kegiatan berikut:</p>
     <ul class="plist">
-      <li><span>Nama Kegiatan</span><span>: ${ev.title}</span></li>
+      <li><span>Nama Kegiatan</span><span>: ${x(ev.title)}</span></li>
       <li><span>Hari / Tanggal</span><span>: ${fd(ev.event_date)}</span></li>
       <li><span>Waktu</span><span>: ${ft(ev.start_time)} – ${ft(ev.end_time)} WIB</span></li>
-      <li><span>Tempat</span><span>: ${ev.location||'—'}</span></li>
+      <li><span>Tempat</span><span>: ${x(ev.location)||'—'}</span></li>
     </ul>
-    ${isi ? `<p class="pp ind">${isi.replace(/\n/g,'<br>')}</p>` : ''}
-    <p class="pp ind">Konfirmasi kehadiran dapat disampaikan melalui ${kontak}. Besar harapan kami atas kesediaan Bapak/Ibu. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.</p>
+    ${isi ? `<p class="pp ind">${x(isi).replace(/\n/g,'<br>')}</p>` : ''}
+    <p class="pp ind">Konfirmasi kehadiran dapat disampaikan melalui ${x(kontak)}. Besar harapan kami atas kesediaan Bapak/Ibu. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.</p>
     <p class="pp">Wassalamu'alaikum Wr. Wb.</p>`;
 
   setTimeout(() => savePdfDoc('pUnd', pn(ev.title,'SuratUndangan'), false), 120);
@@ -1977,19 +1996,19 @@ function downloadPmhFromModal(e) {
 
   document.getElementById('pPmhBody').innerHTML = `
     <table class="pmeta">
-      <tr><td class="k">Nomor</td><td class="s">:</td><td>${noSurat}</td></tr>
+      <tr><td class="k">Nomor</td><td class="s">:</td><td>${x(noSurat)}</td></tr>
       <tr><td class="k">Lampiran</td><td class="s">:</td><td>—</td></tr>
-      <tr><td class="k">Perihal</td><td class="s">:</td><td><strong>${perihal}</strong></td></tr>
+      <tr><td class="k">Perihal</td><td class="s">:</td><td><strong>${x(perihal)}</strong></td></tr>
     </table>
-    <div class="pto">Kepada Yth.<br><strong>${kepada}</strong>${instansi ? '<br>' + instansi : ''}<br>di tempat.</div>
+    <div class="pto">Kepada Yth.<br><strong>${x(kepada)}</strong>${instansi ? '<br>' + x(instansi) : ''}<br>di tempat.</div>
     <p class="pp">Assalamu'alaikum Wr. Wb.</p>
     <p class="pp ind">Salam sejahtera untuk kita semua. Puji syukur kami panjatkan kepada Tuhan Yang Maha Esa atas segala nikmat dan karunia-Nya. Sehubungan dengan hal tersebut, dengan hormat kami sampaikan bahwa Rumah BUMN Jakarta, program kolaborasi PT Bank Rakyat Indonesia (Persero) Tbk dan Danantara Indonesia, sedang merencanakan kegiatan sebagai berikut:</p>
     <ul class="plist">
-      <li><span>Nama Kegiatan</span><span>: ${kegiatan}</span></li>
-      ${tglKegiatan ? `<li><span>Hari / Tanggal</span><span>: ${tglKegiatan}</span></li>` : ''}
-      ${lokasi ? `<li><span>Tempat</span><span>: ${lokasi}</span></li>` : ''}
+      <li><span>Nama Kegiatan</span><span>: ${x(kegiatan)}</span></li>
+      ${tglKegiatan ? `<li><span>Hari / Tanggal</span><span>: ${x(tglKegiatan)}</span></li>` : ''}
+      ${lokasi ? `<li><span>Tempat</span><span>: ${x(lokasi)}</span></li>` : ''}
     </ul>
-    ${isi ? `<p class="pp ind">${isi.replace(/\n/g,'<br>')}</p>` : ''}
+    ${isi ? `<p class="pp ind">${x(isi).replace(/\n/g,'<br>')}</p>` : ''}
     <p class="pp ind">Demikian surat permohonan ini kami sampaikan. Besar harapan kami atas perhatian dan kerja sama yang baik dari Bapak/Ibu. Atas perkenan dan kerja samanya kami ucapkan terima kasih.</p>
     <p class="pp">Wassalamu'alaikum Wr. Wb.</p>`;
 
@@ -2139,9 +2158,9 @@ function downloadTORFromModal(e) {
   if (bgEl) {
     const pList = bg.split('\n\n').filter(p=>p.trim());
     if (pList.length > 0) {
-      bgEl.innerHTML = pList.map(p => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${p.replace(/\n/g, '<br>')}</p>`).join('');
+      bgEl.innerHTML = pList.map(p => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${x(p).replace(/\n/g, '<br>')}</p>`).join('');
     } else {
-      bgEl.innerHTML = `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${bg}</p>`;
+      bgEl.innerHTML = `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${x(bg)}</p>`;
     }
   }
 
@@ -2149,7 +2168,7 @@ function downloadTORFromModal(e) {
   const tujuanEl = document.getElementById('pTorTujuanList');
   if (tujuanEl) {
     const tList = tujuan.split('\n').filter(t=>t.trim()).map(t=>t.replace(/^\d+[\.\)]\s*/, ''));
-    tujuanEl.innerHTML = tList.map(t => `<li style="margin-bottom:4px;">${t}</li>`).join('');
+    tujuanEl.innerHTML = tList.map(t => `<li style="margin-bottom:4px;">${x(t)}</li>`).join('');
   }
 
   // III. Target Peserta
@@ -2162,10 +2181,10 @@ function downloadTORFromModal(e) {
     rundownTbody.innerHTML = torRundownRows.map((r, i) => `
       <tr style="${i % 2 === 1 ? 'background:#f7f7f7;' : ''}">
         <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${i + 1}</td>
-        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${r.waktu || '—'}</td>
-        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${r.durasi || '—'}</td>
-        <td style="border:1px solid #999;padding:5px 6px;text-align:left;">${r.teknis || ''}</td>
-        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${r.keterangan || ''}</td>
+        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${x(r.waktu) || '—'}</td>
+        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${x(r.durasi) || '—'}</td>
+        <td style="border:1px solid #999;padding:5px 6px;text-align:left;">${x(r.teknis) || ''}</td>
+        <td style="border:1px solid #999;padding:5px 4px;text-align:center;">${x(r.keterangan) || ''}</td>
       </tr>
     `).join('');
   }
@@ -2174,21 +2193,21 @@ function downloadTORFromModal(e) {
   const silabusEl = document.getElementById('pTorSilabus');
   if (silabusEl) {
     const sList = silabus.split('\n').filter(s=>s.trim()).map(s=>s.replace(/^\d+[\.\)]\s*/, ''));
-    silabusEl.innerHTML = '<ol style="margin:0;padding-left:20px;">' + sList.map(s=>`<li style="margin-bottom:3px;">${s}</li>`).join('') + '</ol>';
+    silabusEl.innerHTML = '<ol style="margin:0;padding-left:20px;">' + sList.map(s=>`<li style="margin-bottom:3px;">${x(s)}</li>`).join('') + '</ol>';
   }
 
   // VI. Format Diskusi
   const diskEl = document.getElementById('pTorDiskusiContainer');
   if (diskEl) {
     const dList = diskusi.split('\n\n').filter(d=>d.trim());
-    diskEl.innerHTML = dList.map(d => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${d.replace(/\n/g, '<br>')}</p>`).join('');
+    diskEl.innerHTML = dList.map(d => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${x(d).replace(/\n/g, '<br>')}</p>`).join('');
   }
 
   // VIII. Penutup
   const penEl = document.getElementById('pTorPenutupContainer');
   if (penEl) {
     const pList = penutup.split('\n\n').filter(p=>p.trim());
-    penEl.innerHTML = pList.map(p => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${p.replace(/\n/g, '<br>')}</p>`).join('');
+    penEl.innerHTML = pList.map(p => `<p style="margin:0 0 8px;text-align:justify;text-indent:48px;">${x(p).replace(/\n/g, '<br>')}</p>`).join('');
   }
 
   setTimeout(() => {

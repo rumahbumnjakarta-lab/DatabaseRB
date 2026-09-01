@@ -304,7 +304,7 @@
     </div>
 
     <div class="v-bottom">
-      <img class="v-photo" src="FOTO/login2.png" alt="Rumah BUMN Jakarta">
+      <img class="v-photo" src="FOTO/login2.webp" alt="Rumah BUMN Jakarta">
       <div class="v-trust-label">Program Kolaborasi Resmi</div>
       <div class="v-trust-row">
         <span>BRI</span><i>&bull;</i><span>Danantara Indonesia</span><i>&bull;</i><span>Rumah BUMN Jakarta</span>
@@ -425,7 +425,6 @@
         btn.disabled = false;
         btnLabel.textContent = 'Masuk ke Sistem';
       } else {
-        sessionStorage.setItem('app_session', 'active');
         window.location.href = data.redirect || '/index.html';
       }
     } catch (err) {

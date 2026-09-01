@@ -445,7 +445,10 @@ let selectedBase64Image = null;
 
 initAppShell('perizinan', function(user) {
   currentUser = user;
-  const todayStr = new Date().toISOString().split('T')[0];
+  // toISOString() pakai UTC — jam 00:00–06:59 WIB masih kehitung tanggal
+  // KEMARIN (WIB = UTC+7). Kunci ke Asia/Jakarta biar tanggal default izin
+  // selalu sama dengan tanggal WIB saat ini.
+  const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
   document.getElementById('startDate').value = todayStr;
   document.getElementById('endDate').value = todayStr;
 

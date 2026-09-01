@@ -393,7 +393,10 @@
       let html = `<div class="cp-day-num">${d}</div>`;
       const dayPlans = cpPlans.filter(p => p.publish_date === dateStr);
       dayPlans.forEach(p => {
-        const safeData = JSON.stringify(p).replace(/"/g, '&quot;');
+        // encodeURIComponent, bukan cuma ganti tanda kutip dua — judul bebas
+        // yang mengandung tanda kutip satu bisa lolos dari string JS di
+        // onclick kalau cuma tanda kutip dua yang di-escape (stored XSS).
+        const safeData = encodeURIComponent(JSON.stringify(p));
         html += `<div class="cp-item ${p.status}" onclick="openDetailContent('${safeData}')" title="${escHtml(p.title)}">${getPlatformIconHTML(p.platform)} ${escHtml(p.title)}</div>`;
       });
       cell.innerHTML = html;
@@ -409,7 +412,7 @@
     const sorted = [...cpPlans].sort((a,b) => new Date(a.publish_date) - new Date(b.publish_date));
     let html = '';
     sorted.forEach(p => {
-      const safeData = JSON.stringify(p).replace(/"/g, '&quot;');
+      const safeData = encodeURIComponent(JSON.stringify(p));
       const dateStr = new Date(p.publish_date).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
       html += `
         <div class="cp-list-item" onclick="openDetailContent('${safeData}')">
@@ -444,7 +447,7 @@
 
   let activeContentPlan = null;
   function openDetailContent(dataStr) {
-    const p = JSON.parse(dataStr);
+    const p = JSON.parse(decodeURIComponent(dataStr));
     activeContentPlan = p;
     document.getElementById('detCpTitle').textContent = p.title;
     document.getElementById('detCpBadges').innerHTML = `
@@ -477,7 +480,8 @@
       Swal.fire({ icon:'success', title:'Berhasil', text:'Status konten diperbarui!', timer:1500, showConfirmButton:false });
       closeDetailContentModal();
       fetchContentPlans();
-    });
+    })
+    .catch(() => Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' }));
   }
 
   function deleteContentPlan() {
@@ -491,7 +495,8 @@
         Swal.fire({ icon:'success', title:'Dihapus', timer:1200, showConfirmButton:false });
         closeDetailContentModal();
         fetchContentPlans();
-      });
+      })
+      .catch(() => Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' }));
     });
   }
 
@@ -519,7 +524,20 @@
       closeAddContentModal();
       fetchContentPlans();
     })
-    .catch(() => { btn.disabled = false; btn.textContent = 'Simpan Konten'; });
+    .catch(() => {
+      btn.disabled = false; btn.textContent = 'Simpan Konten';
+      Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' });
+    });
+  }
+
+  function applyPrefillFromQuery() {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('prefill') !== '1') return;
+    openAddContentModal();
+    if (p.get('title')) document.getElementById('cpTitleInput').value = p.get('title');
+    if (p.get('date')) document.getElementById('cpDate').value = p.get('date');
+    if (p.get('notes')) document.getElementById('cpNotes').value = p.get('notes');
+    history.replaceState(null, '', window.location.pathname);
   }
 
   // Init
@@ -529,6 +547,7 @@
       .then(r => r.json())
       .then(items => initDivisionPage(items))
       .catch(() => initDivisionPage([]));
+    applyPrefillFromQuery();
   });
 </script>
 </body>

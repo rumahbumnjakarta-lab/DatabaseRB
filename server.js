@@ -1,5 +1,11 @@
-require('dotenv').config({ override: true });
+// override:false (default) — kalau ada .env yang somehow ikut ke-deploy, dia
+// TIDAK BOLEH menimpa env var yang sudah diset lewat dashboard hosting
+// (Vercel dsb). override:true justru bikin file lokal menang atas
+// konfigurasi resmi platform — berbahaya kalau file .env-nya ketinggalan
+// versi lama/bocor.
+require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const session = require('cookie-session');
 const bcrypt = require('bcryptjs');
@@ -7,7 +13,11 @@ const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+// Tanpa limits.fileSize, multer akan menampung seluruh file di memori proses
+// tanpa batas — siapa pun yang login bisa upload file raksasa ke CV
+// Narasumber dan menghabiskan RAM server. 10MB cukup longgar untuk dokumen
+// CV/PDF wajar.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 const PORT = process.env.PORT || 3000;
 
 // ─── Supabase Init ───────────────────────────────────────────────────────────
@@ -73,6 +83,7 @@ async function verifySupabaseConnection() {
 }
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(compression());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
@@ -95,12 +106,34 @@ app.use((req, res, next) => {
 });
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
-function requireAuth(req, res, next) {
-  if (req.session && req.session.user) return next();
-  if (req.path.startsWith('/api/')) {
-    return res.status(401).json({ error: 'Unauthorized', redirect: '/login.html' });
+// Sesi cookie hanya menyimpan snapshot role saat login. Kalau tidak dicek ulang,
+// akun yang barusan di-demote/dihapus staff tetap bisa pakai akses lamanya
+// sampai browser/tab ditutup. Refetch role dari DB tiap request supaya
+// perubahan role/penghapusan akun langsung berlaku. Gagal-terbuka kalau
+// Supabase-nya sendiri yang error (jangan sampai satu hiccup mengunci semua
+// orang keluar), tapi gagal-tertutup kalau akunnya memang sudah tidak ada.
+async function requireAuth(req, res, next) {
+  if (!(req.session && req.session.user)) {
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({ error: 'Unauthorized', redirect: '/login.html' });
+    }
+    return res.redirect('/login.html');
   }
-  res.redirect('/login.html');
+  const { data, error } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', req.session.user.id)
+    .maybeSingle();
+  if (error) return next();
+  if (!data) {
+    req.session = null;
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({ error: 'Akun tidak ditemukan, silakan login kembali.', redirect: '/login.html' });
+    }
+    return res.redirect('/login.html');
+  }
+  req.session.user.role = data.role;
+  next();
 }
 
 function requireStaff(req, res, next) {
@@ -421,16 +454,20 @@ app.get('/rekap-absen.html', requireAuth, requireStaff, (req, res) => sendGuarde
 app.get('/chat.html', requireAuth, (req, res) => sendGuardedHtml(res, 'chat.html'));
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/lucide/dist/umd')));
-app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist')));
-app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules/sweetalert2/dist')));
-app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist')));
+// Vendor libs only change on npm install/upgrade, safe to cache for a day.
+app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/lucide/dist/umd'), { maxAge: '1d' }));
+app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist'), { maxAge: '1d' }));
+app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules/sweetalert2/dist'), { maxAge: '1d' }));
+app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist'), { maxAge: '1d' }));
 app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1d',
   setHeaders: (res, path) => {
-    // No-cache for HTML, and for the shared app-shell JS/CSS — these change
-    // often during active development and a stale cached copy (e.g. an old
-    // sidebar/topbar in shared.js) can silently linger in the browser.
-    if (path.endsWith('.html') || path.endsWith('shared.js') || path.endsWith('style.css')) {
+    // No-cache for HTML and the app-shell files that change often during
+    // active development — a stale cached copy (e.g. an old sidebar/topbar
+    // in shared.js) can silently linger in the browser otherwise.
+    // Everything else (images, etc.) gets the 1-day maxAge set above.
+    if (path.endsWith('.html') || path.endsWith('shared.js') || path.endsWith('style.css')
+      || path.endsWith('theme.js') || path.endsWith('sw.js')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
   }
@@ -1155,9 +1192,20 @@ app.post('/api/bd-partnerships', requireAuth, async (req, res) => {
 });
 
 // PUT /api/bd-partnerships/:id — Update data
+const BD_PARTNERSHIP_EDITABLE_FIELDS = [
+  'tanggal_dihubungi', 'tanggal_kerjasama', 'nama_komunitas', 'linkedin',
+  'instagram', 'email', 'kontak_komunitas', 'nama_cp', 'kontak_cp',
+  'jumlah_anggota', 'status', 'via', 'template_approach'
+];
 app.put('/api/bd-partnerships/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const updates = req.body;
+  // Ambil field yang boleh diedit saja — body mentah tidak boleh langsung
+  // dipakai, supaya orang tidak bisa selipin kolom lain (mis. created_by, id)
+  // buat memalsukan kepemilikan data atau menimpa primary key.
+  const updates = {};
+  for (const key of BD_PARTNERSHIP_EDITABLE_FIELDS) {
+    if (key in req.body) updates[key] = req.body[key];
+  }
   if (updates.tanggal_kerjasama === "") updates.tanggal_kerjasama = null;
 
   try {
@@ -1189,6 +1237,186 @@ app.delete('/api/bd-partnerships/:id', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error deleting bd partnership:', err);
     res.status(500).json({ error: 'Gagal menghapus data bd partnership' });
+  }
+});
+
+// ─── API: Katalog UMKM (Business Development) ─────────────────────────────────
+// Kategori bebas (teks) — kategori baru otomatis muncul begitu dipakai di satu
+// entri, tidak ada tabel/menu kelola kategori terpisah.
+
+// Foto produk dibatasi 2MB — cukup untuk kualitas web/mobile, jaga kuota
+// Supabase Storage tetap hemat walau entri katalog terus bertambah.
+const CATALOG_PHOTO_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const uploadCatalogPhoto = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!CATALOG_PHOTO_MIME_TYPES.includes(file.mimetype)) {
+      return cb(new Error('Format foto harus PNG, JPEG, atau WebP.'));
+    }
+    cb(null, true);
+  }
+});
+
+function handleCatalogUpload(req, res, next) {
+  uploadCatalogPhoto.single('foto')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Ukuran foto maksimal 2MB.' });
+      }
+      return res.status(400).json({ error: 'Gagal memproses foto: ' + err.message });
+    }
+    next();
+  });
+}
+
+async function uploadCatalogPhotoFile(file) {
+  const filename = `${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+  const { error } = await supabase.storage.from('bd-catalog-photos').upload(filename, file.buffer, { contentType: file.mimetype });
+  if (error) throw error;
+  const { data } = supabase.storage.from('bd-catalog-photos').getPublicUrl(filename);
+  return data.publicUrl;
+}
+
+function catalogStoragePathFromUrl(url) {
+  if (!url || !url.startsWith('http')) return null;
+  const marker = '/bd-catalog-photos/';
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return url.substring(idx + marker.length);
+}
+
+async function deleteCatalogPhotoIfAny(url) {
+  const path = catalogStoragePathFromUrl(url);
+  if (!path) return;
+  try { await supabase.storage.from('bd-catalog-photos').remove([path]); }
+  catch (e) { console.warn('Gagal hapus foto katalog lama:', e.message); }
+}
+
+// GET /api/bd-catalog — Ambil data katalog UMKM
+app.get('/api/bd-catalog', requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('bd_catalog')
+      .select(`*, users ( name, divisi )`)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const formattedData = data.map(item => ({
+      ...item,
+      created_by_name: item.users ? item.users.name : 'Unknown'
+    }));
+    res.json(formattedData);
+  } catch (err) {
+    console.error('Error fetching bd catalog:', err);
+    res.status(500).json({ error: 'Gagal mengambil data katalog UMKM' });
+  }
+});
+
+// POST /api/bd-catalog — Buat entri katalog baru (multipart/form-data, field "foto" opsional)
+app.post('/api/bd-catalog', requireAuth, handleCatalogUpload, async (req, res) => {
+  const { kategori, nama_umkm, no_telp, tanggal_display } = req.body;
+
+  if (!nama_umkm) {
+    return res.status(400).json({ error: 'Nama UMKM wajib diisi' });
+  }
+
+  try {
+    let link_foto_katalog = null;
+    if (req.file) link_foto_katalog = await uploadCatalogPhotoFile(req.file);
+
+    const { data, error } = await supabase
+      .from('bd_catalog')
+      .insert([{
+        kategori: (kategori || '').trim() || 'Umum',
+        nama_umkm,
+        no_telp: no_telp || null,
+        link_foto_katalog,
+        tanggal_display: tanggal_display || null,
+        created_by: req.session.user.id
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (err) {
+    console.error('Error creating bd catalog entry:', err);
+    res.status(500).json({ error: 'Gagal membuat entri katalog: ' + err.message });
+  }
+});
+
+// PUT /api/bd-catalog/:id — Update entri katalog. Kirim field "foto" untuk ganti
+// foto (foto lama otomatis dihapus dari Storage), atau hapusFoto=1 untuk
+// menghapus foto tanpa gantinya.
+app.put('/api/bd-catalog/:id', requireAuth, handleCatalogUpload, async (req, res) => {
+  const { id } = req.params;
+  const { kategori, nama_umkm, no_telp, tanggal_display, hapusFoto } = req.body;
+
+  try {
+    const { data: existing, error: findErr } = await supabase
+      .from('bd_catalog').select('link_foto_katalog').eq('id', id).maybeSingle();
+    if (findErr) throw findErr;
+    if (!existing) return res.status(404).json({ error: 'Data tidak ditemukan.' });
+
+    const updates = {
+      kategori: (kategori || '').trim() || 'Umum',
+      nama_umkm,
+      no_telp: no_telp || null,
+      tanggal_display: tanggal_display || null,
+    };
+
+    const oldPhotoUrl = existing.link_foto_katalog;
+    let shouldDeleteOldPhoto = false;
+    if (req.file) {
+      updates.link_foto_katalog = await uploadCatalogPhotoFile(req.file);
+      shouldDeleteOldPhoto = true;
+    } else if (hapusFoto === '1' || hapusFoto === 'true') {
+      updates.link_foto_katalog = null;
+      shouldDeleteOldPhoto = true;
+    }
+
+    const { data, error } = await supabase
+      .from('bd_catalog')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Hapus foto lama BARU setelah update DB dikonfirmasi berhasil — kalau
+    // urutannya dibalik dan update-nya gagal, entrinya jadi nunjuk ke foto
+    // yang sudah tidak ada, dan foto baru yang sudah terupload jadi nyasar
+    // (tidak terhubung ke entri manapun).
+    if (shouldDeleteOldPhoto) await deleteCatalogPhotoIfAny(oldPhotoUrl);
+
+    res.json(data);
+  } catch (err) {
+    console.error('Error updating bd catalog entry:', err);
+    res.status(500).json({ error: 'Gagal update entri katalog: ' + err.message });
+  }
+});
+
+// DELETE /api/bd-catalog/:id — Hapus entri katalog sekaligus foto di Storage-nya
+app.delete('/api/bd-catalog/:id', requireAuth, async (req, res) => {
+  try {
+    const { data: existing } = await supabase
+      .from('bd_catalog').select('link_foto_katalog').eq('id', req.params.id).maybeSingle();
+
+    const { error } = await supabase
+      .from('bd_catalog')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    if (existing) await deleteCatalogPhotoIfAny(existing.link_foto_katalog);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting bd catalog entry:', err);
+    res.status(500).json({ error: 'Gagal menghapus entri katalog' });
   }
 });
 
@@ -1271,6 +1499,24 @@ async function cleanupOldAttendance() {
     console.error('Cleanup absensi lama gagal:', err.message);
   }
 }
+
+// GET /api/cron/cleanup-attendance — Dipanggil Vercel Cron (lihat vercel.json).
+// setInterval di bagian "Start Server" di bawah cuma jalan untuk server
+// long-running (localhost) — di Vercel tiap request punya proses serverless
+// sendiri yang berumur pendek, jadi setInterval di sana tidak pernah benar-benar
+// jalan. Endpoint ini adalah cara cleanup tetap jalan saat deploy di Vercel.
+// Diproteksi CRON_SECRET (Vercel otomatis kirim header ini kalau env var
+// CRON_SECRET diset di project settings) supaya orang luar tidak bisa memicu.
+app.get('/api/cron/cleanup-attendance', async (req, res) => {
+  if (process.env.CRON_SECRET) {
+    const auth = req.headers.authorization || '';
+    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  await cleanupOldAttendance();
+  res.json({ ok: true });
+});
 
 // POST /api/absen — Submit absensi (semua user yang login)
 app.post('/api/absen', requireAuth, async (req, res) => {
@@ -1560,10 +1806,14 @@ app.get('/api/absen', requireAuth, requireStaff, async (req, res) => {
     let query = supabase.from('attendance').select('*').order('timestamp', { ascending: false });
 
     if (date) {
-      const start = new Date(date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(date);
-      end.setHours(23, 59, 59, 999);
+      // `new Date(date).setHours(0,0,0,0)` memakai jam LOKAL proses Node —
+      // di server yang jalan di UTC (mis. default Vercel), itu jadi batas
+      // hari UTC, bukan WIB. Orang yang absen jam 00:00–06:59 WIB (masih
+      // hari "kemarin" di UTC) jadi hilang dari rekap hari itu. Tulis
+      // offset +07:00 langsung di string ISO-nya supaya batas harinya
+      // selalu pas WIB, apa pun zona waktu server yang menjalankannya.
+      const start = new Date(`${date}T00:00:00+07:00`);
+      const end = new Date(`${date}T23:59:59.999+07:00`);
       query = query.gte('timestamp', start.toISOString()).lte('timestamp', end.toISOString());
     }
     if (user_id) query = query.eq('user_id', user_id);
@@ -2435,6 +2685,25 @@ app.post('/api/chat/rooms/:id/read', requireAuth, async (req, res) => {
     console.error('Chat read error:', err);
     res.status(500).json({ error: 'Gagal menandai dibaca: ' + err.message });
   }
+});
+
+// ─── Error Handler ────────────────────────────────────────────────────────────
+// Multer melempar error lewat next(err) kalau limits.fileSize/fileFilter
+// menolak upload (mis. cvNarsum di /api/events). Tanpa handler ini, Express
+// jatuh ke handler bawaannya sendiri: halaman HTML generik + stack trace,
+// bukan respons JSON yang bisa dibaca frontend.
+app.use((err, req, res, next) => {
+  if (err && err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'Ukuran file terlalu besar.' });
+    }
+    return res.status(400).json({ error: 'Gagal memproses file: ' + err.message });
+  }
+  if (err) {
+    console.error('Unhandled error:', err);
+    return res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
+  }
+  next();
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────

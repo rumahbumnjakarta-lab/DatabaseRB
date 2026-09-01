@@ -662,7 +662,10 @@
       grid.appendChild(emptyCell);
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    // toISOString() pakai UTC — jam 00:00–06:59 WIB masih kehitung tanggal
+    // KEMARIN (WIB = UTC+7), jadi kalender bisa nyorot sel "hari ini" yang
+    // salah. Kunci ke Asia/Jakarta biar selalu sama dengan tanggal WIB.
+    const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
 
     // Create cells for each day
     for (let day = 1; day <= daysInMonth; day++) {
@@ -687,7 +690,13 @@
         const colorClass = getCategoryColorClass(ev.category);
         
         // Escape data for inline JSON parsing
-        const safeData = JSON.stringify(ev).replace(/"/g, '&quot;');
+        // encodeURIComponent, bukan cuma ganti tanda kutip dua — data event
+        // ini teks bebas (judul, lokasi, dll). Kalau ada tanda kutip satu di
+        // dalamnya, itu bisa lolos dari string JS di onclick di bawah dan
+        // menjalankan kode apa saja (stored XSS). encodeURIComponent tidak
+        // pernah menghasilkan karakter kutip/`<`/`>` sama sekali, jadi aman
+        // dipakai di dalam atribut HTML maupun literal string JS.
+        const safeData = encodeURIComponent(JSON.stringify(ev));
         
         html += `
           <div class="event-pill ${colorClass}" onclick="openDetailModal(event, '${safeData}')">
@@ -726,7 +735,7 @@
       let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
       if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
       const colorClass = getCategoryColorClass(ev.category);
-      const safeData = JSON.stringify(ev).replace(/"/g, '&quot;');
+      const safeData = encodeURIComponent(JSON.stringify(ev));
       const isCompleted = isEventCompleted(ev);
       
       const statusBadge = isCompleted 
@@ -786,7 +795,7 @@
 
   function openDetailModal(e, dataStr) {
     if(e) e.stopPropagation();
-    const ev = JSON.parse(dataStr);
+    const ev = JSON.parse(decodeURIComponent(dataStr));
     
     document.getElementById('detTitle').textContent = ev.title;
     document.getElementById('detCat').textContent = ev.category;

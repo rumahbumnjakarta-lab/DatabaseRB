@@ -543,7 +543,7 @@ function renderUsers() {
           <button class="btn-card-action btn-card-edit" onclick="openEditDrawer('${u.id}')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
           </button>
-          <button class="btn-card-action btn-card-delete" onclick="openDeleteModal('${u.id}', '${escHtml(u.email)}')">
+          <button class="btn-card-action btn-card-delete" onclick="openDeleteModal('${u.id}')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Hapus
           </button>
         </div>
@@ -683,13 +683,18 @@ async function handleFormSubmit(e) {
 }
 
 // ─── Delete Actions ───
-function openDeleteModal(id, email) {
+// Cuma id yang lewat onclick (aman, selalu UUID) — email-nya dicari dari
+// allUsers di sini. Kalau dititipkan mentah-mentah di atribut onclick, email
+// yang mengandung tanda kutip satu (valid secara HTML5, mis. d'angelo@...)
+// bisa lolos dari string JS-nya dan menjalankan kode apa saja.
+function openDeleteModal(id) {
   if (currentUser && currentUser.id === id) {
     showSwalToast('Anda tidak bisa menghapus akun Anda sendiri.', 'error');
     return;
   }
+  const u = allUsers.find(x => x.id === id);
   deleteTargetId = id;
-  document.getElementById('deleteUserEmail').textContent = email;
+  document.getElementById('deleteUserEmail').textContent = u ? u.email : '';
   document.getElementById('deleteModal').classList.add('open');
 }
 

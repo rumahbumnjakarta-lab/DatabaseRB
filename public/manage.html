@@ -881,7 +881,7 @@ function renderTable() {
           <button class="btn-card-action btn-card-edit" onclick="editItem('${item.id}')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
           </button>
-          <button class="btn-card-action btn-card-delete" onclick="openDeleteModal('${item.id}', '${escHtml(item.title)}')">
+          <button class="btn-card-action btn-card-delete" onclick="openDeleteModal('${item.id}')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Hapus
           </button>
         </div>
@@ -998,7 +998,14 @@ function resetForm() {
 }
 
 // ─── Delete ───
-function openDeleteModal(id, title) {
+// Cuma id yang lewat onclick (aman, selalu UUID) — judulnya dicari dari
+// allItems di sini, bukan dititipkan lewat string di HTML. Kalau judulnya
+// ikut diselipkan mentah-mentah ke dalam atribut onclick, judul yang
+// mengandung tanda kutip satu bisa lolos dari string JS-nya dan menjalankan
+// kode apa saja (stored XSS) begitu kartu ini dirender di browser siapa pun.
+function openDeleteModal(id) {
+  const item = allItems.find(i => i.id === id);
+  const title = item ? item.title : '';
   showSwalConfirm(
     'Hapus Item?',
     `Apakah Anda yakin ingin menghapus "${title}"? Data yang dihapus tidak dapat dikembalikan.`,
@@ -1211,18 +1218,18 @@ initAppShell('manage', function(user) {
         <!-- URL Group (for link type) -->
         <div id="urlGroup" class="form-field">
           <label for="itemUrl">URL Link <span style="color:#DC2626">*</span></label>
-          <input type="text" id="itemUrl" placeholder="https://docs.google.com/...">
+          <input type="text" id="itemUrl" placeholder="https://docs.google.com/..." required>
         </div>
 
         <!-- Cred Group (for cred type) -->
         <div id="credGroup" style="display:none;">
           <div class="form-field">
             <label for="itemEmail">Alamat Email <span style="color:#DC2626">*</span></label>
-            <input type="text" id="itemEmail" placeholder="contoh@gmail.com">
+            <input type="text" id="itemEmail" placeholder="contoh@gmail.com" required>
           </div>
           <div class="form-field">
             <label for="itemPass">Password <span style="color:#DC2626">*</span></label>
-            <input type="text" id="itemPass" placeholder="Password akun">
+            <input type="text" id="itemPass" placeholder="Password akun" required>
           </div>
         </div>
 

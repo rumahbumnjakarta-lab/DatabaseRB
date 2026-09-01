@@ -613,11 +613,16 @@ function openRoom(id) {
   fetch(`/api/chat/rooms/${room.id}/messages`)
     .then(r => r.json())
     .then(msgs => {
+      // Kalau user udah pindah ke room lain sebelum request ini selesai,
+      // jangan timpa #messageList — bisa ketuker nampilin pesan room yang
+      // salah (header nunjuk room baru, isi masih room lama).
+      if (ACTIVE !== room) return;
       if (msgs && msgs.error) throw new Error(msgs.error);
       renderMessages(msgs || [], true);
       markRead(room.id);
     })
     .catch(err => {
+      if (ACTIVE !== room) return;
       document.getElementById('messageList').innerHTML =
         `<div style="margin:auto;color:var(--text-muted);font-size:12.5px;">${escHtml(err.message)}</div>`;
     });
@@ -797,6 +802,10 @@ function sendMessage() {
   if (!body || !ACTIVE) return;
   closeMentionPopup();
 
+  // Kunci room tujuan saat tombol kirim ditekan — kalau user pindah room
+  // sebelum request ini selesai, pesan yang baru terkirim (milik room lama)
+  // tidak boleh nyasar ke-render di thread room yang sekarang lagi dibuka.
+  const targetRoom = ACTIVE;
   const mentions = resolveMentionsFromText(body);
   const btn = document.getElementById('btnSend');
   btn.disabled = true;
@@ -806,8 +815,8 @@ function sendMessage() {
   const isEdit = !!EDITING_ID;
   const replyTo = !isEdit ? REPLYING_ID : null;
   const url = isEdit
-    ? `/api/chat/rooms/${ACTIVE.id}/messages/${EDITING_ID}`
-    : `/api/chat/rooms/${ACTIVE.id}/messages`;
+    ? `/api/chat/rooms/${targetRoom.id}/messages/${EDITING_ID}`
+    : `/api/chat/rooms/${targetRoom.id}/messages`;
 
   fetch(url, {
     method: isEdit ? 'PUT' : 'POST',
@@ -819,10 +828,10 @@ function sendMessage() {
       if (msg.error) throw new Error(msg.error);
       if (isEdit) {
         cancelEdit();
-        patchMessageInPlace(msg);
+        if (ACTIVE === targetRoom) patchMessageInPlace(msg);
       } else {
         if (REPLYING_ID) cancelReply();
-        renderMessages([msg], false);
+        if (ACTIVE === targetRoom) renderMessages([msg], false);
       }
       loadRooms(false);
     })

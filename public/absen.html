@@ -528,6 +528,18 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 var gpsData = { lat: null, lng: null, address: '—', accuracy: null };
+var gpsWatchId = null;
+
+// watchPosition tanpa clearWatch bakal terus jalan (nge-refresh lokasi tiap
+// beberapa detik) sampai tab-nya ditutup, walau user udah selesai absen —
+// boros baterai/GPS tanpa alasan. Panggil ini begitu lokasi sudah tidak
+// diperlukan lagi (mis. setelah absen berhasil).
+function stopGpsWatch() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+}
 var selfieBase64 = null;
 var map = null;
 var myMarker = null;
@@ -749,7 +761,7 @@ function getLocation() {
 
   setStatusIcon(statusEl, 'radio', 'var(--blue-mid)', 'Mendapatkan lokasi...');
 
-  navigator.geolocation.watchPosition(
+  gpsWatchId = navigator.geolocation.watchPosition(
     (pos) => {
       gpsData.lat = pos.coords.latitude;
       gpsData.lng = pos.coords.longitude;
@@ -807,8 +819,17 @@ function getLocation() {
       }
     },
     (err) => {
-      setStatusIcon(statusEl, 'alert-triangle', '#dc2626', 'Akses lokasi ditolak — GPS diperlukan untuk absen');
-      coordsEl.textContent = 'Izinkan akses lokasi di browser';
+      // err.code 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT —
+      // dua yang terakhir sering kejadian pas sinyal GPS lemah (di dalam
+      // ruangan, dll), bukan karena izinnya ditolak. Kalau pesannya disamain
+      // semua jadi "izin ditolak", user malah disuruh benerin izin browser
+      // yang sebenarnya sudah benar, padahal solusinya cuma pindah dekat
+      // jendela/ruang terbuka.
+      let msg = 'Akses lokasi ditolak — GPS diperlukan untuk absen';
+      if (err.code === 2) msg = 'Sinyal GPS tidak ditemukan — coba pindah ke dekat jendela/ruang terbuka';
+      else if (err.code === 3) msg = 'GPS lambat merespons (timeout) — coba lagi sebentar';
+      setStatusIcon(statusEl, 'alert-triangle', '#dc2626', msg);
+      coordsEl.textContent = err.code === 1 ? 'Izinkan akses lokasi di browser' : 'Mencoba ulang otomatis...';
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
   );
@@ -878,6 +899,27 @@ function retakeSelfie() {
 // ─── Submit Absen ───
 // mode: 'wfo' (wajib di lokasi kantor) atau 'wfh' (lokasi bebas, staff only)
 async function submitAbsen(mode) {
+  // Status izin WFH ('wfhAllowed') cuma dicek sekali pas halaman dibuka.
+  // Kalau staff cabut izinnya di tengah jalan, tombol WFH di layar intern
+  // masih kelihatan aktif — server memang sudah benar menolaknya, tapi baru
+  // ketahuan SETELAH foto+GPS selesai diambil dan dikirim. Cek ulang di sini
+  // dulu supaya penolakannya langsung kelihatan, bukan nunggu round-trip
+  // upload foto yang sia-sia.
+  if (mode === 'wfh' && currentUser && currentUser.role !== 'staff') {
+    try {
+      const res = await fetch('/api/wfh-assignments/mine');
+      const data = await res.json();
+      if (!data.allowed) {
+        showToastMsg('Izin WFH untuk hari ini sudah dicabut oleh staff. Silakan Absen WFO.', true);
+        renderAbsenButtons(currentUser);
+        return;
+      }
+    } catch (e) {
+      // Kalau pengecekannya sendiri gagal (jaringan, dll), lanjut ke submit
+      // seperti biasa — server tetap jadi penjaga akhir yang benar.
+    }
+  }
+
   if (!gpsData.lat || !gpsData.lng) {
     showToastMsg('GPS belum terdeteksi. Mohon aktifkan & izinkan akses lokasi.', true);
     return;
@@ -928,6 +970,7 @@ async function submitAbsen(mode) {
       </div>
       <div class="submit-msg">${data.message || data.error}</div>`;
     if (typeof renderIcons === 'function') renderIcons();
+    if (res.ok) stopGpsWatch();
 
     setTimeout(() => {
       overlay.remove();

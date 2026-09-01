@@ -293,8 +293,11 @@
 var detailMap = null;
 
 initAppShell('rekap-absen', function(user) {
-  // Set today as default date
-  const today = new Date().toISOString().split('T')[0];
+  // Set today as default date — toISOString() pakai UTC, jadi antara jam
+  // 00:00–06:59 WIB dia masih nunjuk tanggal KEMARIN (WIB = UTC+7).
+  // Kunci ke Asia/Jakarta biar "hari ini" selalu sama dengan tanggal WIB,
+  // bukan ikut zona waktu perangkat/server yang buka halamannya.
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
   document.getElementById('filterDate').value = today;
 
   loadData();

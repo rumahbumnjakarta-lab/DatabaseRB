@@ -716,8 +716,14 @@ const IDLE_LIMIT = 10 * 60 * 1000; // 10 minutes
 function resetIdleTimer() {
   if (idleTimeout) clearTimeout(idleTimeout);
   idleTimeout = setTimeout(() => {
-    // Session expired due to inactivity
-    window.location.href = '/login.html?error=session_expired';
+    // Session expired due to inactivity — matikan juga sesi cookie di
+    // server (bukan cuma pindah halaman). Sebelumnya cuma redirect, jadi
+    // sesinya di server masih hidup — di komputer bersama, tekan Back atau
+    // reload index.html sesudah layar "sesi habis" ini tetap bisa balik
+    // masuk begitu saja.
+    fetch('/auth/logout').finally(() => {
+      window.location.href = '/login.html?error=session_expired';
+    });
   }, IDLE_LIMIT);
 }
 
@@ -844,16 +850,15 @@ function initAppShell(activePage, onSuccess, staffOnly) {
     document.body.prepend(loader);
   }
 
-  // ─── Enforce Tab-based Session (Logout on Tab Close) ───
-  if (!sessionStorage.getItem('app_session')) {
-    // If there is no session in this tab, force backend logout and redirect
-    fetch('/auth/logout').then(() => {
-      window.location.href = '/login.html';
-    }).catch(() => {
-      window.location.href = '/login.html';
-    });
-    return;
-  }
+  // Sesi login sudah pakai session COOKIE biasa (lihat komentar di server.js:
+  // maxAge sengaja tidak diset, jadi otomatis hilang saat browser-nya
+  // ditutup) — itu sudah cukup buat "logout otomatis kalau browser ditutup".
+  // Dulu di sini ada gate tambahan pakai sessionStorage (per-tab) yang
+  // niatnya sama, tapi sessionStorage TIDAK ikut ke tab baru (walau origin-
+  // nya sama) — jadi tiap kali user buka link di tab baru, gate ini kira
+  // belum login, langsung panggil /auth/logout, dan itu mematikan cookie
+  // sesi yang DIPAKAI BERSAMA semua tab, bukan cuma tab yang baru dibuka.
+  // Hasilnya: buka 1 link di tab baru = semua tab lain ikut ke-logout.
 
   if (window.currentUserCache) {
     handleAuthSuccess(window.currentUserCache, activePage, onSuccess, staffOnly);

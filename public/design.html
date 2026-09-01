@@ -397,7 +397,12 @@
     if (!items.length) { el.innerHTML = '<div class="kanban-empty">Tidak ada request.</div>'; return; }
     let html = '';
     items.forEach(r => {
-      const safeData = JSON.stringify(r).replace(/"/g, '&quot;');
+      // encodeURIComponent, bukan cuma ganti tanda kutip dua — judul/deskripsi
+      // bebas yang mengandung tanda kutip satu bisa lolos dari string JS di
+      // onclick kalau cuma tanda kutip dua yang di-escape (stored XSS). Ini
+      // makin krusial sekarang karena judul bisa diisi lewat link
+      // ?prefill=1&title=... dari Event Hub — orang bisa kirim link jahat.
+      const safeData = encodeURIComponent(JSON.stringify(r));
       const deadlineStr = r.deadline ? new Date(r.deadline).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) : '';
       html += `
         <div class="kanban-card" onclick="openDetailRequest('${safeData}')">
@@ -433,7 +438,7 @@
 
   let activeRequest = null;
   function openDetailRequest(dataStr) {
-    const r = JSON.parse(dataStr);
+    const r = JSON.parse(decodeURIComponent(dataStr));
     activeRequest = r;
     document.getElementById('detDrTitle').textContent = r.title;
     document.getElementById('detDrBadges').innerHTML = `
@@ -485,7 +490,8 @@
       Swal.fire({ icon:'success', title:'Berhasil', text:'Status request diperbarui!', timer:1500, showConfirmButton:false });
       closeDetailRequestModal();
       fetchRequests();
-    });
+    })
+    .catch(() => Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' }));
   }
 
   function submitRequest(e) {
@@ -512,7 +518,22 @@
       closeRequestModal();
       fetchRequests();
     })
-    .catch(() => { btn.disabled = false; btn.textContent = 'Kirim Request'; });
+    .catch(() => {
+      btn.disabled = false; btn.textContent = 'Kirim Request';
+      Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' });
+    });
+  }
+
+  function applyPrefillFromQuery() {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('prefill') !== '1') return;
+    openRequestModal();
+    if (p.get('title')) document.getElementById('drTitle').value = p.get('title');
+    if (p.get('type')) document.getElementById('drType').value = p.get('type');
+    if (p.get('division')) document.getElementById('drDivision').value = p.get('division');
+    if (p.get('desc')) document.getElementById('drDesc').value = p.get('desc');
+    if (p.get('deadline')) document.getElementById('drDeadline').value = p.get('deadline');
+    history.replaceState(null, '', window.location.pathname);
   }
 
   // Init
@@ -523,6 +544,7 @@
       .then(r => r.json())
       .then(items => initDivisionPage(items))
       .catch(() => initDivisionPage([]));
+    applyPrefillFromQuery();
   });
 </script>
 </body>
