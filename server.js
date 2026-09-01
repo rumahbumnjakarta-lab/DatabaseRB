@@ -24,18 +24,6 @@ const PORT = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
-// DEBUG SEMENTARA — hapus lagi setelah ketauan kenapa env var ke-baca kosong
-// di Vercel. Cuma nampilin panjang string + beberapa karakter awal, bukan
-// full secret, jadi aman dilihat di log.
-console.log('[DEBUG env]', {
-  urlLen: supabaseUrl ? supabaseUrl.length : 0,
-  urlPreview: supabaseUrl ? JSON.stringify(supabaseUrl.slice(0, 15)) : null,
-  keyLen: supabaseKey ? supabaseKey.length : 0,
-  keyPreview: supabaseKey ? JSON.stringify(supabaseKey.slice(0, 8)) : null,
-  hasServiceRoleVar: 'SUPABASE_SERVICE_ROLE_KEY' in process.env,
-  hasKeyVar: 'SUPABASE_KEY' in process.env,
-});
-
 const isInvalidUrl = !supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE') || !supabaseUrl.startsWith('http');
 const isInvalidKey = !supabaseKey || supabaseKey.includes('YOUR_SUPABASE');
 
