@@ -122,6 +122,15 @@
     padding: 3px 12px; border-radius: 20px; margin: 6px 0;
   }
   .msg { max-width: 68%; display: flex; flex-direction: column; gap: 3px; position: relative; }
+  /* .chat-messages adalah flex column tanpa align-items eksplisit, jadi
+     default-nya "stretch" — tanpa align-self di sini, .msg pesan ORANG LAIN
+     ikut melebar sampai 68% penuh (bukan cuma selebar bubble-nya), padahal
+     bubble-nya sendiri cuma auto-width. Akibatnya tombol titik-tiga yang
+     diposisikan "right:4px" relatif ke .msg jadi nempel di ujung kanan area
+     yang melebar itu — jauh dari bubble aslinya, kelihatan "ngambang"
+     sendirian. .msg.mine sudah benar duluan (align-self:flex-end di bawah
+     ini juga sekalian membatalkan stretch-nya untuk pesan sendiri). */
+  .msg:not(.mine) { align-self: flex-start; }
   .msg.mine { align-self: flex-end; align-items: flex-end; }
   .msg-sender { font-size: 11px; font-weight: 700; color: var(--blue-mid); padding: 0 4px; }
   .msg-row { display: flex; align-items: flex-end; gap: 6px; }

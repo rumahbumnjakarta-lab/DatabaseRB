@@ -123,6 +123,18 @@
   transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
   box-sizing: border-box;
 }
+.pw-field-wrap { position: relative; }
+.pw-field-wrap input { padding-right: 40px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: none; background: transparent; border-radius: 7px;
+  color: var(--text-secondary); cursor: pointer; transition: color 0.2s, background 0.2s;
+}
+.pw-toggle:hover { color: var(--gold); background: rgba(48,127,226,0.08); }
+.pw-toggle svg { width: 16px; height: 16px; }
+.pw-toggle .eye-off { display: none; }
+
 .form-field input:focus,
 .form-field select:focus {
   border-color: var(--gold);
@@ -451,8 +463,14 @@
           <select id="userDivisi" required></select>
         </div>
         <div class="form-field" id="passwordFieldGroup">
-          <label for="userPassword">Kata Sandi</label>
-          <input type="password" id="userPassword" placeholder="Minimal 6 karakter" minlength="6">
+          <label for="userPassword" id="userPasswordLabel">Kata Sandi</label>
+          <div class="pw-field-wrap">
+            <input type="password" id="userPassword" placeholder="Minimal 6 karakter" minlength="6">
+            <button type="button" class="pw-toggle" id="userPwToggle" aria-label="Tampilkan kata sandi">
+              <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -603,6 +621,8 @@ function openCreateDrawer() {
   document.getElementById('userId').value = '';
   document.getElementById('drawerTitle').textContent = 'Tambah Akun Baru';
   document.getElementById('passwordFieldGroup').style.display = 'block';
+  document.getElementById('userPasswordLabel').textContent = 'Kata Sandi';
+  document.getElementById('userPassword').placeholder = 'Minimal 6 karakter';
   document.getElementById('userPassword').required = true;
   document.getElementById('userEmail').disabled = false;
   updateDivisiOptions('internship'); // default
@@ -622,7 +642,10 @@ function openEditDrawer(id) {
   updateDivisiOptions(user.role || 'internship', user.divisi || '');
   
   document.getElementById('userEmail').disabled = true;
-  document.getElementById('passwordFieldGroup').style.display = 'none';
+  document.getElementById('passwordFieldGroup').style.display = 'block';
+  document.getElementById('userPasswordLabel').textContent = 'Kata Sandi Baru (opsional)';
+  document.getElementById('userPassword').placeholder = 'Kosongkan jika tidak ingin ganti password';
+  document.getElementById('userPassword').value = '';
   document.getElementById('userPassword').required = false;
 
   document.getElementById('drawerTitle').textContent = 'Edit Akun';
@@ -632,6 +655,17 @@ function openEditDrawer(id) {
 function closeDrawer() {
   document.getElementById('drawerOverlay').classList.remove('open');
 }
+
+// Toggle tampil/sembunyi kata sandi
+document.getElementById('userPwToggle').addEventListener('click', () => {
+  const input = document.getElementById('userPassword');
+  const btn = document.getElementById('userPwToggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.querySelector('.eye-on').style.display = showing ? '' : 'none';
+  btn.querySelector('.eye-off').style.display = showing ? 'none' : '';
+  btn.setAttribute('aria-label', showing ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi');
+});
 
 function submitForm() {
   document.getElementById('userForm').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}));
@@ -653,10 +687,14 @@ async function handleFormSubmit(e) {
   try {
     let res;
     if (isEditMode) {
+      // password cuma dikirim kalau diisi — field kosong berarti "jangan
+      // ubah password", bukan dikirim sebagai string kosong.
+      const editPayload = { name, email, role, divisi };
+      if (password) editPayload.password = password;
       res = await fetch(`/api/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, role, divisi })
+        body: JSON.stringify(editPayload)
       });
     } else {
       res = await fetch('/auth/register', {

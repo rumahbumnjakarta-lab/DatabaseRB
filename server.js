@@ -368,7 +368,7 @@ app.get('/api/users', requireAuth, requireStaff, async (req, res) => {
 // PUT /api/users/:id — Edit account details
 app.put('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
   const { id } = req.params;
-  const { name, email, role, divisi } = req.body;
+  const { name, email, role, divisi, password } = req.body;
   const cleanName = (name || '').trim();
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanDivisi = (divisi || '').trim();
@@ -377,10 +377,20 @@ app.put('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
     return res.status(400).json({ error: 'Nama, email, role, dan divisi wajib diisi.' });
   }
 
+  // Password ganti cuma kalau diisi — kosongkan berarti "jangan ubah",
+  // bukan "hapus password akunnya".
+  const updates = { name: cleanName, email: cleanEmail, role, divisi: cleanDivisi };
+  if (password) {
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Kata sandi baru minimal 6 karakter.' });
+    }
+    updates.password_hash = await bcrypt.hash(password, 10);
+  }
+
   try {
     const { data: updatedUser, error } = await supabase
       .from('users')
-      .update({ name: cleanName, email: cleanEmail, role, divisi: cleanDivisi })
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
@@ -2090,27 +2100,36 @@ async function ensureRoom({ type, name, division }) {
 
 // Daftar ruang yang boleh diakses user + id-nya, dipakai sebagai penjaga akses.
 async function roomsVisibleTo(user) {
-  const rooms = [];
-
-  rooms.push(await ensureRoom({ type: 'global', name: 'Semua Anggota' }));
+  // canAccessRoom() (jadi roomsVisibleTo juga) dipanggil di HAMPIR SEMUA
+  // endpoint chat — kirim pesan, edit, hapus, tandai dibaca, ambil pesan.
+  // Sebelumnya tiap ensureRoom() di-await satu-satu berurutan: untuk staff
+  // (mengawasi semua divisi) itu bisa 7-8 round-trip Supabase BERURUTAN
+  // cuma buat ngecek "boleh nggak akses ruang ini" — baru setelah itu baru
+  // kirim pesannya sendiri. Ini penyebab utama kirim chat berasa lambat,
+  // khususnya buat akun staff. Semua ensureRoom() di sini independen satu
+  // sama lain, jadi jalankan paralel (Promise.all) — total waktu tunggu
+  // jadi ~1 round-trip, bukan dikali jumlah ruang.
+  const roomPromises = [ensureRoom({ type: 'global', name: 'Semua Anggota' })];
 
   if (user.divisi && CHAT_DIVISIONS.includes(user.divisi)) {
-    rooms.push(await ensureRoom({ type: 'division', name: user.divisi, division: user.divisi }));
+    roomPromises.push(ensureRoom({ type: 'division', name: user.divisi, division: user.divisi }));
   }
 
   // Staff mengawasi seluruh divisi, jadi diberi akses ke semua ruang divisi.
   if (user.role === 'staff') {
     for (const div of CHAT_DIVISIONS) {
       if (div === user.divisi) continue;
-      rooms.push(await ensureRoom({ type: 'division', name: div, division: div }));
+      roomPromises.push(ensureRoom({ type: 'division', name: div, division: div }));
     }
   }
 
-  const { data: dms } = await supabase
+  const dmsPromise = supabase
     .from('chat_rooms')
     .select('*')
     .eq('type', 'dm')
     .like('dm_key', `%${user.id}%`);
+
+  const [rooms, { data: dms }] = await Promise.all([Promise.all(roomPromises), dmsPromise]);
 
   // `like` bisa ikut menangkap id yang hanya kebetulan mengandung substring,
   // jadi saring lagi berdasarkan potongan kunci yang persis.
@@ -2564,11 +2583,14 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       .single();
     if (error) throw error;
 
-    // Pengirim otomatis dianggap sudah membaca ruangnya sendiri.
-    await supabase
+    // Pengirim otomatis dianggap sudah membaca ruangnya sendiri — ini tidak
+    // perlu ditunggu sebelum menjawab request, sama seperti push notification
+    // di bawah, supaya user pengirim tidak ikut nunggu round-trip ini.
+    supabase
       .from('chat_reads')
       .upsert({ room_id: room.id, user_id: user.id, last_read_at: data.created_at },
-              { onConflict: 'room_id,user_id' });
+              { onConflict: 'room_id,user_id' })
+      .then(({ error }) => { if (error) console.error('Gagal update chat_reads:', error.message); });
 
     // Push notification ke anggota lain (tidak menunggu/tidak memblokir response).
     const pushPreview = msgType === 'agenda' ? `📅 ${req.body.meta.title}` : body;
