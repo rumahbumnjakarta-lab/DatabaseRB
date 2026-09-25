@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Database admin operasional Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <style>
   .btn-rekap-export {
     display: inline-flex; align-items: center; gap: 8px;
@@ -93,13 +93,13 @@
   </main>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 // Admin page: accessible by all logged-in users
 initAppShell('admin', function(user) {
   // /api/absen/export is staff-gated, so only surface the panel to staff —
   // otherwise the link just opens a tab with a 403 JSON body.
-  if (user && user.role === 'staff') {
+  if (user && (user.role === 'staff' || user.role === 'sistem')) {
     const panel = document.getElementById('rekapPanel');
     if (panel) panel.style.display = 'block';
   }

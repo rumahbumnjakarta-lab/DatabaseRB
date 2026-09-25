@@ -24,25 +24,19 @@ Dokumen ini dibuat khusus sebagai panduan konteks teknis untuk AI Assistant (sep
 ```text
 DatabaseRB/
 ├── server.js                     # Backend Express.js utama: Auth, Middleware, REST APIs
-├── schema_permissions.sql        # Migration SQL untuk tabel permissions di Supabase
+├── database/
+│   ├── schemas/                  # Definisi tabel SQL (mis. schema_permissions.sql, setup_all_schemas.sql)
+│   └── migrations/               # ALTER SQL + migrate.js
+├── scripts/                      # Skrip utilitas/development
 ├── public/                       # Berkas Frontend (Client-side)
-│   ├── shared.js                 # Shared library: Auth guard (initAppShell), Sidebar builder, Modals
-│   ├── style.css                 # Master CSS: Design tokens, Layout App Shell, UI components
-│   ├── theme.js                  # Theme preference manager
-│   ├── index.html                # Dashboard / Portal Utama
-│   ├── login.html                # Halaman Autentikasi Login
-│   ├── absen.html                # Absensi GPS & Selfie untuk Peserta Magang
-│   ├── perizinan.html            # Form Pengajuan Izin/Sakit & Panel Review Mentor
-│   ├── rekap-absen.html          # Rekap Absensi Real-time (Staff Only)
-│   ├── manage-users.html         # Manajemen Akun Pengguna (Staff Only)
-│   ├── manage.html               # Manajemen Link & Kredensial Divisi (Staff Only)
-│   ├── business-development.html # Hub Divisi Business Development
-│   ├── sosmed.html               # Hub Divisi Social Media
-│   ├── design.html               # Hub Divisi Design
-│   ├── event.html                # Hub Divisi Event
-│   ├── admin.html                # Hub Divisi Admin
-│   ├── administrasi.html         # Hub Divisi Administrasi (Staff Only)
-│   └── email.html                # Hub Divisi Akun Email (Staff Only)
+│   ├── js/shared.js              # Shared library: Auth guard (initAppShell), Sidebar builder, Modals
+│   ├── js/theme.js               # Theme preference manager
+│   ├── css/style.css             # Master CSS: Design tokens, Layout App Shell, UI components
+│   ├── sw.js, manifest.json      # Service Worker & PWA manifest (harus di root public/)
+│   └── pages/                    # Semua halaman .html, diakses lewat URL root (/index.html, dst.)
+│       ├── index.html, login.html, absen.html, perizinan.html, rekap-absen.html
+│       ├── manage.html, manage-users.html, chat.html, agenda-hub.html, event-hub.html, tampilan.html
+│       └── business-development / sosmed / design / event / admin / administrasi / email .html
 ├── .env                          # Variabel lingkungan (SUPABASE_URL, SUPABASE_KEY, etc.)
 ├── README.md                     # Panduan umum proyek & instalasi
 ├── DESIGN.md                     # Dokumentasi UI/UX Design System

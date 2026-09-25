@@ -1,10 +1,10 @@
-require('dotenv').config({ override: true });
+require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env'), override: true });
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4, validate: validateUuid } = require('uuid');
 
-const DATA_FILE = path.join(__dirname, 'data', 'items.json');
+const DATA_FILE = path.join(__dirname, '..', '..', 'data', 'items.json');
 
 // Periksa file .env
 const supabaseUrl = process.env.SUPABASE_URL;

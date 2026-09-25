@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Silabus — Rumah BUMN Jakarta</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <style>
   /* Page header uses the shared .page-hero component in style.css */
 
@@ -356,9 +356,15 @@
           
           <div class="form-row">
             <div class="form-group">
-              <label>Kategori Divisi</label>
+              <label>Kategori</label>
               <select id="agendaCat" name="category" required>
                 <option value="" disabled selected>Pilih Kategori...</option>
+                <option>Pelatihan</option>
+                <option>Seminar</option>
+                <option>Workshop</option>
+                <option>Webinar</option>
+                <option>Coaching</option>
+                <option>Networking</option>
                 <option value="Silabus BD">Silabus BD</option>
                 <option value="UMIBA">UMIBA</option>
                 <option value="GBKP Moria">GBKP Moria</option>
@@ -375,7 +381,7 @@
               <input type="date" id="agendaDate" name="event_date" required>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label>Jam Mulai</label>
@@ -386,64 +392,48 @@
               <input type="time" id="agendaEnd" name="end_time">
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
-              <label>Lokasi / Ruangan</label>
-              <input type="text" id="agendaLoc" name="location" placeholder="Misal: Aula RB">
+              <label>Lokasi / Platform</label>
+              <input type="text" id="agendaLoc" name="location" placeholder="Aula Lt.2 / Zoom">
             </div>
             <div class="form-group">
               <label>Kelas</label>
-              <select id="agendaKelas" name="kelas">
-                <option value="">Pilih...</option>
-                <option value="Offline">Offline</option>
-                <option value="Online">Online</option>
-              </select>
+              <input type="text" id="agendaKelas" name="kelas" placeholder="Kelas A / Offline / Online">
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>Jenis Pelatihan</label>
-            <select id="agendaJenisPelatihan" name="jenis_pelatihan">
-              <option value="">Pilih...</option>
-              <option value="Literasi Bisnis">Literasi Bisnis</option>
-              <option value="Literasi Digital">Literasi Digital</option>
-              <option value="Pelatihan Tematik">Pelatihan Tematik</option>
-              <option value="Literasi Dasar">Literasi Dasar</option>
-              <option value="Booking">Booking</option>
-            </select>
+            <input type="text" id="agendaJenisPelatihan" name="jenis_pelatihan" placeholder="Soft Skill / Hard Skill">
           </div>
         </div>
 
         <!-- Kolom Kanan: Tim & Tautan -->
         <div>
           <h4 style="margin-top:0; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="users" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tim Acara</h4>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label>Narasumber</label>
-              <input type="text" id="agendaSpeaker" name="speaker_name" placeholder="Nama Pembicara">
+              <input type="text" id="agendaSpeaker" name="speaker_name" placeholder="Nama narasumber">
             </div>
             <div class="form-group">
-              <label>Upload CV (Opsional)</label>
-              <input type="file" id="agendaCvFile" name="cvNarsum" accept=".pdf,.doc,.docx" style="font-size: 12px; padding: 6px;">
+              <label>PIC</label>
+              <input type="text" id="agendaPic" name="pic_name" placeholder="Nama PIC">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>PIC</label>
-              <input type="text" id="agendaPic" name="pic_name" placeholder="Penanggung Jawab">
-            </div>
-            <div class="form-group">
               <label>MC</label>
               <input type="text" id="agendaMC" name="mc" placeholder="Nama MC">
             </div>
-          </div>
-          
-          <div class="form-group">
-            <label>Jumlah Peserta</label>
-            <input type="number" id="agendaPeserta" name="jumlah_peserta" placeholder="Target Peserta (Angka)">
+            <div class="form-group">
+              <label>Target Peserta</label>
+              <input type="number" id="agendaPeserta" name="jumlah_peserta" placeholder="30">
+            </div>
           </div>
 
           <h4 style="margin-top:24px; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="link" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tautan (Opsional)</h4>
@@ -460,7 +450,7 @@
             <input type="url" id="linkSheets" name="spreadsheets_data_peserta" placeholder="Link Spreadsheet Data">
           </div>
           <div class="form-group" style="margin-bottom: 8px;">
-            <input type="text" id="captionSosmed" name="caption_sosmed" placeholder="Caption Sosmed Singkat">
+            <textarea id="captionSosmed" name="caption_sosmed" placeholder="Caption singkat untuk publikasi..." style="min-height:70px;"></textarea>
           </div>
         </div>
       </div>
@@ -571,7 +561,7 @@
   </div>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
   let currentDate = new Date();
   let isStaffUser = false; // set in initAppShell — checklist updates stay Staff Only
@@ -977,9 +967,9 @@
 
   initAppShell('agenda', function(user) {
     document.getElementById('topbarContainer').innerHTML = buildTopbar('Silabus');
-    isStaffUser = user.role === 'staff';
-    // Menambah agenda terbuka untuk semua user login (lihat pembatasan
-    // per-kategori di server.js POST /api/events) — bukan cuma Staff.
+    isStaffUser = user.role === 'staff' || user.role === 'sistem';
+    // Menambah agenda/event terbuka untuk semua user login (termasuk
+    // intern), bukan cuma Staff.
     document.getElementById('btnAddAgenda').style.display = 'flex';
     // Render initial calendar
     fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());

@@ -43,29 +43,38 @@ Aplikasi Web **Database Hub & Sistem Operasional Internal** berbasis **Node.js (
 ```text
 DatabaseRB/
 ├── public/                       # Berkas Aset Statis & Tampilan Frontend
+│   ├── pages/                    # Halaman HTML (tetap diakses lewat URL root, mis. /login.html)
+│   │   ├── absen.html            # Halaman Absensi Digital (GPS & Kamera)
+│   │   ├── admin.html            # Portal Divisi Admin
+│   │   ├── administrasi.html     # Portal Divisi Administrasi (Staff Only)
+│   │   ├── business-development.html # Portal Divisi Business Development
+│   │   ├── design.html           # Portal Divisi Design
+│   │   ├── email.html            # Portal Divisi Akun Email (Staff Only)
+│   │   ├── event.html            # Portal Divisi Event
+│   │   ├── index.html            # Dashboard Utama Aplikasi
+│   │   ├── login.html            # Halaman Masuk (Login)
+│   │   ├── manage-users.html     # Kelola Pengguna & Akun (Staff Only)
+│   │   ├── manage.html           # Kelola Link & Kredensial Divisi (Staff Only)
+│   │   ├── perizinan.html        # Halaman Pengajuan Izin/Sakit & Review Mentor
+│   │   ├── rekap-absen.html      # Rekap Absensi Real-time (Staff Only)
+│   │   └── sosmed.html           # Portal Divisi Social Media
+│   │   (+ agenda-hub, chat, event-hub, tampilan .html)
+│   ├── css/style.css             # Master Stylesheet (Design System & Tokens)
+│   ├── js/shared.js              # App Shell, Sidebar, Navigation, & Shared Utilities
+│   ├── js/theme.js               # Theme Manager Utility
 │   ├── FOTO/                     # Aset logo & gambar aplikasi
-│   ├── absen.html                # Halaman Absensi Digital (GPS & Kamera)
-│   ├── admin.html                # Portal Divisi Admin
-│   ├── administrasi.html         # Portal Divisi Administrasi (Staff Only)
-│   ├── business-development.html # Portal Divisi Business Development
-│   ├── design.html               # Portal Divisi Design
-│   ├── email.html                # Portal Divisi Akun Email (Staff Only)
-│   ├── event.html                # Portal Divisi Event
-│   ├── index.html                # Dashboard Utama Aplikasi
-│   ├── login.html                # Halaman Masuk (Login)
-│   ├── manage-users.html         # Kelola Pengguna & Akun (Staff Only)
-│   ├── manage.html               # Kelola Link & Kredensial Divisi (Staff Only)
-│   ├── perizinan.html            # Halaman Pengajuan Izin/Sakit & Review Mentor
-│   ├── rekap-absen.html          # Rekap Absensi Real-time (Staff Only)
-│   ├── shared.js                 # App Shell, Sidebar, Navigation, & Shared Utilities
-│   ├── sosmed.html               # Portal Divisi Social Media
-│   ├── style.css                 # Master Stylesheet (Design System & Tokens)
-│   └── theme.js                  # Theme Manager Utility
+│   ├── manifest.json             # PWA manifest
+│   └── sw.js                     # Service Worker (harus di root public/ agar scope '/')
+├── database/
+│   ├── schemas/                  # Definisi tabel SQL (schema_*.sql, setup_all_schemas.sql)
+│   └── migrations/               # ALTER SQL + migrate.js (import data/items.json)
+├── scripts/                      # Skrip utilitas/development (check_schemas, test_db, fix_*, dll.)
+├── data/items.json               # Data sumber untuk migrate.js
 ├── .env                          # Konfigurasi Environment (Supabase URL & Keys)
 ├── AI.md                         # Panduan Konteks & Arsitektur Teknis untuk AI Assistant
 ├── DESIGN.md                     # Dokumentasi Sistem Desain UI/UX
-├── schema_permissions.sql        # Skrip SQL Tabel Perizinan Supabase
 ├── server.js                     # Server Utama Backend Express.js
+├── vercel.json                   # Konfigurasi deploy Vercel
 └── package.json                  # Manifes Dependensi Node.js
 ```
 
@@ -92,7 +101,7 @@ SESSION_SECRET=rumahbumn-super-secret-session-key-2024
 
 ### 3. Eksekusi Skrip Database di Supabase
 Buka **Supabase Dashboard → SQL Editor**, kemudian jalankan query pembuatan tabel:
-- Tabel `permissions` (bisa dilihat di `schema_permissions.sql`):
+- Tabel `permissions` (bisa dilihat di `database/schemas/schema_permissions.sql`):
 ```sql
 CREATE TABLE IF NOT EXISTS public.permissions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

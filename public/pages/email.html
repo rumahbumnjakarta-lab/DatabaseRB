@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event — Database Rumah BUMN Jakarta</title>
-<meta name="description" content="Database link dan akses operasional divisi Event Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css">
+<title>Akun Email — Database Rumah BUMN Jakarta</title>
+<meta name="description" content="Akses kredensial akun email operasional Rumah BUMN Jakarta — Staff Only.">
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
@@ -16,30 +16,45 @@
       <button class="sidebar-toggle" onclick="toggleSidebar()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <div class="topbar-title">Event <small>Database link &amp; akses divisi</small></div>
+      <div class="topbar-title">
+        Akun Email
+        <small>
+          <span style="display:inline-flex;align-items:center;gap:5px;">
+            <span style="background:rgba(239,68,68,0.1);color:#dc2626;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;border:1px solid rgba(239,68,68,0.25);"><i data-lucide="lock" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px;"></i>Staff Only</span>
+            Kredensial email operasional
+          </span>
+        </small>
+      </div>
     </div>
     <div id="appContent" class="app-content" style="display:none;">
-      <div class="page-hero ph-event">
+      <div class="page-hero ph-secure">
         <div class="page-hero-c">
-          <h1><i data-lucide="calendar" style="width:24px;height:24px;"></i> Event</h1>
-          <p>Semua dokumen, rundown, form, dan akses operasional divisi Event.</p>
+          <h1><i data-lucide="mail" style="width:24px;height:24px;"></i> Akun Email Operasional</h1>
+          <p>Kredensial email resmi Rumah BUMN Jakarta. Halaman ini hanya dapat diakses oleh Staff.</p>
         </div>
       </div>
 
       <div class="pg-stats">
         <div class="pg-stat-card st-blue">
-          <div class="pg-stat-icon"><i data-lucide="layers" style="width:21px;height:21px;"></i></div>
-          <div class="pg-stat-text"><b id="stat-total">0</b><span>Total Item</span></div>
+          <div class="pg-stat-icon"><i data-lucide="key-round" style="width:21px;height:21px;"></i></div>
+          <div class="pg-stat-text"><b id="stat-total">0</b><span>Total Akun</span></div>
         </div>
         <div class="pg-stat-card st-purple">
           <div class="pg-stat-icon"><i data-lucide="folder" style="width:21px;height:21px;"></i></div>
           <div class="pg-stat-text"><b id="stat-cat">0</b><span>Kategori</span></div>
         </div>
       </div>
+
+      <!-- Warning Banner -->
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#dc2626;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Halaman ini berisi informasi sensitif. Jaga kerahasiaan data ini dan jangan berbagi kepada pihak tidak berwenang.</span>
+      </div>
+
       <div class="controls">
         <div class="search-bar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInput" type="text" placeholder="Cari dokumen, form, atau kata kunci...">
+          <input id="searchInput" type="text" placeholder="Cari akun email...">
         </div>
         <div class="chips" id="chipRow"></div>
       </div>
@@ -55,14 +70,15 @@
   </main>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
-initAppShell('event', function(user) {
-  fetch('/api/items?division=event')
+// Email page: Staff only
+initAppShell('email', function(user) {
+  fetch('/api/items?division=email')
     .then(r => r.json())
     .then(items => initDivisionPage(items))
     .catch(() => initDivisionPage([]));
-});
+}, true); // true = staffOnly
 </script>
 </body>
 </html>

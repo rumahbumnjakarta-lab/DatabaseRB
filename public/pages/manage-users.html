@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f3f6fa">
 <title>Kelola Akun — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Dashboard admin untuk mengelola akun staff dan internship divisi Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="/css/style.css?v=2">
 
 <style>
 /* ─── Slide-in Drawer ─── */
@@ -225,6 +225,7 @@
 }
 .role-badge.staff { background: rgba(5, 150, 105, 0.1); color: #059669; }
 .role-badge.intern { background: rgba(37, 99, 235, 0.1); color: #2563EB; }
+.role-badge.sistem { background: rgba(147, 51, 234, 0.1); color: #7e22ce; }
 
 .item-card .item-title {
   font-weight: 600;
@@ -448,14 +449,15 @@
           <input type="text" id="userName" placeholder="Contoh: John Doe" required>
         </div>
         <div class="form-field">
-          <label for="userEmail">Email Perusahaan</label>
-          <input type="email" id="userEmail" placeholder="nama@staff.rbjakarta.id" required>
+          <label for="userEmail">Email</label>
+          <input type="email" id="userEmail" placeholder="nama@email.com" required>
         </div>
         <div class="form-field">
           <label for="userRole">Peran</label>
           <select id="userRole" required>
             <option value="internship">Internship</option>
             <option value="staff">Staff</option>
+            <option value="sistem">Sistem</option>
           </select>
         </div>
         <div class="form-field">
@@ -496,7 +498,7 @@
   </div>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 var allUsers = [];
 var deleteTargetId = null;
@@ -539,9 +541,11 @@ function renderUsers() {
   empty.style.display = 'none';
   grid.innerHTML = filtered.map(u => {
     const initial = (u.name || u.email || '?').charAt(0).toUpperCase();
-    const roleBadge = u.role === 'staff' 
-      ? `<span class="role-badge staff">Staff</span>`
-      : `<span class="role-badge intern">Internship</span>`;
+    const roleBadge = u.role === 'sistem'
+      ? `<span class="role-badge sistem">Sistem</span>`
+      : u.role === 'staff'
+        ? `<span class="role-badge staff">Staff</span>`
+        : `<span class="role-badge intern">Internship</span>`;
 
     const avatarHtml = u.avatar_url && u.avatar_url.startsWith('http')
       ? `<img src="${u.avatar_url}" alt="" onerror="this.style.display='none'">`
@@ -584,17 +588,23 @@ function updateDivisiOptions(role, selectedVal = '') {
   select.appendChild(placeholder);
 
   let options = [];
-  if (role === 'staff') {
+  if (role === 'sistem') {
     options = [
-      { value: 'General Administration', label: 'General Administration' }
+      { value: 'Sistem', label: 'Sistem' }
+    ];
+  } else if (role === 'staff') {
+    options = [
+      { value: 'General Administration', label: 'General Administration' },
+      { value: 'Staff', label: 'Staff' }
     ];
   } else {
     options = [
       { value: 'Business Development', label: 'Business Development' },
       { value: 'Social Media', label: 'Social Media' },
-      { value: 'Design Graphic', label: 'Design Graphic' },
-      { value: 'Event & Partnerships', label: 'Event & Partnerships' },
-      { value: 'General Administration', label: 'General Administration' }
+      { value: 'Media & Content', label: 'Media & Content' },
+      { value: 'Design', label: 'Design' },
+      { value: 'General Administration', label: 'General Administration' },
+      { value: 'Staff', label: 'Staff' }
     ];
   }
 

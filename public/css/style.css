@@ -512,6 +512,11 @@ body {
   color: var(--blue-text);
   border: 1px solid rgba(21, 94, 239, 0.22);
 }
+.sidebar-user-role.role-sistem {
+  background: rgba(147, 51, 234, 0.1);
+  color: #7e22ce;
+  border: 1px solid rgba(147, 51, 234, 0.22);
+}
 .sidebar-logout-btn {
   background: none;
   border: none;
@@ -1505,6 +1510,7 @@ footer {
    banner peringatan merah di bawahnya tetap menonjol sebagai peringatan. */
 .page-hero.ph-secure { --ph-dark: #1e293b; --ph-mid: #475569; --ph-shadow: rgba(30,41,59,0.3); }
 .page-hero.ph-navy   { --ph-dark: #082b66; --ph-mid: #0b3b8f; --ph-shadow: rgba(8,43,102,0.3); }
+.page-hero.ph-sistem { --ph-dark: #581c87; --ph-mid: #9333ea; --ph-shadow: rgba(88,28,135,0.3); }
 
 /* ─── Shared Stat Cards (icon + number + label, like the Dashboard) ─── */
 .pg-stats {

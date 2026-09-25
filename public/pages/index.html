@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Pusat database operasional seluruh divisi Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <style>
 /* ═══════════════════════════════════════
    DASHBOARD — Premium Corporate Redesign
@@ -591,13 +591,14 @@
   </main>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 initAppShell('dashboard', function(user) {
   // Welcome message
   const name = user.name ? user.name.split(' ')[0] : 'Pengguna';
   document.getElementById('welcomeMsg').textContent = `Hello, ${name}!`;
-  document.getElementById('welcomeSub').innerHTML = `Anda masuk sebagai <strong>${user.role === 'staff' ? 'Staff' : 'Internship'}</strong> · ${user.email}`;
+  const roleLabelText = user.role === 'sistem' ? 'Sistem' : (user.role === 'staff' ? 'Staff' : 'Internship');
+  document.getElementById('welcomeSub').innerHTML = `Anda masuk sebagai <strong>${roleLabelText}</strong> · ${user.email}`;
 
   // GSAP animation for greeting & cards
   if (window.gsap) {
@@ -607,7 +608,8 @@ initAppShell('dashboard', function(user) {
   }
 
   // Show staff section & cards
-  if (user.role === 'staff') {
+  const isStaffOrSistem = user.role === 'staff' || user.role === 'sistem';
+  if (isStaffOrSistem) {
     document.getElementById('staffSection').style.display = 'block';
     const rekapCard = document.getElementById('rekapAbsenCard');
     if (rekapCard) rekapCard.style.display = 'flex';
@@ -615,7 +617,7 @@ initAppShell('dashboard', function(user) {
 
   // Load stats per division
   const divs = ['bd', 'sosmed', 'design', 'event', 'admin'];
-  if (user.role === 'staff') {
+  if (isStaffOrSistem) {
     divs.push('email');
     divs.push('administrasi');
   }

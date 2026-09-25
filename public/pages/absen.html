@@ -9,7 +9,7 @@
 <title>Absensi — Rumah BUMN Jakarta</title>
 <meta name="description" content="Sistem absensi digital Rumah BUMN Jakarta dengan GPS dan foto selfie.">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -505,7 +505,7 @@
   </main>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 var currentUser = null;
 
@@ -566,9 +566,10 @@ initAppShell('absen', function(user) {
   document.getElementById('greetIconWrap').innerHTML =
     `<i data-lucide="${greetIcon}" style="width:24px;height:24px;"></i>`;
   if (typeof renderIcons === 'function') renderIcons();
-  document.getElementById('greetSub').textContent = user.role === 'staff' ? 'Selamat bekerja, Staff Rumah BUMN!' : 'Semangat magang hari ini!';
+  const isStaffOrSistem = user.role === 'staff' || user.role === 'sistem';
+  document.getElementById('greetSub').textContent = isStaffOrSistem ? 'Selamat bekerja, Staff Rumah BUMN!' : 'Semangat magang hari ini!';
 
-  if (user.role === 'staff') {
+  if (isStaffOrSistem) {
     const ql = document.getElementById('quickLinkPerizinan');
     if (ql) ql.style.display = 'none';
   }
@@ -580,7 +581,7 @@ initAppShell('absen', function(user) {
   updateClock();
   setInterval(updateClock, 1000);
 
-  if (user.role !== 'staff') {
+  if (!isStaffOrSistem) {
     renderAbsenButtons(user);
     initMap();
     getLocation();
@@ -599,7 +600,7 @@ async function renderAbsenButtons(user) {
   if (!wrap) return;
 
   let wfhAllowed = true;
-  if (user.role !== 'staff') {
+  if (user.role !== 'staff' && user.role !== 'sistem') {
     try {
       const res = await fetch('/api/wfh-assignments/mine');
       const data = await res.json();
@@ -637,7 +638,7 @@ async function renderAbsenButtons(user) {
 
 // ─── Staff tidak perlu absen sendiri — sembunyikan GPS, kamera, dan tombol absen ───
 function applyStaffLayout(user) {
-  if (user.role !== 'staff') return;
+  if (user.role !== 'staff' && user.role !== 'sistem') return;
 
   const grid = document.getElementById('absenGrid');
   const leftCol = document.getElementById('absenLeftCol');
@@ -656,7 +657,7 @@ function applyStaffLayout(user) {
 function initWfhManage(user) {
   const card = document.getElementById('wfhManageCard');
   if (!card) return;
-  if (user.role !== 'staff') { card.style.display = 'none'; return; }
+  if (user.role !== 'staff' && user.role !== 'sistem') { card.style.display = 'none'; return; }
   card.style.display = 'block';
 
   const dateInput = document.getElementById('wfhDate');
@@ -905,7 +906,7 @@ async function submitAbsen(mode) {
   // ketahuan SETELAH foto+GPS selesai diambil dan dikirim. Cek ulang di sini
   // dulu supaya penolakannya langsung kelihatan, bukan nunggu round-trip
   // upload foto yang sia-sia.
-  if (mode === 'wfh' && currentUser && currentUser.role !== 'staff') {
+  if (mode === 'wfh' && currentUser && currentUser.role !== 'staff' && currentUser.role !== 'sistem') {
     try {
       const res = await fetch('/api/wfh-assignments/mine');
       const data = await res.json();

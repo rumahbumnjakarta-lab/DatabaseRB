@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f3f6fa">
+<title>Monitoring Sistem — Database Rumah BUMN Jakarta</title>
+<meta name="description" content="Pantau aktivitas dan trouble aplikasi secara realtime — khusus role Sistem.">
+<link rel="stylesheet" href="/css/style.css?v=2">
+
+<style>
+.mon-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+}
+.mon-filter-pill {
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+  font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600;
+  padding: 7px 14px; border-radius: 20px; cursor: pointer; transition: all 0.15s;
+}
+.mon-filter-pill:hover { border-color: var(--border-mid); }
+.mon-filter-pill.active { background: #7e22ce; border-color: #7e22ce; color: #fff; }
+.mon-toolbar-spacer { flex: 1; }
+.mon-live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block;
+  animation: monPulse 1.6s ease-in-out infinite;
+}
+@keyframes monPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+}
+.mon-live-label { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+.mon-feed { max-height: 62vh; overflow-y: auto; }
+.mon-row {
+  display: flex; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.mon-row:last-child { border-bottom: none; }
+.mon-row.mon-new { animation: monRowIn 1.2s ease; }
+@keyframes monRowIn { from { background: rgba(147,51,234,0.10); } to { background: transparent; } }
+.mon-level-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.mon-level-dot.info { background: #155eef; }
+.mon-level-dot.warning { background: #f59e0b; }
+.mon-level-dot.error { background: #dc2626; }
+.mon-row-body { flex: 1; min-width: 0; }
+.mon-row-msg { font-size: 13.5px; color: var(--text-primary); line-height: 1.5; word-break: break-word; }
+.mon-row-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+.mon-row-type {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 1px 8px; border-radius: 20px; background: var(--bg-hover); color: var(--text-muted);
+}
+.mon-empty { padding: 60px 24px; text-align: center; color: var(--text-muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+
+  <main class="app-main">
+    <div id="authLoading">
+      <div style="text-align:center;">
+        <div class="loading-spinner"></div>
+        <p style="color:var(--text-muted);font-family:Inter,sans-serif;font-size:13px;">Memeriksa izin akses...</p>
+      </div>
+    </div>
+
+    <div class="app-topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Monitoring Sistem <small>Aktivitas &amp; trouble aplikasi realtime</small></div>
+    </div>
+
+    <div id="appContent" class="app-content" style="display:none;">
+      <div class="dash-content" style="width: 100%; max-width: 100%; margin: 24px 0 60px; padding: 0 24px;">
+
+        <div class="page-hero ph-sistem">
+          <div class="page-hero-c">
+            <h1><i data-lucide="activity" style="width:24px;height:24px;"></i> Monitoring Sistem</h1>
+            <p>Aktivitas login, absen, izin, registrasi, dan error aplikasi — semuanya diperbarui otomatis.</p>
+          </div>
+          <div class="page-hero-actions">
+            <button class="btn-ph" onclick="fetchStats(); fetchActivity(true);">
+              <i data-lucide="refresh-cw" style="width:16px;height:16px;"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-card-icon">👥</div><div class="stat-card-value" id="statTotalUsers">–</div><div class="stat-card-label">Total Akun</div></div>
+          <div class="stat-card"><div class="stat-card-icon">🛠️</div><div class="stat-card-value" id="statStaff">–</div><div class="stat-card-label">Staff</div></div>
+          <div class="stat-card"><div class="stat-card-icon">🎓</div><div class="stat-card-value" id="statIntern">–</div><div class="stat-card-label">Internship</div></div>
+          <div class="stat-card"><div class="stat-card-icon">🖥️</div><div class="stat-card-value" id="statSistem">–</div><div class="stat-card-label">Sistem</div></div>
+          <div class="stat-card"><div class="stat-card-icon">📄</div><div class="stat-card-value" id="statPendingIzin">–</div><div class="stat-card-label">Izin Pending</div></div>
+          <div class="stat-card"><div class="stat-card-icon">🚨</div><div class="stat-card-value" id="statErrorsToday">–</div><div class="stat-card-label">Error Hari Ini</div></div>
+        </div>
+
+        <div class="table-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:0 4px 20px var(--card-shadow);">
+          <div class="mon-toolbar">
+            <button class="mon-filter-pill active" data-level="" onclick="setLevelFilter('', this)">Semua</button>
+            <button class="mon-filter-pill" data-level="info" onclick="setLevelFilter('info', this)">Info</button>
+            <button class="mon-filter-pill" data-level="warning" onclick="setLevelFilter('warning', this)">Warning</button>
+            <button class="mon-filter-pill" data-level="error" onclick="setLevelFilter('error', this)">Error</button>
+            <div class="mon-toolbar-spacer"></div>
+            <span class="mon-live-label"><span class="mon-live-dot"></span> Live</span>
+          </div>
+          <div class="mon-feed" id="monFeed">
+            <div class="mon-empty">Memuat aktivitas...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/shared.js"></script>
+<script>
+var currentLevel = '';
+var latestSeenAt = null; // ISO timestamp of the newest row currently shown — used for "since" polling
+var pollTimer = null;
+
+initAppShell('monitoring', function(user) {
+  fetchStats();
+  fetchActivity(true);
+  pollTimer = setInterval(() => {
+    fetchActivity(false);
+  }, 5000);
+  setInterval(fetchStats, 20000);
+}, false, true); // systemOnly = true
+
+function setLevelFilter(level, btn) {
+  currentLevel = level;
+  document.querySelectorAll('.mon-filter-pill').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  latestSeenAt = null;
+  fetchActivity(true);
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/system/stats');
+    if (!res.ok) return;
+    const s = await res.json();
+    document.getElementById('statTotalUsers').textContent = s.total_users;
+    document.getElementById('statStaff').textContent = s.total_staff;
+    document.getElementById('statIntern').textContent = s.total_internship;
+    document.getElementById('statSistem').textContent = s.total_sistem;
+    document.getElementById('statPendingIzin').textContent = s.pending_permissions;
+    document.getElementById('statErrorsToday').textContent = s.errors_today;
+  } catch (err) {
+    console.error('Gagal memuat statistik sistem:', err);
+  }
+}
+
+async function fetchActivity(replace) {
+  const feed = document.getElementById('monFeed');
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', replace ? '50' : '20');
+    if (currentLevel) params.set('level', currentLevel);
+    if (!replace && latestSeenAt) params.set('since', latestSeenAt);
+
+    const res = await fetch('/api/system/activity?' + params.toString());
+    if (!res.ok) {
+      if (replace) feed.innerHTML = `<div class="mon-empty">Gagal memuat aktivitas.</div>`;
+      return;
+    }
+    const rows = await res.json();
+
+    if (replace) {
+      latestSeenAt = rows.length ? rows[0].created_at : null;
+      renderFeed(rows, false);
+    } else if (rows.length) {
+      latestSeenAt = rows[0].created_at;
+      prependFeed(rows);
+    }
+  } catch (err) {
+    console.error('Gagal memuat aktivitas:', err);
+  }
+}
+
+function renderFeed(rows, isNew) {
+  const feed = document.getElementById('monFeed');
+  if (!rows.length) {
+    feed.innerHTML = `<div class="mon-empty">Belum ada aktivitas${currentLevel ? ' level ini' : ''}.</div>`;
+    return;
+  }
+  feed.innerHTML = rows.map(r => rowHTML(r, isNew)).join('');
+  if (typeof renderIcons === 'function') renderIcons();
+}
+
+function prependFeed(rows) {
+  const feed = document.getElementById('monFeed');
+  const empty = feed.querySelector('.mon-empty');
+  if (empty) empty.remove();
+  const html = rows.map(r => rowHTML(r, true)).join('');
+  feed.insertAdjacentHTML('afterbegin', html);
+}
+
+function rowHTML(r) {
+  const time = new Date(r.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const who = r.user_name || r.user_email || '';
+  return `
+    <div class="mon-row mon-new">
+      <span class="mon-level-dot ${escHtml(r.level)}"></span>
+      <div class="mon-row-body">
+        <div class="mon-row-msg">${escHtml(r.message)}</div>
+        <div class="mon-row-meta">
+          <span class="mon-row-type">${escHtml(r.type)}</span>
+          ${who ? `<span>${escHtml(who)}</span>` : ''}
+          <span>${time}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

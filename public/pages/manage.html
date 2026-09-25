@@ -7,7 +7,7 @@
 <meta name="description" content="Dashboard admin untuk mengelola link operasional dan kredensial divisi Rumah BUMN Jakarta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="/css/style.css?v=2">
 
 <style>
 /* =============================================
@@ -723,7 +723,7 @@ var divNames = {
 
 // ─── Init (called by initAppShell after auth) ───
 function initManagePage(user) {
-  if (user && user.role !== 'staff') {
+  if (user && user.role !== 'staff' && user.role !== 'sistem') {
     // Hide/remove staff only pills in sidebar/selector
     const adminPill = document.querySelector('.div-pill[data-tab="administrasi"]');
     if (adminPill) adminPill.remove();
@@ -754,7 +754,7 @@ function fetchData() {
     .then(r => r.json())
     .then(data => {
       // Filter out staff-only divisions if intern
-      if (window.currentUserCache && window.currentUserCache.role !== 'staff') {
+      if (window.currentUserCache && window.currentUserCache.role !== 'staff' && window.currentUserCache.role !== 'sistem') {
         data = data.filter(i => i.division !== 'administrasi' && i.division !== 'email');
       }
       allItems = data;
@@ -1046,17 +1046,23 @@ function updateManageDivisiOptions(role, selectedVal = '') {
   select.appendChild(placeholder);
 
   let options = [];
-  if (role === 'staff') {
+  if (role === 'sistem') {
     options = [
-      { value: 'General Administration', label: 'General Administration' }
+      { value: 'Sistem', label: 'Sistem' }
+    ];
+  } else if (role === 'staff') {
+    options = [
+      { value: 'General Administration', label: 'General Administration' },
+      { value: 'Staff', label: 'Staff' }
     ];
   } else {
     options = [
       { value: 'Business Development', label: 'Business Development' },
       { value: 'Social Media', label: 'Social Media' },
-      { value: 'Design Graphic', label: 'Design Graphic' },
-      { value: 'Event & Partnerships', label: 'Event & Partnerships' },
-      { value: 'General Administration', label: 'General Administration' }
+      { value: 'Media & Content', label: 'Media & Content' },
+      { value: 'Design', label: 'Design' },
+      { value: 'General Administration', label: 'General Administration' },
+      { value: 'Staff', label: 'Staff' }
     ];
   }
 
@@ -1071,22 +1077,21 @@ function updateManageDivisiOptions(role, selectedVal = '') {
   });
 }
 
-// Bind email input keyup/change to detect role.
-// The input lives further down the document, so wait for the DOM to finish
+// Bind role select change to refresh the divisi options.
+// The select lives further down the document, so wait for the DOM to finish
 // parsing — binding inline here ran before the element existed and threw.
 document.addEventListener('DOMContentLoaded', () => {
-  const emailInput = document.getElementById('manageRegEmail');
-  if (!emailInput) return;
-  emailInput.addEventListener('input', (e) => {
-    const email = e.target.value.toLowerCase().trim();
-    const role = email.endsWith('@staff.rbjakarta.id') ? 'staff' : 'internship';
-    updateManageDivisiOptions(role);
+  const roleSelect = document.getElementById('manageRegRole');
+  if (!roleSelect) return;
+  roleSelect.addEventListener('change', (e) => {
+    updateManageDivisiOptions(e.target.value);
   });
 });
 
 // ─── Register ───
 function openRegisterModal() {
   document.getElementById('manageRegisterForm').reset();
+  document.getElementById('manageRegRole').value = 'internship';
   updateManageDivisiOptions('internship'); // default
   document.getElementById('registerModal').classList.add('open');
 }
@@ -1104,13 +1109,14 @@ async function handleManageRegister(e) {
   const name = document.getElementById('manageRegName').value.trim();
   const email = document.getElementById('manageRegEmail').value.trim();
   const divisi = document.getElementById('manageRegDivisi').value;
+  const role = document.getElementById('manageRegRole').value;
   const password = document.getElementById('manageRegPassword').value;
 
   try {
     const res = await fetch('/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, divisi })
+      body: JSON.stringify({ name, email, password, divisi, role })
     });
     
     let data;
@@ -1145,7 +1151,7 @@ function truncate(s, n) {
 }
 </script>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 // ─── Staff & Intern Auth Guard via shared.js ───
 initAppShell('manage', function(user) {
@@ -1273,7 +1279,7 @@ initAppShell('manage', function(user) {
 
     <div class="drawer-body">
       <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;margin-top:0;margin-bottom:20px;">
-        Gunakan email <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong> untuk mendaftarkan anggota tim baru.
+        Daftarkan anggota tim baru dengan email bebas (tidak harus email perusahaan).
       </p>
       <form id="manageRegisterForm" onsubmit="handleManageRegister(event)">
         <div class="form-field">
@@ -1281,21 +1287,27 @@ initAppShell('manage', function(user) {
           <input type="text" id="manageRegName" placeholder="Contoh: John Doe" required>
         </div>
         <div class="form-field">
-          <label for="manageRegEmail">Email Perusahaan</label>
-          <input type="email" id="manageRegEmail" placeholder="nama@staff.rbjakarta.id" required>
+          <label for="manageRegEmail">Email</label>
+          <input type="email" id="manageRegEmail" placeholder="nama@email.com" required>
+        </div>
+        <div class="form-field">
+          <label for="manageRegRole">Role <span style="color:#DC2626">*</span></label>
+          <select id="manageRegRole" required>
+            <option value="internship">Internship</option>
+            <option value="staff">Staff</option>
+            <option value="sistem">Sistem</option>
+          </select>
         </div>
         <div class="form-field">
           <label for="manageRegDivisi">Divisi <span style="color:#DC2626">*</span></label>
           <select id="manageRegDivisi" required>
             <option value="" disabled selected>Pilih Divisi...</option>
-            <option value="Sekretaris">Sekretaris</option>
-            <option value="Bendahara">Bendahara</option>
             <option value="Business Development">Business Development</option>
             <option value="Social Media">Social Media</option>
-            <option value="PIC UMIBA">PIC UMIBA</option>
-            <option value="Fasilitator">Fasilitator</option>
-            <option value="Media & Content">Media & Content</option>
+            <option value="Media &amp; Content">Media &amp; Content</option>
             <option value="Design">Design</option>
+            <option value="General Administration">General Administration</option>
+            <option value="Staff">Staff</option>
           </select>
         </div>
         <div class="form-field">

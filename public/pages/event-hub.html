@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Event &amp; Partnership Hub — Rumah BUMN Jakarta</title>
 <meta name="description" content="Pusat pengelolaan kegiatan, narasumber, dokumen partnership, dan presensi divisi Event Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <style>
@@ -567,7 +567,7 @@ body{background:var(--bg-app);}
           </h1>
           <p>Kelola narasumber, dokumen partnership, dan presensi kegiatan divisi Event</p>
           <div class="hdr-actions">
-            <button class="btn-hp" onclick="openAddModal()" id="btnAddEv" style="display:none;">
+            <button class="btn-hp" onclick="openAddModal()" id="btnAddEv">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Tambah Event
             </button>
@@ -751,7 +751,7 @@ body{background:var(--bg-app);}
       <div class="mbody">
         <div class="frow">
           <div class="fg"><label>Kategori *</label>
-            <select name="category" required><option value="">Pilih...</option><option>Pelatihan</option><option>Seminar</option><option>Workshop</option><option>Webinar</option><option>Coaching</option><option>Networking</option><option>Lainnya</option></select>
+            <select name="category" required><option value="">Pilih...</option><option>Pelatihan</option><option>Seminar</option><option>Workshop</option><option>Webinar</option><option>Coaching</option><option>Networking</option><option>Silabus BD</option><option>UMIBA</option><option>GBKP Moria</option><option>Event</option><option>Audiensi</option><option>Design</option><option>Sosmed</option><option>Admin</option><option>Lainnya</option></select>
           </div>
           <div class="fg"><label>Tanggal *</label><input type="date" name="event_date" required></div>
         </div>
@@ -774,12 +774,13 @@ body{background:var(--bg-app);}
         </div>
         <div class="frow">
           <div class="fg"><label>Target Peserta</label><input type="number" name="jumlah_peserta" placeholder="30"></div>
-          <div class="fg"><label>CV Narasumber (PDF)</label><input type="file" name="cvNarsum" accept=".pdf,.doc,.docx"></div>
+          <div class="fg"><label>Link UMKM</label><input type="url" name="link_umkm" placeholder="Link pendataan UMKM (opsional)"></div>
         </div>
         <div class="frow">
-          <div class="fg"><label>Link Zoom</label><input type="url" name="link_zoom" placeholder="https://zoom.us/..."></div>
-          <div class="fg"><label>GForm Pendaftaran</label><input type="url" name="link_pendaftaran_gform" placeholder="https://forms.google.com/..."></div>
+          <div class="fg"><label>Link Zoom</label><input type="url" name="link_zoom" placeholder="https://zoom.us/... (opsional)"></div>
+          <div class="fg"><label>GForm Pendaftaran</label><input type="url" name="link_pendaftaran_gform" placeholder="https://forms.google.com/... (opsional)"></div>
         </div>
+        <div class="fg" style="margin-bottom:12px;"><label>Spreadsheet Data Peserta</label><input type="url" name="spreadsheets_data_peserta" placeholder="Link spreadsheet (opsional)"></div>
         <div class="fg"><label>Caption Sosmed</label><textarea name="caption_sosmed" placeholder="Caption singkat untuk publikasi..."></textarea></div>
       </div>
       <div class="mfoot">
@@ -1426,7 +1427,7 @@ body{background:var(--bg-app);}
 <!-- ══════════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════════════ -->
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 let AE = [], CE = null, CF = 'all', IS = false;
 
@@ -1449,8 +1450,7 @@ const CLF = [
 
 initAppShell('event', function(u) {
   document.getElementById('topbarContainer').innerHTML = buildTopbar('Event & Partnership Hub', 'Narasumber, Dokumen & Presensi');
-  IS = u.role === 'staff';
-  if (IS) document.getElementById('btnAddEv').style.display = 'flex';
+  IS = u.role === 'staff' || u.role === 'sistem';
   loadEvents();
 });
 

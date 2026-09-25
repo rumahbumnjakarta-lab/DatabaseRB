@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Design — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Design Request Dashboard dan database operasional divisi Design Rumah BUMN Jakarta.">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -312,7 +312,7 @@
   </div>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
   let allRequests = [];
   let currentFilter = 'all';
@@ -463,7 +463,7 @@
 
     // Show action buttons for staff
     const actionsEl = document.getElementById('detDrActions');
-    if (currentUser && currentUser.role === 'staff') {
+    if (currentUser && (currentUser.role === 'staff' || currentUser.role === 'sistem')) {
       actionsEl.style.display = 'block';
       document.getElementById('detDrStatus').value = r.status;
       document.getElementById('detDrNotes').value = r.designer_notes || '';

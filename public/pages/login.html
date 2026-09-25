@@ -183,20 +183,38 @@
   .input-group label { font-size: 12px; font-weight: 600; color: #334155; }
   .input-wrap { position: relative; display: flex; align-items: center; }
   .input-wrap svg.field-icon { position: absolute; left: 14px; color: #94a3b8; pointer-events: none; transition: color 0.2s; }
-  .input-group input {
+  .input-group input,
+  .input-group select {
     width: 100%; background: #f8fafc;
     border: 1.5px solid transparent; box-shadow: inset 0 0 0 1.5px rgba(15,23,42,0.09);
     border-radius: 12px;
     padding: 12px 14px 12px 40px; font-size: 14px; color: #0f172a; outline: none; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
   }
+  .input-group select { padding-left: 14px; }
   .input-group input::placeholder { color: #94a3b8; }
-  .input-group input:focus {
+  .input-group input:focus,
+  .input-group select:focus {
     background: #ffffff;
     box-shadow: inset 0 0 0 1.5px #307fe2, 0 0 0 4px rgba(48,127,226,0.12);
   }
   .input-group input:focus ~ svg.field-icon { color: #307fe2; }
   .input-group input[type="password"],
   .input-group input[data-pw-visible] { padding-right: 40px; }
+
+  /* ─── Auth tabs (Masuk / Daftar) ─── */
+  .auth-tabs {
+    display: flex; gap: 6px; padding: 4px; margin-bottom: 24px;
+    background: #f1f5f9; border-radius: 12px;
+  }
+  .auth-tab {
+    flex: 1; padding: 9px; border: none; border-radius: 9px; background: transparent;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #64748b;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .auth-tab.active { background: #ffffff; color: #0857c3; box-shadow: 0 1px 4px rgba(15,23,42,0.12); }
+  .auth-tab-panel { display: none; }
+  .auth-tab-panel.active { display: block; }
 
   .pw-toggle {
     position: absolute; right: 10px; display: flex; align-items: center; justify-content: center;
@@ -315,45 +333,128 @@
   <!-- Right: login form panel -->
   <main class="auth-panel">
     <div class="auth-panel-inner">
-      <div class="form-kicker">Selamat Datang Kembali</div>
-      <h1>Masuk ke Database Hub</h1>
-      <p class="subtitle">Gunakan email domain <strong>@intern.rbjakarta.id</strong> atau <strong>@staff.rbjakarta.id</strong> untuk masuk.</p>
+      <div class="form-kicker">Database Hub</div>
 
-      <!-- Notifikasi -->
-      <div class="notif-box" id="notifBox">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="notifText"></span>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabBtnLogin" onclick="switchAuthTab('login')">Masuk</button>
+        <button type="button" class="auth-tab" id="tabBtnRegister" onclick="switchAuthTab('register')">Daftar</button>
       </div>
 
-      <!-- Form Login -->
-      <form id="loginForm" class="auth-form">
-        <div class="input-group">
-          <label for="loginEmail">Email Perusahaan</label>
-          <div class="input-wrap">
-            <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
-            <input type="email" id="loginEmail" placeholder="nama@staff.rbjakarta.id" required>
-          </div>
-        </div>
-        <div class="input-group">
-          <label for="loginPassword">Kata Sandi</label>
-          <div class="input-wrap">
-            <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="loginPassword" placeholder="••••••••" required>
-            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Tampilkan kata sandi">
-              <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            </button>
-          </div>
-        </div>
-        <button type="submit" class="btn-submit" id="btnLoginBtn">
-          <span class="btn-label">Masuk ke Sistem</span>
-          <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </button>
-      </form>
+      <!-- ═══════════ Panel: Masuk ═══════════ -->
+      <div class="auth-tab-panel active" id="loginPanel">
+        <h1>Masuk ke Database Hub</h1>
+        <p class="subtitle">Masuk menggunakan email dan kata sandi akun Anda.</p>
 
-      <p class="login-note">
-        Akses dan peran Anda (Internship atau Staff) akan ditentukan <strong>otomatis</strong> berdasarkan domain email yang digunakan.
-      </p>
+        <!-- Notifikasi -->
+        <div class="notif-box" id="notifBox">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="notifText"></span>
+        </div>
+
+        <!-- Form Login -->
+        <form id="loginForm" class="auth-form">
+          <div class="input-group">
+            <label for="loginEmail">Email</label>
+            <div class="input-wrap">
+              <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+              <input type="email" id="loginEmail" placeholder="nama@email.com" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="loginPassword">Kata Sandi</label>
+            <div class="input-wrap">
+              <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="loginPassword" placeholder="••••••••" required>
+              <button type="button" class="pw-toggle" id="pwToggle" aria-label="Tampilkan kata sandi">
+                <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a20.3 20.3 0 0 1-3.22 4.44M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="btnLoginBtn">
+            <span class="btn-label">Masuk ke Sistem</span>
+            <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- ═══════════ Panel: Daftar ═══════════ -->
+      <div class="auth-tab-panel" id="registerPanel">
+        <h1>Daftar Akun</h1>
+        <p class="subtitle">Masukkan kode akses untuk membuka form pendaftaran.</p>
+
+        <div class="notif-box" id="regNotifBox">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="regNotifText"></span>
+        </div>
+
+        <!-- Gate: kode akses -->
+        <form id="registerGateForm" class="auth-form">
+          <div class="input-group">
+            <label for="gatePassword">Kode Akses Pendaftaran</label>
+            <div class="input-wrap">
+              <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="gatePassword" placeholder="••••••••" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="btnGateBtn">
+            <span class="btn-label">Lanjutkan</span>
+            <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <!-- Form daftar (muncul setelah kode akses benar) -->
+        <form id="registerForm" class="auth-form" style="display:none;">
+          <div class="input-group">
+            <label for="regName">Nama Lengkap</label>
+            <div class="input-wrap">
+              <input type="text" id="regName" placeholder="Nama lengkap" required style="padding-left:14px;">
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="regEmail">Email</label>
+            <div class="input-wrap">
+              <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+              <input type="email" id="regEmail" placeholder="nama@email.com" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="regDivisi">Divisi</label>
+            <div class="input-wrap">
+              <select id="regDivisi" required>
+                <option value="" disabled selected>Pilih Divisi...</option>
+                <option value="Business Development">Business Development</option>
+                <option value="Social Media">Social Media</option>
+                <option value="Media & Content">Media & Content</option>
+                <option value="Design">Design</option>
+                <option value="General Administration">General Administration</option>
+                <option value="Staff">Staff</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="regRole">Role</label>
+            <div class="input-wrap">
+              <select id="regRole" required>
+                <option value="" disabled selected>Pilih Role...</option>
+                <option value="internship">Internship</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="regPassword">Kata Sandi</label>
+            <div class="input-wrap">
+              <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="regPassword" placeholder="Minimal 6 karakter" required minlength="6">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="btnRegisterBtn">
+            <span class="btn-label">Buat Akun</span>
+            <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+      </div>
     </div>
   </main>
 
@@ -385,9 +486,13 @@
     btn.setAttribute('aria-label', showing ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi');
   });
 
-  function isValidCompanyEmail(email) {
-    const clean = email.toLowerCase().trim();
-    return clean.endsWith('@intern.rbjakarta.id') || clean.endsWith('@staff.rbjakarta.id');
+  // Tab switcher: Masuk / Daftar
+  function switchAuthTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('tabBtnLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabBtnRegister').classList.toggle('active', !isLogin);
+    document.getElementById('loginPanel').classList.toggle('active', isLogin);
+    document.getElementById('registerPanel').classList.toggle('active', !isLogin);
   }
 
   function showNotif(msg, type) {
@@ -433,6 +538,66 @@
       btnLabel.textContent = 'Masuk ke Sistem';
     }
   });
+
+  // Kode akses disimpan sementara di memori tab (bukan disimpan permanen)
+  // supaya bisa dikirim ulang bareng data registrasi ke server untuk
+  // divalidasi ulang di sana — pengecekan di sini cuma untuk UX.
+  let registerGatePassword = '';
+
+  document.getElementById('registerGateForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('gatePassword');
+    const entered = input.value;
+
+    if (entered !== '12345678') {
+      showRegNotif('Kode akses salah.', 'error');
+      return;
+    }
+
+    registerGatePassword = entered;
+    document.getElementById('registerGateForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'flex';
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnRegisterBtn');
+    const btnLabel = btn.querySelector('.btn-label');
+    btn.disabled = true;
+    btnLabel.textContent = 'Memproses...';
+
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const divisi = document.getElementById('regDivisi').value;
+    const role = document.getElementById('regRole').value;
+    const password = document.getElementById('regPassword').value;
+
+    try {
+      const res = await fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, divisi, role, password, gatePassword: registerGatePassword })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showRegNotif(data.error || 'Gagal mendaftar.', 'error');
+      } else {
+        showRegNotif('Registrasi berhasil! Silakan masuk.', 'success');
+        document.getElementById('registerForm').reset();
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('registerGateForm').style.display = 'flex';
+        document.getElementById('registerGateForm').reset();
+        registerGatePassword = '';
+        setTimeout(() => switchAuthTab('login'), 1600);
+      }
+    } catch (err) {
+      showRegNotif('Koneksi terputus. Coba lagi.', 'error');
+    } finally {
+      btn.disabled = false;
+      btnLabel.textContent = 'Buat Akun';
+    }
+  });
 </script>
 <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
 <script>
@@ -448,6 +613,23 @@
       });
     } else {
       const box = document.getElementById('notifBox');
+      box.textContent = msg;
+      box.className = `notif-box show ${type}`;
+    }
+  }
+
+  function showRegNotif(msg, type = 'error') {
+    if (window.Swal) {
+      Swal.fire({
+        icon: type === 'error' ? 'error' : 'success',
+        title: type === 'error' ? 'Gagal' : 'Berhasil',
+        text: msg,
+        background: '#ffffff',
+        color: '#0f172a',
+        confirmButtonColor: '#307fe2'
+      });
+    } else {
+      const box = document.getElementById('regNotifBox');
       box.textContent = msg;
       box.className = `notif-box show ${type}`;
     }

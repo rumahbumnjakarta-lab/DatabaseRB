@@ -9,7 +9,7 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="/css/style.css?v=3">
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
@@ -436,7 +436,7 @@
   </div>
 </div>
 
-<script src="shared.js"></script>
+<script src="/js/shared.js"></script>
 <script>
 let currentUser = null;
 let allPermissions = [];
@@ -452,7 +452,7 @@ initAppShell('perizinan', function(user) {
   document.getElementById('startDate').value = todayStr;
   document.getElementById('endDate').value = todayStr;
 
-  const isStaff = user && user.role === 'staff';
+  const isStaff = user && (user.role === 'staff' || user.role === 'sistem');
   const subElem = document.getElementById('permHeaderSub');
   const btnNew = document.getElementById('btnOpenNewPerm');
 
@@ -531,7 +531,7 @@ function renderPermissions() {
   }
 
   permGrid.innerHTML = list.map(item => {
-    const isStaff = currentUser && currentUser.role === 'staff';
+    const isStaff = currentUser && (currentUser.role === 'staff' || currentUser.role === 'sistem');
     const isOwner = currentUser && currentUser.id === item.user_id;
     const initial = (item.user_name || item.user_email || '?').charAt(0).toUpperCase();
 

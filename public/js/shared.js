@@ -20,6 +20,7 @@ const SEARCH_PAGES = [
   { href: '/email.html', icon: 'mail', label: 'Akun Email', staffOnly: true },
   { href: '/manage-users.html', icon: 'users', label: 'Kelola Akun', staffOnly: true },
   { href: '/rekap-absen.html', icon: 'bar-chart-3', label: 'Rekap Absensi', staffOnly: true },
+  { href: '/monitoring.html', icon: 'activity', label: 'Monitoring', systemOnly: true },
 ];
 
 // Which page shows a given data item, by items.division value.
@@ -35,9 +36,12 @@ const SEARCH_ITEM_PAGE = {
 
 // ─── Build Sidebar HTML ───
 function buildSidebar(user, activePage) {
-  const isStaff = user && user.role === 'staff';
-  const roleClass = isStaff ? 'role-staff' : 'role-internship';
-  const roleLabel = isStaff ? 'Staff' : 'Internship';
+  const isSistem = user && user.role === 'sistem';
+  // 'sistem' punya akses setara staff ke semua fitur (lihat requireStaff di
+  // server.js) plus halaman Monitoring yang khusus role ini (systemOnly).
+  const isStaff = user && (user.role === 'staff' || isSistem);
+  const roleClass = isSistem ? 'role-sistem' : (isStaff ? 'role-staff' : 'role-internship');
+  const roleLabel = isSistem ? 'Sistem' : (isStaff ? 'Staff' : 'Internship');
   const initial = (user && user.name) ? user.name.charAt(0).toUpperCase() : '?';
 
   const navItems = [
@@ -58,16 +62,20 @@ function buildSidebar(user, activePage) {
     { href: '/administrasi.html', icon: 'shield-check', label: 'Administrasi', key: 'administrasi', staffOnly: true },
     { href: '/email.html', icon: 'mail', label: 'Akun Email', key: 'email', staffOnly: true },
     { href: isStaff ? '#' : '/manage.html', icon: 'settings', label: 'Kelola', key: 'manage', onclick: isStaff ? 'openManagePopup(event)' : null },
+    { divider: true, label: 'Sistem', systemOnly: true },
+    { href: '/monitoring.html', icon: 'activity', label: 'Monitoring', key: 'monitoring', systemOnly: true },
   ];
 
   let navHTML = '';
   navItems.forEach(item => {
     if (item.divider) {
       if (item.staffOnly && !isStaff) return;
+      if (item.systemOnly && !isSistem) return;
       navHTML += `<div class="sidebar-section-title">${item.label}</div>`;
       return;
     }
     if (item.staffOnly && !isStaff) return;
+    if (item.systemOnly && !isSistem) return;
     if (item.internOnly && isStaff) return;
     const isActive = (item.key === activePage || (item.key === 'manage' && (activePage === 'manage' || activePage === 'manage-users' || activePage === 'rekap-absen'))) ? ' active' : '';
     const onclickAttr = item.onclick ? `onclick="${item.onclick}"` : '';
@@ -201,8 +209,9 @@ function showHelpInfo() {
 // built via buildTopbar() or hardcoded per-page), so every page gets the
 // same controls without needing per-page HTML changes.
 function buildTopbarActionsHTML(user) {
-  const isStaff = user && user.role === 'staff';
-  const roleLabel = isStaff ? 'Staff' : 'Internship';
+  const isSistem = user && user.role === 'sistem';
+  const isStaff = user && (user.role === 'staff' || isSistem);
+  const roleLabel = isSistem ? 'Sistem' : (isStaff ? 'Staff' : 'Internship');
   const initial = (user && user.name) ? user.name.charAt(0).toUpperCase() : '?';
   const avatarHTML = (user && user.avatar)
     ? `<img src="${user.avatar}" alt="">`
@@ -327,14 +336,15 @@ function initTopbarSearch(user) {
   const box = document.getElementById('topbarSearchResults');
   if (!input || !box) return;
 
-  const isStaff = user && user.role === 'staff';
+  const isStaff = user && (user.role === 'staff' || user.role === 'sistem');
+  const isSistem = user && user.role === 'sistem';
   let debounceTimer = null;
 
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     const q = input.value.trim();
     if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
-    debounceTimer = setTimeout(() => runTopbarSearch(q, isStaff), 150);
+    debounceTimer = setTimeout(() => runTopbarSearch(q, isStaff, isSistem), 150);
   });
 
   input.addEventListener('focus', () => {
@@ -350,7 +360,7 @@ function initTopbarSearch(user) {
   });
 }
 
-function runTopbarSearch(query, isStaff) {
+function runTopbarSearch(query, isStaff, isSistem) {
   const box = document.getElementById('topbarSearchResults');
   if (!box) return;
   box.classList.add('open');
@@ -371,7 +381,7 @@ function runTopbarSearch(query, isStaff) {
     const q = query.toLowerCase();
 
     const menuResults = SEARCH_PAGES
-      .filter(p => (!p.staffOnly || isStaff) && p.label.toLowerCase().includes(q))
+      .filter(p => (!p.staffOnly || isStaff) && (!p.systemOnly || isSistem) && p.label.toLowerCase().includes(q))
       .slice(0, 5)
       .map(p => ({ type: 'menu', icon: p.icon, title: p.label, sub: 'Buka halaman', href: p.href }));
 
@@ -836,7 +846,7 @@ function showSwalConfirm(title, text, confirmButtonText, onConfirm) {
 // ─── Auth guard + render shell ───
 window.currentUserCache = null;
 
-function initAppShell(activePage, onSuccess, staffOnly) {
+function initAppShell(activePage, onSuccess, staffOnly, systemOnly) {
   // Create loading screen if not exists
   if (!document.getElementById('authLoading')) {
     const loader = document.createElement('div');
@@ -861,7 +871,7 @@ function initAppShell(activePage, onSuccess, staffOnly) {
   // Hasilnya: buka 1 link di tab baru = semua tab lain ikut ke-logout.
 
   if (window.currentUserCache) {
-    handleAuthSuccess(window.currentUserCache, activePage, onSuccess, staffOnly);
+    handleAuthSuccess(window.currentUserCache, activePage, onSuccess, staffOnly, systemOnly);
     return;
   }
 
@@ -869,7 +879,7 @@ function initAppShell(activePage, onSuccess, staffOnly) {
     .then(r => r.json())
     .then(user => {
       window.currentUserCache = user;
-      handleAuthSuccess(user, activePage, onSuccess, staffOnly);
+      handleAuthSuccess(user, activePage, onSuccess, staffOnly, systemOnly);
     })
     .catch((err) => { 
       console.error('Error in initAppShell:', err);
@@ -881,9 +891,13 @@ function initAppShell(activePage, onSuccess, staffOnly) {
     });
 }
 
-function handleAuthSuccess(user, activePage, onSuccess, staffOnly) {
+function handleAuthSuccess(user, activePage, onSuccess, staffOnly, systemOnly) {
   if (!user.loggedIn) { window.location.href = '/login.html'; return; }
-  if (staffOnly && user.role !== 'staff') { window.location.href = '/index.html?error=forbidden'; return; }
+  // Role 'sistem' punya akses setara staff ke semua fitur/halaman staffOnly
+  // (lihat requireStaff di server.js), tapi staffOnly TIDAK meloloskan
+  // sistem ke halaman yang khusus systemOnly (mis. monitoring.html).
+  if (staffOnly && user.role !== 'staff' && user.role !== 'sistem') { window.location.href = '/index.html?error=forbidden'; return; }
+  if (systemOnly && user.role !== 'sistem') { window.location.href = '/index.html?error=forbidden'; return; }
 
   // Inject sidebar
   const sidebarContainer = document.getElementById('sidebarContainer');

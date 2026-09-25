@@ -45,6 +45,36 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@rbjakarta.id', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
+// ─── Resend Email ─────────────────────────────────────────────────────────────
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+const REGISTER_GATE_PASSWORD = process.env.REGISTER_GATE_PASSWORD || '12345678';
+
+// Gagal kirim email tidak boleh menggagalkan registrasi — selalu ditelan di
+// sini (logged, tidak di-throw) supaya caller tidak perlu try/catch lagi.
+async function sendResendEmail({ to, subject, html }) {
+  if (!RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY belum diset di .env — email tidak dikirim.');
+    return;
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to, subject, html })
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error('Resend gagal kirim email:', res.status, errBody);
+    }
+  } catch (err) {
+    console.error('Resend request error:', err.message);
+  }
+}
+
 function mapDbError(err, fallback) {
   if (!err) return fallback;
   const code = err.code || '';
@@ -136,27 +166,67 @@ async function requireAuth(req, res, next) {
   next();
 }
 
+// Role 'sistem' adalah role monitoring terpisah dari 'staff', tapi tetap
+// perlu akses ke semua fitur yang staff punya (lihat AI.md) — jadi diloloskan
+// di sini juga. Akses yang KHUSUS 'sistem' (dashboard Monitoring) pakai
+// requireSystem di bawah, bukan requireStaff.
 function requireStaff(req, res, next) {
-  if (req.session && req.session.user && req.session.user.role === 'staff') return next();
+  const role = req.session && req.session.user && req.session.user.role;
+  if (role === 'staff' || role === 'sistem') return next();
   if (req.path.startsWith('/api/')) {
     return res.status(403).json({ error: 'Forbidden: Staff only' });
   }
   res.redirect('/index.html?error=forbidden');
 }
 
+// Khusus role 'sistem' — staff BIASA tidak otomatis lolos di sini, cuma di
+// requireStaff (lihat komentar di atasnya).
+function requireSystem(req, res, next) {
+  if (req.session && req.session.user && req.session.user.role === 'sistem') return next();
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Forbidden: Sistem only' });
+  }
+  res.redirect('/index.html?error=forbidden');
+}
+
+// ─── Activity Log (Monitoring) ────────────────────────────────────────────────
+// Dipakai dashboard Monitoring (role 'sistem') untuk melihat aktivitas &
+// error aplikasi secara realtime (via polling di monitoring.html). Gagal
+// insert log TIDAK BOLEH menggagalkan alur utama (login/absen/dst), jadi
+// selalu ditelan di sini, bukan di-throw ke caller.
+async function logActivity({ type, level = 'info', user, message, meta }) {
+  try {
+    await supabase.from('activity_log').insert({
+      type,
+      level,
+      user_id: user && user.id ? user.id : null,
+      user_name: user && user.name ? user.name : null,
+      user_email: user && user.email ? user.email : null,
+      message,
+      meta: meta || null
+    });
+  } catch (err) {
+    console.error('logActivity gagal:', err.message);
+  }
+}
+
 // ─── Auth API Routes ─────────────────────────────────────────────────────────
 
 app.post('/auth/register', async (req, res) => {
-  const isStaff = req.session && req.session.user && req.session.user.role === 'staff';
-  try {
-    const { count } = await supabase.from('users').select('id', { count: 'exact', head: true });
-    if (count && count > 0 && !isStaff) {
-      return res.status(403).json({ error: 'Registrasi hanya dapat dilakukan oleh akun Staff.' });
+  const sessionRole = req.session && req.session.user && req.session.user.role;
+  const isStaff = sessionRole === 'staff' || sessionRole === 'sistem';
+
+  // Staff/sistem yang sudah login (mis. lewat Kelola Users) boleh langsung
+  // daftar. Kalau bukan (mis. tab "Daftar" publik di halaman login), wajib
+  // masukkan password gerbang pendaftaran dulu.
+  if (!isStaff) {
+    const { gatePassword } = req.body;
+    if (!gatePassword || gatePassword !== REGISTER_GATE_PASSWORD) {
+      return res.status(403).json({ error: 'Password menu daftar salah.' });
     }
-  } catch (e) {
-    if (!isStaff) return res.status(403).json({ error: 'Unauthorized' });
   }
-  const { email, name, password, divisi } = req.body;
+
+  const { email, name, password, divisi, role: requestedRole } = req.body;
   const cleanName = (name || '').trim();
   const cleanDivisi = (divisi || '').trim();
 
@@ -169,15 +239,15 @@ app.post('/auth/register', async (req, res) => {
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  let role = '';
 
-  // Penentuan Role otomatis berdasarkan domain
-  if (cleanEmail.endsWith('@intern.rbjakarta.id')) {
-    role = 'internship';
-  } else if (cleanEmail.endsWith('@staff.rbjakarta.id')) {
-    role = 'staff';
-  } else {
-    return res.status(400).json({ error: 'Domain email tidak valid. Gunakan email @intern.rbjakarta.id atau @staff.rbjakarta.id.' });
+  // Role dipilih manual saat daftar (Internship, Staff, atau Sistem) — tidak
+  // lagi ditentukan otomatis dari domain email, karena email sekarang bebas.
+  // 'sistem' = role monitoring, akses semua fitur seperti staff (lihat
+  // requireStaff) plus dashboard Monitoring yang khusus role ini.
+  const ALLOWED_ROLES = ['internship', 'staff', 'sistem'];
+  const role = ALLOWED_ROLES.includes((requestedRole || '').trim()) ? requestedRole.trim() : '';
+  if (!role) {
+    return res.status(400).json({ error: 'Role wajib dipilih (Internship, Staff, atau Sistem).' });
   }
 
   try {
@@ -215,6 +285,51 @@ app.post('/auth/register', async (req, res) => {
       return res.status(status).json({ error: message });
     }
 
+    logActivity({
+      type: 'register',
+      level: 'info',
+      user: { email: cleanEmail, name: cleanName },
+      message: `Akun baru terdaftar: ${cleanName} (${cleanEmail}) — role ${role}`,
+      meta: { role, divisi: cleanDivisi }
+    });
+
+    // Email ditunggu sebelum response: di Vercel, fungsi dibekukan begitu
+    // response terkirim, jadi fetch ke Resend yang belum selesai ikut hilang.
+    // sendResendEmail tidak pernah throw, jadi kegagalan kirim tidak
+    // menggagalkan registrasi.
+    const ROLE_LABELS = { staff: 'Staff', internship: 'Internship', sistem: 'Sistem' };
+    const roleLabel = ROLE_LABELS[role] || role;
+    const welcomeEmail = sendResendEmail({
+      to: cleanEmail,
+      subject: 'Selamat Datang di Database Hub Rumah BUMN Jakarta',
+      html: `<p>Halo <strong>${cleanName}</strong>,</p>
+        <p>Akun Anda berhasil dibuat dengan detail berikut:</p>
+        <ul>
+          <li>Email: ${cleanEmail}</li>
+          <li>Divisi: ${cleanDivisi}</li>
+          <li>Role: ${roleLabel}</li>
+        </ul>
+        <p>Silakan login menggunakan email dan kata sandi yang sudah Anda daftarkan.</p>`
+    });
+
+    const staffEmail = supabase.from('users').select('email').in('role', ['staff', 'sistem']).then(({ data: staffUsers, error: staffErr }) => {
+      if (staffErr || !staffUsers || staffUsers.length === 0) return;
+      const staffEmails = staffUsers.map(u => u.email).filter(Boolean);
+      if (staffEmails.length === 0) return;
+      return sendResendEmail({
+        to: staffEmails,
+        subject: 'Registrasi Akun Baru — Database Hub',
+        html: `<p>Ada akun baru yang mendaftar:</p>
+          <ul>
+            <li>Nama: ${cleanName}</li>
+            <li>Email: ${cleanEmail}</li>
+            <li>Divisi: ${cleanDivisi}</li>
+            <li>Role: ${roleLabel}</li>
+          </ul>`
+      });
+    }, err => console.error('Gagal ambil email staff untuk notifikasi:', err));
+
+    await Promise.all([welcomeEmail, staffEmail]);
     res.status(201).json({ message: 'Registrasi berhasil. Silakan login.' });
   } catch (err) {
     console.error('Registration error:', err);
@@ -233,6 +348,7 @@ app.post('/auth/login', async (req, res) => {
   try {
     const { data: user, error } = await supabase.from('users').select('*').eq('email', cleanEmail).single();
     if (error || !user) {
+      logActivity({ type: 'login_failed', level: 'warning', user: { email: cleanEmail }, message: `Percobaan login gagal: email ${cleanEmail} tidak ditemukan.` });
       return res.status(401).json({ error: 'Email tidak ditemukan.' });
     }
 
@@ -242,6 +358,7 @@ app.post('/auth/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
+      logActivity({ type: 'login_failed', level: 'warning', user: { id: user.id, email: user.email, name: user.name }, message: `Percobaan login gagal: kata sandi salah untuk ${user.email}.` });
       return res.status(401).json({ error: 'Kata sandi salah.' });
     }
 
@@ -254,6 +371,8 @@ app.post('/auth/login', async (req, res) => {
       avatar: user.avatar_url
     };
 
+    logActivity({ type: 'login', level: 'info', user, message: `${user.name} (${user.email}) login.` });
+
     res.json({ message: 'Login berhasil.', redirect: '/index.html' });
   } catch (err) {
     console.error('Login error:', err);
@@ -262,6 +381,9 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.get('/auth/logout', (req, res) => {
+  if (req.session && req.session.user) {
+    logActivity({ type: 'logout', level: 'info', user: req.session.user, message: `${req.session.user.name} (${req.session.user.email}) logout.` });
+  }
   req.session = null;
   res.redirect('/login.html');
 });
@@ -433,6 +555,77 @@ app.delete('/api/users/:id', requireAuth, requireStaff, async (req, res) => {
   }
 });
 
+// ─── API: Monitoring (khusus role 'sistem') ────────────────────────────────────
+// Dashboard monitoring.html polling endpoint ini tiap beberapa detik untuk
+// menampilkan aktivitas & trouble secara realtime — lihat logActivity().
+
+// GET /api/system/activity — feed aktivitas, terbaru duluan
+app.get('/api/system/activity', requireAuth, requireSystem, async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+  const { level, type, since } = req.query;
+
+  try {
+    let query = supabase.from('activity_log').select('*').order('created_at', { ascending: false }).limit(limit);
+    if (level) query = query.eq('level', level);
+    if (type) query = query.eq('type', type);
+    if (since) query = query.gt('created_at', since);
+
+    const { data, error } = await query;
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (error.code === '42P01' || msg.includes('does not exist') || msg.includes('schema cache')) {
+        return res.status(400).json({ error: 'Tabel "activity_log" belum dibuat. Jalankan database/schemas/schema_activity_log.sql di Supabase SQL Editor.' });
+      }
+      throw error;
+    }
+    res.json(data || []);
+  } catch (err) {
+    console.error('Error fetching activity log:', err);
+    res.status(500).json({ error: 'Gagal mengambil log aktivitas: ' + err.message });
+  }
+});
+
+// GET /api/system/stats — ringkasan untuk stat tiles di dashboard Monitoring
+app.get('/api/system/stats', requireAuth, requireSystem, async (req, res) => {
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [
+      { count: totalUsers },
+      { count: totalStaff },
+      { count: totalInternship },
+      { count: totalSistem },
+      { count: pendingPermissions },
+      { count: errorsToday },
+      { count: warningsToday },
+      { data: latestError }
+    ] = await Promise.all([
+      supabase.from('users').select('id', { count: 'exact', head: true }),
+      supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'staff'),
+      supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'internship'),
+      supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'sistem'),
+      supabase.from('permissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('activity_log').select('id', { count: 'exact', head: true }).eq('level', 'error').gte('created_at', todayStart.toISOString()),
+      supabase.from('activity_log').select('id', { count: 'exact', head: true }).eq('level', 'warning').gte('created_at', todayStart.toISOString()),
+      supabase.from('activity_log').select('message, created_at').eq('level', 'error').order('created_at', { ascending: false }).limit(1)
+    ]);
+
+    res.json({
+      total_users: totalUsers || 0,
+      total_staff: totalStaff || 0,
+      total_internship: totalInternship || 0,
+      total_sistem: totalSistem || 0,
+      pending_permissions: pendingPermissions || 0,
+      errors_today: errorsToday || 0,
+      warnings_today: warningsToday || 0,
+      latest_error: (latestError && latestError[0]) || null
+    });
+  } catch (err) {
+    console.error('Error fetching system stats:', err);
+    res.status(500).json({ error: 'Gagal mengambil ringkasan sistem: ' + err.message });
+  }
+});
 
 // ─── Protected HTML Pages ─────────────────────────────────────────────────────
 // Must be registered BEFORE express.static below. express.static ends the
@@ -447,7 +640,7 @@ function sendGuardedHtml(res, filename) {
   // for HTML (see the static config below) — replicate it so a stale
   // cached copy of one of these pages can't linger in the browser.
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.sendFile(path.join(__dirname, 'public', filename));
+  res.sendFile(path.join(__dirname, 'public', 'pages', filename));
 }
 app.get('/manage', requireAuth, (req, res) => sendGuardedHtml(res, 'manage.html'));
 app.get('/manage.html', requireAuth, (req, res) => sendGuardedHtml(res, 'manage.html'));
@@ -462,6 +655,8 @@ app.get('/administrasi.html', requireAuth, requireStaff, (req, res) => sendGuard
 app.get('/email.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'email.html'));
 app.get('/rekap-absen.html', requireAuth, requireStaff, (req, res) => sendGuardedHtml(res, 'rekap-absen.html'));
 app.get('/chat.html', requireAuth, (req, res) => sendGuardedHtml(res, 'chat.html'));
+app.get('/monitoring', requireAuth, requireSystem, (req, res) => sendGuardedHtml(res, 'monitoring.html'));
+app.get('/monitoring.html', requireAuth, requireSystem, (req, res) => sendGuardedHtml(res, 'monitoring.html'));
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
 // Vendor libs only change on npm install/upgrade, safe to cache for a day.
@@ -469,7 +664,7 @@ app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules/luci
 app.use('/vendor/aos', express.static(path.join(__dirname, 'node_modules/aos/dist'), { maxAge: '1d' }));
 app.use('/vendor/sweetalert2', express.static(path.join(__dirname, 'node_modules/sweetalert2/dist'), { maxAge: '1d' }));
 app.use('/vendor/gsap', express.static(path.join(__dirname, 'node_modules/gsap/dist'), { maxAge: '1d' }));
-app.use(express.static(path.join(__dirname, 'public'), {
+const staticOptions = {
   maxAge: '1d',
   setHeaders: (res, path) => {
     // No-cache for HTML and the app-shell files that change often during
@@ -481,7 +676,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
   }
-}));
+};
+// Halaman HTML hidup di public/pages/ tapi tetap diakses lewat URL root
+// (/login.html, /index.html, ...). Akses langsung ke /pages/* diblokir
+// supaya halaman berpenjaga tidak bisa dibuka lewat jalur ini.
+app.use('/pages', (req, res) => res.status(404).send('Not found'));
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+app.use(express.static(path.join(__dirname, 'public', 'pages'), staticOptions));
 
 // ─── API: Items (CRUD) — Memerlukan Login ─────────────────────────────────────
 // 'administrasi' dan 'email' menyimpan kredensial staff (termasuk password
@@ -494,7 +695,7 @@ const ITEMS_STAFF_ONLY_DIVISIONS = ['administrasi', 'email'];
 // GET /api/items — Semua user yang login bisa baca, kecuali divisi Staff Only di atas
 app.get('/api/items', requireAuth, async (req, res) => {
   const { division } = req.query;
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
 
   if (division && !isStaff && ITEMS_STAFF_ONLY_DIVISIONS.includes(division)) {
     return res.status(403).json({ error: 'Forbidden: Divisi ini hanya dapat diakses oleh Staff.' });
@@ -544,7 +745,7 @@ app.post('/api/items', requireAuth, async (req, res) => {
   }
 
   // Check permission: Interns can't write to administrasi/email
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
   const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
   if (!isStaff && staffOnlyDivisions.includes(division)) {
     return res.status(403).json({ error: 'Forbidden: Intern tidak bisa mengelola divisi ini' });
@@ -567,7 +768,7 @@ app.post('/api/items', requireAuth, async (req, res) => {
 app.put('/api/items/:id', requireAuth, async (req, res) => {
   const { division, cat, title, type, url, email, pass, note } = req.body;
   const { id } = req.params;
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
   const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
 
   try {
@@ -606,7 +807,7 @@ app.put('/api/items/:id', requireAuth, async (req, res) => {
 // DELETE /api/items/:id — Hanya Staff (atau Intern untuk divisi non-staff)
 app.delete('/api/items/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
   const staffOnlyDivisions = ITEMS_STAFF_ONLY_DIVISIONS;
   try {
     const { data: currentItem, error: getError } = await supabase
@@ -724,21 +925,10 @@ app.get('/api/events/month', requireAuth, async (req, res) => {
   }
 });
 
-// This endpoint is shared by two forms with very different intent:
-//   - Agenda & Event Hub's "Tambah Agenda" (calendar/silabus entries) — any
-//     logged-in user, interns included.
-//   - Event Hub's "Tambah Event" (narasumber & partnership tracking, with CV
-//     upload) — Staff only, since it drives official outreach documents.
-// Both write to the same `events` table, so the category value is what
-// tells them apart. Gate on that instead of the route as a whole, so an
-// intern can't just replay an Event Hub payload with a relabeled category.
-const AGENDA_ONLY_CATEGORIES = [
-  'Silabus BD', 'UMIBA', 'GBKP Moria', 'Event', 'Audiensi',
-  'Design', 'Sosmed', 'Admin', 'Lainnya'
-];
-
-// POST /api/events — Menambah acara baru (semua user login untuk kategori
-// agenda; kategori event/narasumber tetap Staff Only)
+// Endpoint ini dipakai bareng oleh form "Tambah Agenda" (Silabus) dan form
+// "Tambah Event" di Event Hub — dua-duanya nulis ke tabel `events` yang sama
+// dan sekarang field-nya juga sudah disamakan. Semua user yang login
+// (termasuk intern) boleh membuat event kategori apa pun.
 app.post('/api/events', requireAuth, upload.single('cvNarsum'), async (req, res) => {
   const {
     category, title, event_date, start_time, end_time, location, speaker_name, pic_name,
@@ -748,11 +938,6 @@ app.post('/api/events', requireAuth, upload.single('cvNarsum'), async (req, res)
 
   if (!category || !title || !event_date) {
     return res.status(400).json({ error: 'Kategori, Judul, dan Tanggal acara wajib diisi.' });
-  }
-
-  const isStaff = req.session.user.role === 'staff';
-  if (!isStaff && !AGENDA_ONLY_CATEGORIES.includes(category)) {
-    return res.status(403).json({ error: 'Forbidden: kategori ini hanya bisa ditambahkan oleh Staff.' });
   }
 
   let cvUrl = null;
@@ -1542,8 +1727,8 @@ app.post('/api/absen', requireAuth, async (req, res) => {
 
   const mode = work_mode === 'wfh' ? 'wfh' : 'wfo';
 
-  // Intern hanya boleh WFH kalau sudah diizinkan staff untuk hari ini. Staff bebas pilih sendiri.
-  if (mode === 'wfh' && user.role !== 'staff') {
+  // Intern hanya boleh WFH kalau sudah diizinkan staff untuk hari ini. Staff/sistem bebas pilih sendiri.
+  if (mode === 'wfh' && user.role !== 'staff' && user.role !== 'sistem') {
     const { data: assignment } = await supabase
       .from('wfh_assignments')
       .select('id')
@@ -1616,9 +1801,18 @@ app.post('/api/absen', requireAuth, async (req, res) => {
       photo_base64: photo_base64 || '',
     });
 
+    logActivity({
+      type: type === 'clock_in' ? 'absen_in' : 'absen_out',
+      level: 'info',
+      user,
+      message: `${user.name} absen ${type === 'clock_in' ? 'masuk' : 'keluar'} (${mode.toUpperCase()}).`,
+      meta: { work_mode: mode, address: address || null }
+    });
+
     res.status(201).json({ message: `Absensi ${mode === 'wfh' ? 'WFH' : 'WFO'} berhasil!`, data });
   } catch (err) {
     console.error('Absen error:', err);
+    logActivity({ type: 'error', level: 'error', user, message: `Gagal menyimpan absensi untuk ${user.email}: ${err.message}` });
     res.status(500).json({ error: 'Gagal menyimpan absensi: ' + err.message });
   }
 });
@@ -1737,8 +1931,8 @@ app.get('/api/wfh-assignments/mine', requireAuth, async (req, res) => {
   const date = req.query.date || todayDateStr();
   const user = req.session.user;
 
-  // Staff selalu bebas memilih WFO/WFH sendiri.
-  if (user.role === 'staff') {
+  // Staff/sistem selalu bebas memilih WFO/WFH sendiri.
+  if (user.role === 'staff' || user.role === 'sistem') {
     return res.json({ allowed: true });
   }
 
@@ -1795,7 +1989,7 @@ app.get('/api/absen/today', requireAuth, async (req, res) => {
       .order('timestamp', { ascending: false });
 
     // Internship hanya bisa lihat punya sendiri
-    if (req.session.user.role !== 'staff') {
+    if (req.session.user.role !== 'staff' && req.session.user.role !== 'sistem') {
       query = query.eq('user_id', req.session.user.id);
     }
 
@@ -1873,7 +2067,7 @@ app.get('/api/absen/export', requireAuth, requireStaff, async (req, res) => {
 // GET /api/permissions — Ambil data perizinan
 app.get('/api/permissions', requireAuth, async (req, res) => {
   const { status, user_id } = req.query;
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
 
   try {
     let query = supabase.from('permissions').select('*').order('created_at', { ascending: false });
@@ -1968,13 +2162,23 @@ app.post('/api/permissions', requireAuth, async (req, res) => {
     if (error) {
       const errMsg = (error.message || '').toLowerCase();
       if (error.code === '42P01' || error.code === 'PGRST205' || errMsg.includes('schema cache') || errMsg.includes('does not exist')) {
-        return res.status(400).json({ error: 'Tabel "permissions" belum dibuat di database Supabase. Silakan jalankan query di schema_permissions.sql pada Supabase SQL Editor.' });
+        return res.status(400).json({ error: 'Tabel "permissions" belum dibuat di database Supabase. Silakan jalankan query di database/schemas/schema_permissions.sql pada Supabase SQL Editor.' });
       }
       throw error;
     }
+
+    logActivity({
+      type: 'izin_ajukan',
+      level: 'info',
+      user,
+      message: `${user.name} mengajukan izin (${type}) ${start_date} s/d ${end_date}.`,
+      meta: { permission_id: data.id, type, start_date, end_date }
+    });
+
     res.status(201).json({ message: 'Pengajuan perizinan berhasil dikirim!', data });
   } catch (err) {
     console.error('Error submitting permission:', err);
+    logActivity({ type: 'error', level: 'error', user, message: `Gagal mengajukan izin untuk ${user.email}: ${err.message}` });
     res.status(500).json({ error: 'Gagal mengajukan perizinan: ' + err.message });
   }
 });
@@ -2004,6 +2208,15 @@ app.put('/api/permissions/:id/status', requireAuth, requireStaff, async (req, re
       .single();
 
     if (error) throw error;
+
+    logActivity({
+      type: 'izin_review',
+      level: status === 'rejected' ? 'warning' : 'info',
+      user: req.session.user,
+      message: `${req.session.user.name} ${status === 'approved' ? 'menyetujui' : 'menolak'} izin ${data.user_name || ''}.`,
+      meta: { permission_id: id, status }
+    });
+
     res.json({ message: `Status perizinan berhasil diperbarui menjadi ${status === 'approved' ? 'Disetujui' : 'Ditolak'}.`, data });
   } catch (err) {
     console.error('Error updating permission status:', err);
@@ -2014,7 +2227,7 @@ app.put('/api/permissions/:id/status', requireAuth, requireStaff, async (req, re
 // DELETE /api/permissions/:id — Hapus perizinan
 app.delete('/api/permissions/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const isStaff = req.session.user.role === 'staff';
+  const isStaff = req.session.user.role === 'staff' || req.session.user.role === 'sistem';
 
   try {
     if (!isStaff) {
@@ -2047,9 +2260,10 @@ app.delete('/api/permissions/:id', requireAuth, async (req, res) => {
 const CHAT_DIVISIONS = [
   'Business Development',
   'Social Media',
-  'Design Graphic',
-  'Event & Partnerships',
-  'General Administration'
+  'Media & Content',
+  'Design',
+  'General Administration',
+  'Staff'
 ];
 const CHAT_MSG_MAX = 4000;
 
@@ -2115,8 +2329,8 @@ async function roomsVisibleTo(user) {
     roomPromises.push(ensureRoom({ type: 'division', name: user.divisi, division: user.divisi }));
   }
 
-  // Staff mengawasi seluruh divisi, jadi diberi akses ke semua ruang divisi.
-  if (user.role === 'staff') {
+  // Staff/sistem mengawasi seluruh divisi, jadi diberi akses ke semua ruang divisi.
+  if (user.role === 'staff' || user.role === 'sistem') {
     for (const div of CHAT_DIVISIONS) {
       if (div === user.divisi) continue;
       roomPromises.push(ensureRoom({ type: 'division', name: div, division: div }));
@@ -2723,6 +2937,13 @@ app.use((err, req, res, next) => {
   }
   if (err) {
     console.error('Unhandled error:', err);
+    logActivity({
+      type: 'error',
+      level: 'error',
+      user: req.session && req.session.user,
+      message: `Unhandled error di ${req.method} ${req.path}: ${err.message}`,
+      meta: { stack: (err.stack || '').split('\n').slice(0, 5).join('\n') }
+    });
     return res.status(500).json({ error: 'Terjadi kesalahan pada server.' });
   }
   next();
@@ -2735,14 +2956,14 @@ if (process.env.VERCEL) {
   module.exports = app;
 } else {
   // Untuk Localhost: Gunakan app.listen
-  verifySupabaseConnection().finally(() => {
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
-      console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
-    });
-
-    // Cleanup absensi lama (>60 hari) — jalan sesaat setelah start, lalu tiap 24 jam
-    setTimeout(cleanupOldAttendance, 10 * 1000);
-    setInterval(cleanupOldAttendance, 24 * 60 * 60 * 1000);
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Server is running at http://localhost:${PORT}`);
+    console.log(`   Halaman login: http://localhost:${PORT}/login.html\n`);
+    verifySupabaseConnection().catch(console.error);
   });
+
+  // Cleanup absensi lama (>60 hari) — jalan sesaat setelah start, lalu tiap 24 jam
+  setTimeout(cleanupOldAttendance, 10 * 1000);
+  setInterval(cleanupOldAttendance, 24 * 60 * 60 * 1000);
 }
+
