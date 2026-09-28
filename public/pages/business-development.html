@@ -81,96 +81,176 @@
 
   .link-icon { color: var(--blue-text); text-decoration: none; }
   .link-icon:hover { text-decoration: underline; }
+  .link-icon svg { width: 15px; height: 15px; }
 
-  /* Katalog UMKM — kotak per kategori berisi kartu produk */
-  .cat-box {
-    background: #fff; border: 1px solid var(--border); border-radius: 16px;
-    padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 2px 12px rgba(15,23,42,0.05);
-  }
-  .cat-box-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
-  }
-  .cat-box-title { font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-  .cat-box-count { font-size: 11px; font-weight: 600; color: var(--text-muted); background: rgba(15,23,42,0.04); padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
-  .cat-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-  .prod-card {
-    border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer;
-    transition: all 0.18s ease; background: var(--bg-card);
-  }
-  .prod-card:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,23,42,0.08); }
-  .prod-card-photo {
-    width: 100%; aspect-ratio: 1; background: rgba(15,23,42,0.04);
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-  }
-  .prod-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .prod-card-body { padding: 10px 12px; }
-  .prod-card-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .prod-card-meta { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-  .prod-card-meta.is-display { color: #ea580c; font-weight: 600; }
-
-  /* Upload foto di form */
-  .file-input-wrap input[type="file"] {
-    width: 100%; padding: 9px 12px; background: var(--bg-input); border: 1px dashed var(--border);
-    border-radius: 10px; color: var(--text-secondary); font-size: 12.5px; font-family: 'Inter', sans-serif;
-    box-sizing: border-box; cursor: pointer;
-  }
-  .foto-preview-wrap { margin-top: 10px; }
-  .foto-preview-wrap img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); display: block; }
-  .foto-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-  /* Modals */
+  /* ── Modal Tambah/Edit Data Outreach ──
+     z-index 1055: di atas bottom-nav mobile (1000) tapi di bawah SweetAlert2
+     (1060) — kalau lebih tinggi, konfirmasi "Hapus" & pesan error malah
+     muncul DI BELAKANG modal dan tidak bisa diklik. */
   .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-    z-index: 2000; opacity: 0; pointer-events: none;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.3s ease;
+    position: fixed; inset: 0; z-index: 1055;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: max(20px, 5vh) 20px 20px;
+    background: rgba(8,18,30,0.6); backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-box {
-    background: rgba(255, 255, 255, 0.98);
-    border: 1px solid var(--border-mid); border-radius: 22px; padding: 32px;
-    width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto;
-    transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 24px 64px rgba(15,23,42,0.18), 0 0 0 1px rgba(48,127,226,0.08);
-    scrollbar-width: thin; scrollbar-color: rgba(15,23,42,0.14) transparent;
+    width: 100%; max-width: 720px; max-height: calc(100vh - max(20px, 5vh) - 20px);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--bg-card); border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.05);
+    transform: translateY(14px) scale(0.98); transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1);
   }
-  .modal-overlay.open .modal-box { transform: translateY(0); }
-  .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
+  .modal-overlay.open .modal-box { transform: none; }
+  .modal-box svg { flex-shrink: 0; }
 
-  .form-group { margin-bottom: 14px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 12px;
-    background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text-primary); font-size: 13px;
-    font-family: 'Inter', sans-serif; box-sizing: border-box; outline: none;
+  .ob-head {
+    flex-shrink: 0; display: flex; align-items: center; gap: 14px;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+    background: radial-gradient(circle at 100% 0%, rgba(249,115,22,0.12), transparent 55%), linear-gradient(180deg, rgba(249,115,22,0.05), transparent);
+  }
+  .ob-head-ico {
+    width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    background: linear-gradient(135deg, #f97316, #ea580c); box-shadow: 0 8px 20px rgba(234,88,12,0.3);
+  }
+  .ob-head-ico svg { width: 21px; height: 21px; }
+  .ob-head-text { flex: 1; min-width: 0; }
+  .ob-head-text h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); }
+  .ob-head-text p { margin: 3px 0 0; font-size: 12.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ob-close {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-surface); color: var(--text-secondary); transition: all 0.15s;
+  }
+  .ob-close:hover { background: rgba(220,38,38,0.1); color: var(--red); transform: rotate(90deg); }
+  .ob-close svg { width: 16px; height: 16px; }
+
+  .ob-form { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; }
+  .ob-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 6px 24px 22px; }
+  .ob-sec { padding-top: 18px; }
+  .ob-sec + .ob-sec { margin-top: 18px; border-top: 1px dashed var(--border); }
+  .ob-sec-title { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 800; color: var(--text-primary); }
+  .ob-sec-ico { width: 24px; height: 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(249,115,22,0.12); color: #ea580c; }
+  .ob-sec-ico svg { width: 13px; height: 13px; }
+  .ob-pill { margin-left: auto; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-surface); }
+
+  .ob-field { margin-bottom: 16px; min-width: 0; }
+  .ob-field:last-child { margin-bottom: 0; }
+  .ob-field > label, .ob-label { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+  .ob-req { color: var(--red); }
+  .ob-aside { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .ob-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
+  .ob-grid-2:last-child { margin-bottom: 0; }
+  .ob-grid-2 > .ob-field { margin-bottom: 0; }
+
+  .ob-input-wrap { position: relative; display: flex; align-items: center; }
+  .ob-ico { position: absolute; left: 13px; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; transition: color 0.15s; }
+  .ob-input-wrap:focus-within .ob-ico { color: #ea580c; }
+  .ob-input {
+    width: 100%; box-sizing: border-box; padding: 11px 14px 11px 40px;
+    font: 500 14px/1.3 'Inter', sans-serif; color: var(--text-primary);
+    background: var(--bg-input); border: 1.5px solid rgba(15,23,42,0.12); border-radius: 12px;
+    outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .ob-input::placeholder { color: #94a3b8; font-weight: 400; }
+  .ob-input:hover { border-color: rgba(15,23,42,0.22); }
+  .ob-input:focus { border-color: #f97316; box-shadow: 0 0 0 4px rgba(249,115,22,0.13); }
+  .ob-input-lg { font-size: 15.5px; font-weight: 600; padding-top: 13px; padding-bottom: 13px; }
+  .ob-input[type="date"] { cursor: pointer; min-height: 45px; }
+
+  .ob-field.is-invalid .ob-input { border-color: var(--red); box-shadow: 0 0 0 4px rgba(220,38,38,0.1); }
+  .ob-err { display: none; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--red); }
+  .ob-field.is-invalid .ob-err { display: flex; }
+  .ob-shake { animation: obShake 0.36s ease; }
+  @keyframes obShake { 0%,100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+  .ob-hint { display: flex; align-items: center; gap: 7px; margin-top: 8px; padding: 7px 11px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(249,115,22,0.08); color: #c2410c; }
+  .ob-hint[hidden] { display: none; }
+  .ob-hint svg { width: 14px; height: 14px; }
+  .ob-hint.is-purple { background: rgba(124,58,237,0.08); color: #6d28d9; }
+
+  .ob-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ob-qchip {
+    padding: 5px 11px; border-radius: 20px; border: 1px solid transparent; cursor: pointer;
+    font: 600 12px 'Inter', sans-serif; color: var(--text-secondary); background: var(--bg-surface); transition: all 0.15s;
+  }
+  .ob-qchip:hover { color: #ea580c; border-color: rgba(249,115,22,0.35); background: var(--bg-card); }
+  .ob-qchip.is-on { color: #fff; background: #ea580c; border-color: #ea580c; }
+
+  /* Pilihan status & via — tombol berwarna, bukan dropdown */
+  .ob-choices { display: flex; flex-wrap: wrap; gap: 7px; }
+  .ob-choice {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 13px; border-radius: 11px; cursor: pointer;
+    border: 1.5px solid rgba(15,23,42,0.1); background: var(--bg-card);
+    font: 600 13px 'Inter', sans-serif; color: var(--text-secondary);
+    transition: all 0.16s ease;
+  }
+  .ob-choice::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+  .ob-choice.has-ico::before { display: none; }
+  .ob-choice svg { width: 15px; height: 15px; color: var(--c); }
+  .ob-choice:hover { border-color: var(--c); color: var(--text-primary); transform: translateY(-1px); }
+  .ob-choice.is-on { color: #fff; background: var(--c); border-color: var(--c); box-shadow: 0 6px 16px -4px var(--c); }
+  .ob-choice.is-on::before { background: #fff; }
+  .ob-choice.is-on svg { color: #fff; }
+
+  /* CP / Ketua dengan avatar inisial */
+  .ob-person { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
+  .ob-person .ob-grid-2 { flex: 1; min-width: 0; margin-bottom: 0; }
+  .ob-avatar {
+    width: 45px; height: 45px; border-radius: 13px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800; color: var(--text-muted); background: var(--bg-surface);
     transition: all 0.2s;
   }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
-  }
-  .form-group select option { background: #ffffff; color: var(--text-primary); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ob-avatar svg { width: 19px; height: 19px; }
+  .ob-avatar.is-filled { color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); }
 
-  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-  .btn-cancel {
-    padding: 10px 20px; background: rgba(148,163,184,0.06);
-    border: 1px solid var(--border); color: var(--text-secondary);
-    border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
-    transition: all 0.15s; font-family: 'Inter', sans-serif;
+  /* Link sosmed dengan tanda valid / salah */
+  .ob-link-state {
+    position: absolute; right: 11px; width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.6); transition: all 0.2s; pointer-events: none;
   }
-  .btn-cancel:hover { background: rgba(148,163,184,0.1); color: var(--text-primary); }
-  .btn-submit {
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #ea580c, #f97316);
-    border: none; color: #fff; border-radius: 10px; cursor: pointer;
-    font-weight: 600; font-size: 13px; font-family: 'Inter', sans-serif;
-    box-shadow: 0 3px 12px rgba(249,115,22,0.3); transition: all 0.2s;
+  .ob-link-state svg { width: 13px; height: 13px; }
+  .ob-link-state .ob-bad { display: none; }
+  .ob-field.is-ok .ob-link-state { opacity: 1; transform: none; background: var(--icon-bg-green); color: var(--icon-green); }
+  .ob-field.is-bad .ob-link-state { opacity: 1; transform: none; background: rgba(220,38,38,0.1); color: var(--red); }
+  .ob-field.is-bad .ob-link-state .ob-ok { display: none; }
+  .ob-field.is-bad .ob-link-state .ob-bad { display: block; }
+  .ob-field.is-bad .ob-input { border-color: var(--red); }
+  .ob-field.is-ok .ob-input, .ob-field.is-bad .ob-input { padding-right: 40px; }
+
+  .ob-foot { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--bg-card); }
+  .ob-spacer { flex: 1; }
+  .ob-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 18px; border-radius: 12px; border: none; cursor: pointer; white-space: nowrap;
+    font: 700 13.5px 'Inter', sans-serif; transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
   }
-  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(249,115,22,0.45); }
+  .ob-btn svg { width: 15px; height: 15px; }
+  .ob-btn-ghost { background: var(--bg-surface); color: var(--text-secondary); }
+  .ob-btn-ghost:hover { background: rgba(15,23,42,0.09); }
+  .ob-btn-danger { background: rgba(220,38,38,0.08); color: var(--red); }
+  .ob-btn-danger:hover { background: rgba(220,38,38,0.15); }
+  .ob-btn-primary { min-width: 120px; color: #fff; background: linear-gradient(135deg, #f97316, #ea580c); box-shadow: 0 6px 16px rgba(234,88,12,0.3); }
+  .ob-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(234,88,12,0.36); }
+  .ob-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 640px) {
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-box { max-width: none; max-height: 94vh; border-radius: 22px 22px 0 0; transform: translateY(40px); }
+    .ob-head { padding: 16px 16px 12px; gap: 12px; }
+    .ob-head-ico { width: 38px; height: 38px; border-radius: 12px; }
+    .ob-body { padding: 4px 16px 18px; }
+    .ob-grid-2 { grid-template-columns: 1fr; }
+    .ob-person { align-items: flex-start; }
+    .ob-foot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); gap: 8px; }
+    .ob-btn { padding: 11px 14px; }
+    .ob-btn-danger .ob-btn-txt { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -239,24 +319,6 @@
         </div>
       </div>
 
-      <!-- Katalog UMKM Section -->
-      <div class="pt-section">
-        <div class="page-hero ph-bd">
-          <div class="page-hero-c">
-            <h1><i data-lucide="book-image" style="width:24px;height:24px;"></i> Katalog UMKM</h1>
-            <p>Daftar produk UMKM binaan, dikelompokkan per kategori — kontak, tanggal display, dan foto produk.</p>
-          </div>
-          <div class="page-hero-actions">
-            <button class="btn-ph" onclick="openCatalogModal()">
-              <i data-lucide="plus" style="width:16px;height:16px;"></i> Tambah UMKM
-            </button>
-          </div>
-        </div>
-
-        <!-- Kotak per kategori — dirender otomatis dari kategori yang dipakai -->
-        <div id="catBoxesWrap"></div>
-      </div>
-
       <!-- Existing Division Links Section -->
       <div style="margin-top:40px; padding-top: 32px; border-top: 1px solid var(--border);">
         <div class="division-header">
@@ -290,155 +352,140 @@
   </main>
 </div>
 
-<!-- Modal Form -->
+<!-- Modal Tambah / Edit Data Outreach -->
 <div class="modal-overlay" id="ptFormModal" onclick="if(event.target===this) closeFormModal()">
-  <div class="modal-box">
-    <h3 id="modalTitle">Tambah Data Outreach</h3>
-    <form id="ptForm" onsubmit="submitData(event)">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="ob-head">
+      <div class="ob-head-ico"><i data-lucide="handshake"></i></div>
+      <div class="ob-head-text">
+        <h3 id="modalTitle">Tambah Data Outreach</h3>
+        <p id="modalSub">Catat komunitas yang dihubungi & pantau status pendekatannya.</p>
+      </div>
+      <button type="button" class="ob-close" onclick="closeFormModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+
+    <form id="ptForm" class="ob-form" onsubmit="submitData(event)" novalidate>
       <input type="hidden" id="ptId">
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label>Tanggal Dihubungi *</label>
-          <input type="date" id="ptTglDihubungi" required>
-        </div>
-        <div class="form-group">
-          <label>Tanggal Kerja Sama (Opsional)</label>
-          <input type="date" id="ptTglKerjasama">
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label>Nama Komunitas *</label>
-        <input type="text" id="ptNamaKomunitas" required placeholder="Contoh: HIMME BINUS">
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label>Status *</label>
-          <select id="ptStatus" required>
-            <option value="Approach">Approach</option>
-            <option value="Not Approach">Not Approach</option>
-            <option value="Respon">Respon</option>
-            <option value="Not Respon">Not Respon</option>
-            <option value="Foll Up">Foll Up</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Via</label>
-          <select id="ptVia">
-            <option value="Via">Via</option>
-            <option value="WA">WA</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Email">Email</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Line">Line</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label>LinkedIn (URL)</label>
-          <input type="url" id="ptLinkedin" placeholder="https://linkedin.com/...">
-        </div>
-        <div class="form-group">
-          <label>Instagram (URL)</label>
-          <input type="url" id="ptInstagram" placeholder="https://instagram.com/...">
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="ptEmail" placeholder="email@domain.com">
-        </div>
-        <div class="form-group">
-          <label>Kontak Komunitas (Telp/WA)</label>
-          <input type="text" id="ptKontakKomunitas" placeholder="0812...">
-        </div>
+      <!-- Status & Via diisi lewat tombol pilihan di bawah -->
+      <input type="hidden" id="ptStatus" value="Approach">
+      <input type="hidden" id="ptVia" value="Via">
+
+      <div class="ob-body" id="ptBody">
+        <section class="ob-sec">
+          <div class="ob-sec-title"><span class="ob-sec-ico"><i data-lucide="building-2"></i></span> Komunitas</div>
+          <div class="ob-field" data-f="nama">
+            <label for="ptNamaKomunitas">Nama Komunitas <span class="ob-req">*</span></label>
+            <div class="ob-input-wrap"><i data-lucide="building-2" class="ob-ico"></i>
+              <input type="text" id="ptNamaKomunitas" class="ob-input ob-input-lg" placeholder="Contoh: HIMME BINUS" autocomplete="off"></div>
+            <div class="ob-err"><i data-lucide="circle-alert" style="width:13px;height:13px;"></i> Nama komunitas wajib diisi.</div>
+          </div>
+          <div class="ob-field">
+            <label for="ptJumlahAnggota">Jumlah Anggota</label>
+            <div class="ob-input-wrap"><i data-lucide="users-round" class="ob-ico"></i>
+              <input type="text" id="ptJumlahAnggota" class="ob-input" placeholder="Misal: 169 Mahasiswa" autocomplete="off"></div>
+          </div>
+        </section>
+
+        <section class="ob-sec">
+          <div class="ob-sec-title"><span class="ob-sec-ico"><i data-lucide="activity"></i></span> Status Outreach</div>
+          <div class="ob-field">
+            <div class="ob-label">Status <span class="ob-req">*</span></div>
+            <div class="ob-choices" id="ptStatusChoices"></div>
+          </div>
+          <div class="ob-field">
+            <div class="ob-label">Dihubungi lewat <span class="ob-aside">Klik lagi untuk batal pilih</span></div>
+            <div class="ob-choices" id="ptViaChoices"></div>
+          </div>
+          <div class="ob-grid-2">
+            <div class="ob-field" data-f="tgl">
+              <label for="ptTglDihubungi">Tanggal Dihubungi <span class="ob-req">*</span></label>
+              <div class="ob-input-wrap"><i data-lucide="calendar" class="ob-ico"></i>
+                <input type="date" id="ptTglDihubungi" class="ob-input"></div>
+              <div class="ob-quick">
+                <button type="button" class="ob-qchip" data-date-for="ptTglDihubungi" data-days="0">Hari ini</button>
+                <button type="button" class="ob-qchip" data-date-for="ptTglDihubungi" data-days="-1">Kemarin</button>
+              </div>
+              <div class="ob-hint" id="ptTglHint" hidden></div>
+              <div class="ob-err"><i data-lucide="circle-alert" style="width:13px;height:13px;"></i> Tanggal dihubungi wajib diisi.</div>
+            </div>
+            <div class="ob-field">
+              <label for="ptTglKerjasama">Tanggal Kerja Sama <span class="ob-aside">Opsional</span></label>
+              <div class="ob-input-wrap"><i data-lucide="calendar-check" class="ob-ico"></i>
+                <input type="date" id="ptTglKerjasama" class="ob-input"></div>
+              <div class="ob-quick">
+                <button type="button" class="ob-qchip" data-date-for="ptTglKerjasama" data-days="0">Hari ini</button>
+              </div>
+              <div class="ob-hint is-purple" id="ptKerjasamaHint" hidden><i data-lucide="sparkles"></i> Status Confirmed — isi tanggal kerja samanya kalau sudah ada.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="ob-sec">
+          <div class="ob-sec-title"><span class="ob-sec-ico"><i data-lucide="contact"></i></span> Kontak</div>
+          <div class="ob-person">
+            <div class="ob-avatar" id="ptCpAvatar"><i data-lucide="user-round"></i></div>
+            <div class="ob-grid-2">
+              <div class="ob-field">
+                <label for="ptNamaCp">Nama CP / Ketua</label>
+                <div class="ob-input-wrap"><i data-lucide="user-round" class="ob-ico"></i>
+                  <input type="text" id="ptNamaCp" class="ob-input" placeholder="Nama lengkap" autocomplete="off"></div>
+              </div>
+              <div class="ob-field">
+                <label for="ptKontakCp">Kontak CP / Ketua</label>
+                <div class="ob-input-wrap"><i data-lucide="phone" class="ob-ico"></i>
+                  <input type="text" id="ptKontakCp" class="ob-input" placeholder="0812..." inputmode="tel" autocomplete="off"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ob-grid-2">
+            <div class="ob-field">
+              <label for="ptKontakKomunitas">Kontak Komunitas (Telp/WA)</label>
+              <div class="ob-input-wrap"><i data-lucide="phone" class="ob-ico"></i>
+                <input type="text" id="ptKontakKomunitas" class="ob-input" placeholder="0812..." inputmode="tel" autocomplete="off"></div>
+            </div>
+            <div class="ob-field" data-link="email">
+              <label for="ptEmail">Email</label>
+              <div class="ob-input-wrap"><i data-lucide="mail" class="ob-ico"></i>
+                <input type="email" id="ptEmail" class="ob-input" placeholder="email@domain.com" inputmode="email" autocomplete="off">
+                <span class="ob-link-state"><i data-lucide="check" class="ob-ok"></i><i data-lucide="x" class="ob-bad"></i></span></div>
+              <div class="ob-err"><i data-lucide="circle-alert" style="width:13px;height:13px;"></i> Format email belum benar.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="ob-sec">
+          <div class="ob-sec-title"><span class="ob-sec-ico"><i data-lucide="at-sign"></i></span> Media Sosial &amp; Template <span class="ob-pill">Opsional</span></div>
+          <div class="ob-grid-2">
+            <div class="ob-field" data-link="linkedin">
+              <label for="ptLinkedin">LinkedIn</label>
+              <div class="ob-input-wrap">
+                <svg class="ob-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                <input type="url" id="ptLinkedin" class="ob-input" placeholder="linkedin.com/company/..." inputmode="url" autocomplete="off">
+                <span class="ob-link-state"><i data-lucide="check" class="ob-ok"></i><i data-lucide="x" class="ob-bad"></i></span></div>
+              <div class="ob-err"><i data-lucide="circle-alert" style="width:13px;height:13px;"></i> Link belum benar — contoh: linkedin.com/company/nama</div>
+            </div>
+            <div class="ob-field" data-link="instagram">
+              <label for="ptInstagram">Instagram <span class="ob-aside">Boleh ketik @username</span></label>
+              <div class="ob-input-wrap">
+                <svg class="ob-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                <input type="text" id="ptInstagram" class="ob-input" placeholder="@username atau link profil" autocomplete="off">
+                <span class="ob-link-state"><i data-lucide="check" class="ob-ok"></i><i data-lucide="x" class="ob-bad"></i></span></div>
+              <div class="ob-err"><i data-lucide="circle-alert" style="width:13px;height:13px;"></i> Username/link Instagram belum benar.</div>
+            </div>
+          </div>
+          <div class="ob-field">
+            <label for="ptTemplateApproach">Template Approach</label>
+            <div class="ob-input-wrap"><i data-lucide="file-text" class="ob-ico"></i>
+              <input type="text" id="ptTemplateApproach" class="ob-input" placeholder="Template yang digunakan" autocomplete="off"></div>
+          </div>
+        </section>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nama CP / Ketua</label>
-          <input type="text" id="ptNamaCp" placeholder="Nama lengkap">
-        </div>
-        <div class="form-group">
-          <label>Kontak CP / Ketua</label>
-          <input type="text" id="ptKontakCp" placeholder="0812...">
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label>Jumlah Anggota</label>
-          <input type="text" id="ptJumlahAnggota" placeholder="Misal: 169 Mahasiswa">
-        </div>
-        <div class="form-group">
-          <label>Template Approach</label>
-          <input type="text" id="ptTemplateApproach" placeholder="Template yang digunakan">
-        </div>
-      </div>
-      
-      <div class="modal-actions" style="justify-content:space-between;">
-        <button type="button" class="btn-cancel" id="btnDelete" style="color:var(--red); display:none;" onclick="deleteData()">Hapus</button>
-        <div style="display:flex; gap:10px;">
-          <button type="button" class="btn-cancel" onclick="closeFormModal()">Batal</button>
-          <button type="submit" class="btn-submit">Simpan</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal Form: Katalog UMKM -->
-<div class="modal-overlay" id="catFormModal" onclick="if(event.target===this) closeCatalogModal()">
-  <div class="modal-box">
-    <h3 id="catModalTitle">Tambah UMKM</h3>
-    <form id="catForm" onsubmit="submitCatalog(event)">
-      <input type="hidden" id="catId">
-
-      <div class="form-group">
-        <label>Kategori</label>
-        <input type="text" id="catKategori" list="catKategoriList" placeholder="Contoh: Katalog 1, Kuliner — ketik kategori baru bila belum ada">
-        <datalist id="catKategoriList"></datalist>
-      </div>
-
-      <div class="form-group">
-        <label>Nama UMKM *</label>
-        <input type="text" id="catNamaUmkm" required placeholder="Nama usaha">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>No. Telp</label>
-          <input type="text" id="catNoTelp" placeholder="0812...">
-        </div>
-        <div class="form-group">
-          <label>Tanggal Display</label>
-          <input type="date" id="catTanggalDisplay">
-        </div>
-      </div>
-
-      <div class="form-group file-input-wrap">
-        <label>Foto Produk</label>
-        <input type="file" id="catFotoInput" accept="image/png,image/jpeg,image/webp" onchange="previewCatalogPhoto(this)">
-        <div class="foto-hint">JPG/PNG/WEBP, maksimal 2MB.</div>
-        <div class="foto-preview-wrap" id="catFotoPreviewWrap" style="display:none;">
-          <img id="catFotoPreview" alt="Preview foto produk">
-          <button type="button" class="btn-cancel" style="margin-top:8px; font-size:12px; padding:6px 12px;" onclick="removeCatalogPhoto()">Hapus Foto Ini</button>
-        </div>
-      </div>
-
-      <div class="modal-actions" style="justify-content:space-between;">
-        <button type="button" class="btn-cancel" id="catBtnDelete" style="color:var(--red); display:none;" onclick="deleteCatalog()">Hapus</button>
-        <div style="display:flex; gap:10px;">
-          <button type="button" class="btn-cancel" onclick="closeCatalogModal()">Batal</button>
-          <button type="submit" class="btn-submit">Simpan</button>
-        </div>
+      <div class="ob-foot">
+        <button type="button" class="ob-btn ob-btn-danger" id="btnDelete" style="display:none;" onclick="deleteData()"><i data-lucide="trash-2"></i><span class="ob-btn-txt">Hapus</span></button>
+        <span class="ob-spacer"></span>
+        <button type="button" class="ob-btn ob-btn-ghost" onclick="closeFormModal()">Batal</button>
+        <button type="submit" class="ob-btn ob-btn-primary" id="btnSavePt"><i data-lucide="save"></i> Simpan</button>
       </div>
     </form>
   </div>
@@ -484,12 +531,26 @@
     return new Date(dStr).toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
+  // Ikon brand (Instagram/LinkedIn) sudah tidak ada di Lucide versi baru —
+  // pakai SVG inline supaya ikonnya tetap muncul (dulu jadi link kosong).
+  const BRAND_SVG = {
+    instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>',
+    linkedin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>'
+  };
+  // Hanya http/https yang boleh jadi link — isinya diketik bebas oleh user,
+  // jangan sampai "javascript:..." ikut jadi href yang bisa diklik.
+  function safeHttpUrl(u) {
+    try {
+      const url = new URL(String(u || '').trim());
+      return (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : null;
+    } catch (e) { return null; }
+  }
+
   function renderLink(url, label) {
-    if (!url) return '-';
-    let displayLabel = label;
-    if (label === 'LinkedIn') displayLabel = '<i data-lucide="linkedin" style="width:14px;height:14px;"></i>';
-    if (label === 'Instagram') displayLabel = '<i data-lucide="instagram" style="width:14px;height:14px;"></i>';
-    return `<a href="${escHtml(url)}" target="_blank" class="link-icon">${displayLabel}</a>`;
+    const href = safeHttpUrl(url);
+    if (!href) return url ? escHtml(url) : '-';
+    const icon = label === 'LinkedIn' ? BRAND_SVG.linkedin : label === 'Instagram' ? BRAND_SVG.instagram : escHtml(label);
+    return `<a href="${escHtml(href)}" target="_blank" rel="noopener noreferrer" class="link-icon" title="${label}" style="display:inline-flex;width:16px;height:16px;" onclick="event.stopPropagation()">${icon}</a>`;
   }
 
   function fetchPtData() {
@@ -548,85 +609,284 @@
     renderTable();
   }
 
-  // Modal Handlers
-  function openFormModal(dataStr) {
-    const form = document.getElementById('ptForm');
-    form.reset();
-    document.getElementById('ptId').value = '';
-    document.getElementById('modalTitle').textContent = 'Tambah Data Outreach';
-    document.getElementById('btnDelete').style.display = 'none';
-    
-    if (dataStr) {
-      const d = JSON.parse(decodeURIComponent(dataStr));
-      document.getElementById('ptId').value = d.id;
-      document.getElementById('modalTitle').textContent = 'Edit Data Outreach';
-      document.getElementById('btnDelete').style.display = 'block';
-      
-      document.getElementById('ptTglDihubungi').value = d.tanggal_dihubungi ? d.tanggal_dihubungi.split('T')[0] : '';
-      document.getElementById('ptTglKerjasama').value = d.tanggal_kerjasama ? d.tanggal_kerjasama.split('T')[0] : '';
-      document.getElementById('ptNamaKomunitas').value = d.nama_komunitas || '';
-      document.getElementById('ptStatus').value = d.status || 'Approach';
-      document.getElementById('ptVia').value = d.via || 'Via';
-      document.getElementById('ptLinkedin').value = d.linkedin || '';
-      document.getElementById('ptInstagram').value = d.instagram || '';
-      document.getElementById('ptEmail').value = d.email || '';
-      document.getElementById('ptKontakKomunitas').value = d.kontak_komunitas || '';
-      document.getElementById('ptNamaCp').value = d.nama_cp || '';
-      document.getElementById('ptKontakCp').value = d.kontak_cp || '';
-      document.getElementById('ptJumlahAnggota').value = d.jumlah_anggota || '';
-      document.getElementById('ptTemplateApproach').value = d.template_approach || '';
-    }
-    document.getElementById('ptFormModal').classList.add('open');
+  // ─── Form Tambah / Edit Data Outreach ───
+  const PT_STATUSES = [
+    ['Approach', '#1d4ed8'], ['Not Approach', '#92400e'], ['Respon', '#15803d'], ['Not Respon', '#dc2626'],
+    ['Foll Up', '#b45309'], ['Confirmed', '#7c3aed'], ['Rejected', '#991b1b']
+  ];
+  const PT_VIAS = [
+    ['WA', '#16a34a', '<i data-lucide="message-circle"></i>'],
+    ['Instagram', '#c026d3', BRAND_SVG.instagram],
+    ['Email', '#dc2626', '<i data-lucide="mail"></i>'],
+    ['LinkedIn', '#0a66c2', BRAND_SVG.linkedin],
+    ['Line', '#06c755', '<i data-lucide="message-square"></i>']
+  ];
+  let ptDirty = false;
+  let ptSaving = false;
+  let ptOriginal = {}; // nilai awal link/email saat edit — data lama yang tidak diubah tidak ikut divalidasi
+
+  const $pt = id => document.getElementById(id);
+
+  (function buildPtChoices() {
+    $pt('ptStatusChoices').innerHTML = PT_STATUSES.map(([v, c]) =>
+      `<button type="button" class="ob-choice" data-status="${v}" style="--c:${c}">${v}</button>`).join('');
+    $pt('ptViaChoices').innerHTML = PT_VIAS.map(([v, c, ico]) =>
+      `<button type="button" class="ob-choice has-ico" data-via="${v}" style="--c:${c}">${ico}${v}</button>`).join('');
+  })();
+
+  function setPtStatus(v) {
+    $pt('ptStatus').value = v;
+    document.querySelectorAll('#ptStatusChoices [data-status]').forEach(b => b.classList.toggle('is-on', b.dataset.status === v));
+    updatePtHints();
+  }
+  function setPtVia(v) {
+    $pt('ptVia').value = v || 'Via';
+    document.querySelectorAll('#ptViaChoices [data-via]').forEach(b => b.classList.toggle('is-on', b.dataset.via === v));
   }
 
-  function closeFormModal() {
-    document.getElementById('ptFormModal').classList.remove('open');
+  // Tanggal "hari ini" versi WIB (bukan UTC)
+  function ptTodayISO(offsetDays) {
+    const [y, m, d] = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' }).split('-').map(Number);
+    const t = new Date(Date.UTC(y, m - 1, d + (offsetDays || 0)));
+    return t.toISOString().slice(0, 10);
   }
+  function updatePtHints() {
+    const tgl = $pt('ptTglDihubungi').value;
+    const hint = $pt('ptTglHint');
+    document.querySelectorAll('[data-date-for]').forEach(b =>
+      b.classList.toggle('is-on', $pt(b.dataset.dateFor).value === ptTodayISO(+b.dataset.days)));
+    if (tgl) {
+      const [y, m, d] = tgl.split('-').map(Number);
+      const diff = Math.round((Date.UTC(y, m - 1, d) - Date.parse(ptTodayISO(0))) / 86400000);
+      const rel = diff === 0 ? 'hari ini' : diff === -1 ? 'kemarin' : diff < 0 ? `${-diff} hari lalu` : `${diff} hari lagi`;
+      hint.innerHTML = '<i data-lucide="calendar"></i><span></span>';
+      hint.querySelector('span').textContent = new Date(y, m - 1, d).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + rel;
+      hint.hidden = false;
+    } else {
+      hint.hidden = true;
+    }
+    $pt('ptKerjasamaHint').hidden = !($pt('ptStatus').value === 'Confirmed' && !$pt('ptTglKerjasama').value);
+    if (window.lucide) window.lucide.createIcons();
+  }
+  function updatePtAvatar() {
+    const av = $pt('ptCpAvatar');
+    const parts = $pt('ptNamaCp').value.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean);
+    const ini = parts.length ? (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() : '';
+    av.classList.toggle('is-filled', !!ini);
+    if (ini) av.textContent = ini;
+    else { av.innerHTML = '<i data-lucide="user-round"></i>'; if (window.lucide) window.lucide.createIcons(); }
+  }
+
+  // Normalisasi link: "linkedin.com/x" → https://…, "@akun" → instagram.com/akun.
+  // Mengembalikan { value, ok } — ok=null berarti kosong (netral).
+  function normalizePtLink(kind, raw) {
+    const v = String(raw || '').trim();
+    if (!v) return { value: '', ok: null };
+    if (kind === 'email') return { value: v, ok: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) };
+    let url = v;
+    if (kind === 'instagram') {
+      const handle = v.replace(/^@/, '');
+      if (/^[A-Za-z0-9._]{1,30}$/.test(handle)) url = 'https://instagram.com/' + handle;
+    }
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(url) && /^[^\s/]+\.[^\s]{2,}/.test(url)) url = 'https://' + url;
+    const href = safeHttpUrl(url);
+    return href && new URL(href).hostname.includes('.') ? { value: url, ok: true } : { value: v, ok: false };
+  }
+  const PT_LINK_INPUTS = { linkedin: 'ptLinkedin', instagram: 'ptInstagram', email: 'ptEmail' };
+  function checkPtLink(kind, finalize) {
+    const input = $pt(PT_LINK_INPUTS[kind]);
+    const field = input.closest('.ob-field');
+    // Data lama yang tidak diubah dibiarkan apa adanya (tidak divalidasi).
+    if (input.value === (ptOriginal[kind] || '') && ptOriginal[kind]) {
+      field.classList.remove('is-ok', 'is-bad', 'is-invalid');
+      return true;
+    }
+    const r = normalizePtLink(kind, input.value);
+    if (finalize && r.ok) input.value = r.value;
+    field.classList.toggle('is-ok', r.ok === true);
+    const bad = r.ok === false && (finalize || field.classList.contains('is-bad'));
+    field.classList.toggle('is-bad', bad);
+    field.classList.toggle('is-invalid', bad);
+    return r.ok !== false;
+  }
+
+  function setPtInvalid(f, bad) {
+    const el = document.querySelector(`#ptForm [data-f="${f}"]`);
+    if (el) el.classList.toggle('is-invalid', !!bad);
+    return el;
+  }
+  function ptShake(el) {
+    if (!el) return;
+    el.classList.remove('ob-shake'); void el.offsetWidth; el.classList.add('ob-shake');
+  }
+
+  // Event: tombol pilihan status/via, chip tanggal, input
+  $pt('ptForm').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.status) { setPtStatus(b.dataset.status); ptDirty = true; }
+    else if (b.dataset.via) { setPtVia($pt('ptVia').value === b.dataset.via ? 'Via' : b.dataset.via); ptDirty = true; }
+    else if (b.dataset.dateFor) {
+      $pt(b.dataset.dateFor).value = ptTodayISO(+b.dataset.days);
+      $pt(b.dataset.dateFor).dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+  $pt('ptForm').addEventListener('input', e => {
+    ptDirty = true;
+    const id = e.target.id;
+    if (id === 'ptNamaKomunitas' && e.target.value.trim()) setPtInvalid('nama', false);
+    if (id === 'ptTglDihubungi' && e.target.value) setPtInvalid('tgl', false);
+    if (id === 'ptTglDihubungi' || id === 'ptTglKerjasama') updatePtHints();
+    if (id === 'ptNamaCp') updatePtAvatar();
+    const kind = Object.keys(PT_LINK_INPUTS).find(k => PT_LINK_INPUTS[k] === id);
+    if (kind) checkPtLink(kind, false);
+  });
+  $pt('ptForm').addEventListener('focusout', e => {
+    const kind = Object.keys(PT_LINK_INPUTS).find(k => PT_LINK_INPUTS[k] === e.target.id);
+    if (kind) checkPtLink(kind, true);
+  });
+  // Klik di mana saja pada kolom tanggal langsung membuka kalender
+  document.querySelectorAll('#ptForm input[type="date"]').forEach(inp =>
+    inp.addEventListener('click', () => { try { inp.showPicker && inp.showPicker(); } catch (err) {} }));
+
+  // Modal Handlers
+  function openFormModal(dataStr) {
+    const form = $pt('ptForm');
+    form.reset();
+    form.querySelectorAll('.is-invalid, .is-ok, .is-bad').forEach(el => el.classList.remove('is-invalid', 'is-ok', 'is-bad'));
+    $pt('ptId').value = '';
+    $pt('modalTitle').textContent = 'Tambah Data Outreach';
+    $pt('modalSub').textContent = 'Catat komunitas yang dihubungi & pantau status pendekatannya.';
+    $pt('btnDelete').style.display = 'none';
+    ptOriginal = {};
+    setPtStatus('Approach');
+    setPtVia('Via');
+
+    if (dataStr) {
+      const d = JSON.parse(decodeURIComponent(dataStr));
+      $pt('ptId').value = d.id;
+      $pt('modalTitle').textContent = 'Edit Data Outreach';
+      $pt('modalSub').textContent = d.nama_komunitas || 'Perbarui status & kontak komunitas ini.';
+      $pt('btnDelete').style.display = 'inline-flex';
+
+      $pt('ptTglDihubungi').value = d.tanggal_dihubungi ? d.tanggal_dihubungi.split('T')[0] : '';
+      $pt('ptTglKerjasama').value = d.tanggal_kerjasama ? d.tanggal_kerjasama.split('T')[0] : '';
+      $pt('ptNamaKomunitas').value = d.nama_komunitas || '';
+      setPtStatus(d.status || 'Approach');
+      setPtVia(d.via || 'Via');
+      $pt('ptLinkedin').value = d.linkedin || '';
+      $pt('ptInstagram').value = d.instagram || '';
+      $pt('ptEmail').value = d.email || '';
+      $pt('ptKontakKomunitas').value = d.kontak_komunitas || '';
+      $pt('ptNamaCp').value = d.nama_cp || '';
+      $pt('ptKontakCp').value = d.kontak_cp || '';
+      $pt('ptJumlahAnggota').value = d.jumlah_anggota || '';
+      $pt('ptTemplateApproach').value = d.template_approach || '';
+      ptOriginal = { linkedin: d.linkedin || '', instagram: d.instagram || '', email: d.email || '' };
+    }
+    updatePtHints();
+    updatePtAvatar();
+    ptDirty = false;
+    $pt('ptBody').scrollTop = 0;
+    $pt('ptFormModal').classList.add('open');
+    if (window.lucide) window.lucide.createIcons();
+    if (!dataStr && window.innerWidth > 640) setTimeout(() => $pt('ptNamaKomunitas').focus(), 80);
+  }
+
+  function closeFormModal(force) {
+    if (!$pt('ptFormModal').classList.contains('open') || ptSaving) return;
+    if (!force && ptDirty) {
+      Swal.fire({
+        icon: 'warning', title: 'Tutup form?', text: 'Perubahan yang belum disimpan akan hilang.',
+        showCancelButton: true, reverseButtons: true,
+        confirmButtonText: 'Ya, tutup', cancelButtonText: 'Lanjut mengisi', confirmButtonColor: '#dc2626'
+      }).then(r => { if (r.isConfirmed) closeFormModal(true); });
+      return;
+    }
+    $pt('ptFormModal').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !$pt('ptFormModal').classList.contains('open')) return;
+    if (window.Swal && Swal.isVisible && Swal.isVisible() && !(Swal.getPopup() && Swal.getPopup().classList.contains('swal2-toast'))) return;
+    closeFormModal();
+  });
 
   function submitData(e) {
     e.preventDefault();
-    const id = document.getElementById('ptId').value;
+    if (ptSaving) return;
+
+    // Validasi: wajib diisi + format link/email
+    const problems = [];
+    if (!$pt('ptNamaKomunitas').value.trim()) problems.push(setPtInvalid('nama', true));
+    if (!$pt('ptTglDihubungi').value) problems.push(setPtInvalid('tgl', true));
+    Object.keys(PT_LINK_INPUTS).forEach(kind => {
+      if (!checkPtLink(kind, true)) problems.push($pt(PT_LINK_INPUTS[kind]).closest('.ob-field'));
+    });
+    if (problems.length) {
+      const first = problems[0];
+      ptShake(first);
+      first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const inp = first.querySelector('input');
+      if (inp && window.innerWidth > 640) setTimeout(() => inp.focus({ preventScroll: true }), 250);
+      return;
+    }
+
+    const id = $pt('ptId').value;
     const method = id ? 'PUT' : 'POST';
     const url = id ? '/api/bd-partnerships/' + id : '/api/bd-partnerships';
-    
+
     const payload = {
-      tanggal_dihubungi: document.getElementById('ptTglDihubungi').value,
-      tanggal_kerjasama: document.getElementById('ptTglKerjasama').value,
-      nama_komunitas: document.getElementById('ptNamaKomunitas').value,
-      status: document.getElementById('ptStatus').value,
-      via: document.getElementById('ptVia').value,
-      linkedin: document.getElementById('ptLinkedin').value,
-      instagram: document.getElementById('ptInstagram').value,
-      email: document.getElementById('ptEmail').value,
-      kontak_komunitas: document.getElementById('ptKontakKomunitas').value,
-      nama_cp: document.getElementById('ptNamaCp').value,
-      kontak_cp: document.getElementById('ptKontakCp').value,
-      jumlah_anggota: document.getElementById('ptJumlahAnggota').value,
-      template_approach: document.getElementById('ptTemplateApproach').value,
+      tanggal_dihubungi: $pt('ptTglDihubungi').value,
+      tanggal_kerjasama: $pt('ptTglKerjasama').value,
+      nama_komunitas: $pt('ptNamaKomunitas').value.trim(),
+      status: $pt('ptStatus').value,
+      via: $pt('ptVia').value,
+      linkedin: $pt('ptLinkedin').value.trim(),
+      instagram: $pt('ptInstagram').value.trim(),
+      email: $pt('ptEmail').value.trim(),
+      kontak_komunitas: $pt('ptKontakKomunitas').value,
+      nama_cp: $pt('ptNamaCp').value,
+      kontak_cp: $pt('ptKontakCp').value,
+      jumlah_anggota: $pt('ptJumlahAnggota').value,
+      template_approach: $pt('ptTemplateApproach').value,
     };
+
+    const btn = $pt('btnSavePt');
+    const btnHtml = btn.innerHTML;
+    ptSaving = true;
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
 
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
-    .then(r => {
-      if (!r.ok) throw new Error('Gagal menyimpan data');
-      return r.json();
+    .then(async r => {
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || 'Gagal menyimpan data');
+      return body;
     })
     .then(() => {
-      Swal.fire({ title: 'Berhasil', text: 'Data berhasil disimpan!', icon: 'success', timer: 1500, showConfirmButton: false });
-      closeFormModal();
+      ptSaving = false;
+      closeFormModal(true);
+      showSwalToast(id ? 'Data outreach diperbarui!' : 'Data outreach ditambahkan!', 'success');
       fetchPtData();
     })
     .catch(err => {
       console.error(err);
-      Swal.fire('Error', err.message, 'error');
+      showSwalToast(err.message || 'Terjadi kesalahan koneksi server', 'error');
+    })
+    .finally(() => {
+      ptSaving = false;
+      btn.disabled = false;
+      btn.innerHTML = btnHtml;
     });
   }
 
   function deleteData() {
-    const id = document.getElementById('ptId').value;
+    const id = $pt('ptId').value;
     if (!id) return;
 
     Swal.fire({
@@ -635,7 +895,8 @@
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Ya, Hapus!'
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
         fetch('/api/bd-partnerships/' + id, { method: 'DELETE' })
@@ -644,212 +905,9 @@
             return r.json();
           })
           .then(() => {
-            Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-            closeFormModal();
+            closeFormModal(true);
+            showSwalToast('Data berhasil dihapus.', 'success');
             fetchPtData();
-          })
-          .catch(err => Swal.fire('Error', err.message, 'error'));
-      }
-    });
-  }
-
-  // ─── Katalog UMKM ───
-  let allCatData = [];
-  let catSelectedFile = null;   // File baru yang dipilih user di form (null = tidak ganti foto)
-  let catRemovePhotoFlag = false; // true kalau user klik "Hapus Foto Ini" tanpa ganti foto baru
-  const CAT_MAX_FOTO_BYTES = 2 * 1024 * 1024; // 2MB — samakan dengan batas di server
-
-  function fetchCatData() {
-    fetch('/api/bd-catalog')
-      .then(r => r.json())
-      .then(data => {
-        allCatData = data;
-        renderCatBoxes();
-        updateCatDatalist();
-      })
-      .catch(e => console.error('Error fetching catalog:', e));
-  }
-
-  function updateCatDatalist() {
-    const categories = [...new Set(allCatData.map(d => d.kategori).filter(Boolean))].sort();
-    document.getElementById('catKategoriList').innerHTML =
-      categories.map(c => `<option value="${escHtml(c)}">`).join('');
-  }
-
-  // Dikelompokkan per kategori — tiap kategori jadi "kotak" sendiri berisi
-  // kartu produk, bukan satu tabel panjang. Kategori baru otomatis dapat
-  // kotaknya sendiri begitu ada UMKM yang pakai kategori itu.
-  function renderCatBoxes() {
-    const wrap = document.getElementById('catBoxesWrap');
-    if (!allCatData.length) {
-      wrap.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:40px 0;">Belum ada data katalog. Klik "Tambah UMKM" untuk mulai.</div>`;
-      return;
-    }
-
-    // Dikelompokkan case-insensitive ("Kuliner" dan "kuliner" jadi satu
-    // kotak yang sama) — tapi nama yang ditampilkan tetap ejaan pertama yang
-    // dipakai user, bukan versi lowercase-nya.
-    const groups = {};
-    const displayNames = {};
-    allCatData.forEach(d => {
-      const raw = (d.kategori || '').trim() || 'Umum';
-      const k = raw.toLowerCase();
-      if (!displayNames[k]) displayNames[k] = raw;
-      (groups[k] = groups[k] || []).push(d);
-    });
-    // Sortir numerik ("Katalog 2" sebelum "Katalog 10"), bukan sortir teks biasa.
-    const categories = Object.keys(groups).sort((a, b) =>
-      displayNames[a].localeCompare(displayNames[b], 'id', { numeric: true, sensitivity: 'base' })
-    );
-
-    let html = '';
-    categories.forEach(kat => {
-      const items = groups[kat];
-      html += `
-        <div class="cat-box">
-          <div class="cat-box-header">
-            <div class="cat-box-title"><i data-lucide="folder" style="width:16px;height:16px;color:var(--accent-bd);"></i> ${escHtml(displayNames[kat])}</div>
-            <span class="cat-box-count">${items.length} produk</span>
-          </div>
-          <div class="cat-products-grid">
-            ${items.map(prodCardHTML).join('')}
-          </div>
-        </div>
-      `;
-    });
-    wrap.innerHTML = html;
-    if (window.lucide) window.lucide.createIcons();
-  }
-
-  function prodCardHTML(d) {
-    const safeData = encodeURIComponent(JSON.stringify(d));
-    const photo = d.link_foto_katalog
-      ? `<img src="${escHtml(d.link_foto_katalog)}" alt="${escHtml(d.nama_umkm)}" loading="lazy">`
-      : `<i data-lucide="image-off" style="width:24px;height:24px;color:var(--text-muted);opacity:0.45;"></i>`;
-    return `
-      <div class="prod-card" onclick="openCatalogModal('${safeData}')">
-        <div class="prod-card-photo">${photo}</div>
-        <div class="prod-card-body">
-          <div class="prod-card-name">${escHtml(d.nama_umkm)}</div>
-          ${d.no_telp ? `<div class="prod-card-meta"><i data-lucide="phone" style="width:11px;height:11px;"></i>${escHtml(d.no_telp)}</div>` : ''}
-          ${d.tanggal_display ? `<div class="prod-card-meta is-display"><i data-lucide="calendar" style="width:11px;height:11px;"></i>${formatDate(d.tanggal_display)}</div>` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  // ─── Upload foto (preview lokal sebelum submit) ───
-  function previewCatalogPhoto(input) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > CAT_MAX_FOTO_BYTES) {
-      Swal.fire('Foto terlalu besar', 'Ukuran foto maksimal 2MB. Pilih foto lain atau kompres dulu.', 'warning');
-      input.value = '';
-      return;
-    }
-    catSelectedFile = file;
-    catRemovePhotoFlag = false;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      document.getElementById('catFotoPreview').src = e.target.result;
-      document.getElementById('catFotoPreviewWrap').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function removeCatalogPhoto() {
-    catSelectedFile = null;
-    catRemovePhotoFlag = true;
-    document.getElementById('catFotoInput').value = '';
-    document.getElementById('catFotoPreviewWrap').style.display = 'none';
-  }
-
-  function openCatalogModal(dataStr) {
-    const form = document.getElementById('catForm');
-    form.reset();
-    document.getElementById('catId').value = '';
-    document.getElementById('catModalTitle').textContent = 'Tambah UMKM';
-    document.getElementById('catBtnDelete').style.display = 'none';
-    catSelectedFile = null;
-    catRemovePhotoFlag = false;
-    document.getElementById('catFotoPreviewWrap').style.display = 'none';
-
-    if (dataStr) {
-      const d = JSON.parse(decodeURIComponent(dataStr));
-      document.getElementById('catId').value = d.id;
-      document.getElementById('catModalTitle').textContent = 'Edit UMKM';
-      document.getElementById('catBtnDelete').style.display = 'block';
-      document.getElementById('catKategori').value = d.kategori || '';
-      document.getElementById('catNamaUmkm').value = d.nama_umkm || '';
-      document.getElementById('catNoTelp').value = d.no_telp || '';
-      document.getElementById('catTanggalDisplay').value = d.tanggal_display ? d.tanggal_display.split('T')[0] : '';
-      if (d.link_foto_katalog) {
-        document.getElementById('catFotoPreview').src = d.link_foto_katalog;
-        document.getElementById('catFotoPreviewWrap').style.display = 'block';
-      }
-    }
-    document.getElementById('catFormModal').classList.add('open');
-  }
-
-  function closeCatalogModal() {
-    document.getElementById('catFormModal').classList.remove('open');
-  }
-
-  function submitCatalog(e) {
-    e.preventDefault();
-    const id = document.getElementById('catId').value;
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? '/api/bd-catalog/' + id : '/api/bd-catalog';
-
-    // multipart/form-data karena bisa ikut membawa file foto — JANGAN set
-    // header Content-Type manual, browser yang isi boundary-nya otomatis.
-    const fd = new FormData();
-    fd.append('kategori', document.getElementById('catKategori').value);
-    fd.append('nama_umkm', document.getElementById('catNamaUmkm').value);
-    fd.append('no_telp', document.getElementById('catNoTelp').value);
-    fd.append('tanggal_display', document.getElementById('catTanggalDisplay').value);
-    if (catSelectedFile) fd.append('foto', catSelectedFile);
-    if (catRemovePhotoFlag) fd.append('hapusFoto', '1');
-
-    fetch(url, { method, body: fd })
-      .then(async r => {
-        const body = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(body.error || 'Gagal menyimpan data');
-        return body;
-      })
-      .then(() => {
-        Swal.fire({ title: 'Berhasil', text: 'Data katalog berhasil disimpan!', icon: 'success', timer: 1500, showConfirmButton: false });
-        closeCatalogModal();
-        fetchCatData();
-      })
-      .catch(err => {
-        console.error(err);
-        Swal.fire('Error', err.message, 'error');
-      });
-  }
-
-  function deleteCatalog() {
-    const id = document.getElementById('catId').value;
-    if (!id) return;
-
-    Swal.fire({
-      title: 'Hapus Data?',
-      text: "Data katalog dan fotonya akan dihapus permanen!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Ya, Hapus!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch('/api/bd-catalog/' + id, { method: 'DELETE' })
-          .then(r => {
-            if (!r.ok) throw new Error('Gagal menghapus');
-            return r.json();
-          })
-          .then(() => {
-            Swal.fire('Terhapus!', 'Data katalog berhasil dihapus.', 'success');
-            closeCatalogModal();
-            fetchCatData();
           })
           .catch(err => Swal.fire('Error', err.message, 'error'));
       }
@@ -867,8 +925,6 @@
     // 2. Fetch partnerships data
     fetchPtData();
 
-    // 3. Fetch katalog UMKM
-    fetchCatData();
   });
 </script>
 </body>

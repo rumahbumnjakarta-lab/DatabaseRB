@@ -666,7 +666,7 @@ function showChatNotifToast(room) {
     icon: 'info',
     title: room.type === 'dm' ? room.label : `${room.label} · ${room.last_sender || ''}`,
     text: preview,
-    didOpen: (el) => { el.style.cursor = 'pointer'; el.onclick = () => { window.location.href = '/chat.html'; }; }
+    didOpen: (el) => { el.style.cursor = 'pointer'; el.onclick = () => { window.location.href = '/chat.html?room=' + encodeURIComponent(room.id); }; }
   });
 }
 

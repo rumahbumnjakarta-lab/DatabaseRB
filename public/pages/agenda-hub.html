@@ -5,194 +5,316 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Silabus — Rumah BUMN Jakarta</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/silabus-form.css?v=4">
 <style>
   /* Page header uses the shared .page-hero component in style.css */
 
-  /* Calendar Controls */
-  .cal-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
+  /* ── Kalender: toolbar ── */
+  .cal-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+  .cal-nav {
+    display: flex; padding: 3px; border-radius: 12px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
   }
-  .cal-btn {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-mid);
-    color: var(--text-primary);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
+  .cal-nav-btn {
+    width: 34px; height: 34px; border: none; background: none; border-radius: 9px;
+    color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
   }
-  .cal-btn:hover {
-    background: var(--border);
+  .cal-nav-btn:hover { background: var(--blue-active-bg); color: var(--blue-mid); }
+  .cal-nav-btn svg { width: 18px; height: 18px; }
+  .cal-title-wrap { flex: 1; min-width: 0; }
+  .cal-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); line-height: 1.2; }
+  .cal-subtitle { font-size: 12.5px; font-weight: 500; color: var(--text-muted); margin-top: 2px; }
+  .cal-today-btn {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 14px; border-radius: 11px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
+    font: 600 13px 'Inter', sans-serif; box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    transition: border-color 0.15s, color 0.15s;
   }
-  .cal-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-primary);
-    min-width: 140px;
-    text-align: center;
-  }
+  .cal-today-btn:hover { border-color: var(--blue-mid); color: var(--blue-mid); }
+  .cal-today-btn svg { width: 15px; height: 15px; }
 
-  /* Calendar Grid */
+  /* Keterangan warna — cuma kategori yang ada di bulan ini */
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .cal-legend:empty { display: none; }
+  .cal-legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 20px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    font-size: 11.5px; font-weight: 600; color: var(--text-secondary);
+  }
+  .cal-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .cal-legend b { font-weight: 700; color: var(--text-muted); }
+
+  /* ── Kalender: grid ── */
   .cal-wrapper {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(15,23,42,0.07);
+    position: relative; overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(15,23,42,0.06);
   }
   .cal-header-row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: rgba(15,23,42,0.02);
-    border-bottom: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+    background: var(--bg-surface); border-bottom: 1px solid var(--border);
   }
   .cal-header-cell {
-    padding: 12px 8px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    padding: 11px 12px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
     color: var(--text-muted);
   }
-  .cal-header-cell.weekend {
-    color: rgba(239, 68, 68, 0.8); /* Red tint for weekends */
-  }
+  .cal-header-cell.weekend { color: #e11d48; }
 
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: minmax(120px, auto);
-  }
-  
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(118px, auto); }
   .cal-cell {
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: var(--bg-card);
-    transition: background 0.2s;
+    position: relative; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px; padding: 8px;
+    border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--bg-card); transition: background 0.15s;
+    container-type: inline-size;
   }
-  .cal-cell:nth-child(7n) {
-    border-right: none;
+  /* Sel sempit (layar kecil / sidebar terbuka): sembunyikan jam & centang
+     supaya judul acara tetap kebaca, bukan cuma jamnya saja. */
+  @container (max-width: 120px) {
+    .event-pill .event-time, .event-pill .event-done, .cal-today-tag { display: none; }
   }
-  .cal-cell.empty {
-    background: rgba(15,23,42,0.015);
-  }
-  .cal-cell:hover:not(.empty) {
-    background: var(--bg-surface);
-  }
-  .cal-cell.today .cal-date-num {
-    background: var(--blue-mid);
-    color: #fff;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .cal-cell:nth-child(7n) { border-right: none; }
+  .cal-grid > .cal-cell:nth-last-child(-n+7) { border-bottom: none; }
+  .cal-cell.weekend { background: rgba(225,29,72,0.02); }
+  .cal-cell.outside { background: var(--bg-surface); }
+  .cal-cell.outside .cal-date-num { color: var(--text-muted); opacity: 0.45; font-weight: 600; }
+  .cal-cell:not(.outside):hover { background: var(--bg-card-hover); }
+  .cal-cell.today { background: var(--blue-active-bg); box-shadow: inset 0 0 0 2px rgba(21,94,239,0.3); }
 
-  .cal-date {
-    display: flex;
-    justify-content: flex-end;
-  }
+  .cal-date { display: flex; align-items: center; gap: 6px; min-height: 26px; }
   .cal-date-num {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13.5px; font-weight: 700; color: var(--text-primary);
   }
-  .cal-cell.weekend .cal-date-num {
-    color: rgba(239, 68, 68, 0.9);
+  .cal-cell.weekend .cal-date-num { color: #e11d48; }
+  .cal-cell.past .cal-date-num { color: var(--text-muted); font-weight: 600; }
+  .cal-cell.today .cal-date-num { background: var(--blue-mid); color: #fff; box-shadow: 0 4px 10px rgba(21,94,239,0.35); }
+  .cal-today-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue-mid); }
+  /* Tombol + muncul saat sel di-hover: tambah silabus langsung di tanggal itu */
+  .cal-add {
+    margin-left: auto; width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+    border: none; background: var(--blue-mid); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s;
   }
+  .cal-cell:hover .cal-add, .cal-add:focus-visible { opacity: 1; transform: none; }
+  .cal-add svg { width: 14px; height: 14px; }
 
-  /* Event Pills */
-  .cal-events {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-  }
+  .cal-events { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .event-pill {
-    font-size: 11px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 600;
-    transition: transform 0.1s, opacity 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: flex; align-items: center; gap: 6px; min-width: 0;
+    padding: 5px 8px 5px 7px; border-radius: 7px;
+    border-left: 3px solid var(--c); background: var(--cbg);
+    font-size: 11.5px; font-weight: 600; color: var(--text-primary);
+    overflow: hidden; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
   }
-  .event-pill:hover {
-    transform: scale(1.02);
-    opacity: 0.9;
-  }
-  .event-pill .event-time {
-    font-family: 'JetBrains Mono', monospace;
-    opacity: 0.7;
-    font-size: 10px;
-  }
+  .event-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -6px var(--c); }
+  .event-pill .event-time { flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: var(--c); font-variant-numeric: tabular-nums; }
+  .event-pill .event-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .event-pill.is-done { opacity: 0.62; }
+  .event-pill .event-done { width: 12px; height: 12px; flex-shrink: 0; margin-left: auto; color: #12b76a; }
 
-  /* Colors for pills based on division (Sesuai Panduan Sheets) */
-  .bg-event { background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); }   /* Red: Event & Partnerships */
-  .bg-bd { background: rgba(249, 115, 22, 0.15); color: #ea580c; border: 1px solid rgba(249, 115, 22, 0.3); }    /* Orange: Business Development */
-  .bg-sosmed { background: rgba(234, 179, 8, 0.18); color: #b45309; border: 1px solid rgba(234, 179, 8, 0.35); }  /* Yellow: Social Media */
-  .bg-admin { background: rgba(6, 182, 212, 0.15); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.3); }   /* Cyan: General Administration */
-  .bg-design { background: rgba(217, 70, 239, 0.15); color: #c026d3; border: 1px solid rgba(217, 70, 239, 0.3); } /* Magenta: Design Graphic */
-  .bg-default { background: rgba(107, 114, 128, 0.15); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.3); } /* Gray: Program Lama / Lainnya */
-
-  /* Modals */
+  /* ── Modal (Detail & Kelengkapan) ──
+     z-index 1055: di atas bottom-nav mobile (1000) tapi di bawah SweetAlert2
+     (1060), supaya toast/error tetap kelihatan saat modal terbuka. */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.3s ease;
+    position: fixed; inset: 0; z-index: 1055;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(8,18,30,0.6); backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-box {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
-    width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto;
-    transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 20px 48px rgba(15,23,42,0.18);
-    position: relative;
+    position: relative; width: 100%; max-width: 640px; max-height: calc(100vh - 40px);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--bg-card); border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(15,23,42,0.28), 0 0 0 1px rgba(15,23,42,0.05);
+    transform: translateY(16px) scale(0.98); transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1);
   }
-  .modal-overlay.open .modal-box { transform: translateY(0); }
-  .modal-box h3 { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
-  
-  /* Detail Modal Specifics */
-  .detail-meta-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 24px;
-    background: var(--bg-surface);
-    padding: 16px;
-    border-radius: 12px;
-    border: 1px solid var(--border-mid);
+  .modal-overlay.open .modal-box { transform: none; }
+  .modal-box svg { flex-shrink: 0; }
+
+  .dm-close {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    border: none; background: var(--bg-card); color: var(--text-secondary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.1); transition: all 0.15s;
   }
-  .detail-meta-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 14px;
-    color: var(--text-secondary);
+  .dm-close:hover { background: rgba(220,38,38,0.1); color: var(--red); transform: rotate(90deg); }
+  .dm-close svg { width: 16px; height: 16px; }
+
+  /* Detail acara */
+  .dm-head {
+    flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px;
+    padding: 22px 24px 18px;
+    border-top: 4px solid var(--c, #155eef);
+    background: linear-gradient(180deg, var(--cbg, rgba(21,94,239,0.07)), transparent);
   }
-  .detail-meta-item i {
-    color: var(--blue-mid);
-    margin-top: 2px;
+  .dm-tile {
+    width: 62px; flex-shrink: 0; overflow: hidden; text-align: center;
+    border-radius: 14px; background: var(--bg-card); box-shadow: 0 4px 14px rgba(15,23,42,0.1);
   }
+  .dm-tile-m { display: block; padding: 4px 0; background: var(--c, #155eef); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .dm-tile-d { display: block; padding: 7px 0 2px; font-size: 24px; font-weight: 800; line-height: 1; color: var(--text-primary); }
+  .dm-tile-w { display: block; padding-bottom: 7px; font-size: 10.5px; font-weight: 600; color: var(--text-muted); }
+  .dm-head-text { flex: 1; min-width: 0; }
+  .dm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .dm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+  .dm-chip svg { width: 12px; height: 12px; }
+  .dm-chip-cat { background: var(--c, #155eef); color: #fff; }
+  .dm-chip-wait { background: rgba(217,119,6,0.12); color: #b45309; }
+  .dm-chip-done { background: rgba(18,183,106,0.12); color: #047857; }
+  #detTitle { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; color: var(--text-primary); overflow-wrap: anywhere; }
+  .dm-when { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+  .dm-when > span { display: inline-flex; align-items: center; gap: 6px; }
+  .dm-when svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .dm-rel { padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 700; background: var(--blue-active-bg); color: var(--blue-mid); }
+  .dm-rel.is-past { background: var(--bg-surface); color: var(--text-muted); }
+
+  .dm-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 24px 22px; }
+  .dm-sec { margin-top: 18px; }
+  .dm-sec-title {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted);
+  }
+  .dm-sec-aside { margin-left: auto; font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--text-secondary); }
+  .dm-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .dm-info-item { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 11px 12px; border-radius: 13px; background: var(--bg-surface); }
+  .dm-info-ico {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-card); color: var(--ic); box-shadow: 0 1px 3px rgba(15,23,42,0.07);
+  }
+  .dm-info-ico svg { width: 16px; height: 16px; }
+  .dm-info-text { min-width: 0; }
+  .dm-info-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .dm-info-val { font-size: 13.5px; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+  .dm-empty { padding: 12px; border-radius: 12px; background: var(--bg-surface); font-size: 13px; color: var(--text-muted); text-align: center; }
+
+  .dm-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dm-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 13px; border-radius: 11px; text-decoration: none;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
+    font-size: 12.5px; font-weight: 700; transition: all 0.15s;
+  }
+  .dm-link:hover { border-color: var(--lc); color: var(--lc); transform: translateY(-1px); box-shadow: 0 6px 14px -6px var(--lc); }
+  .dm-link svg { width: 15px; height: 15px; color: var(--lc); }
+  .dm-link .dm-ext { width: 12px; height: 12px; color: var(--text-muted); }
+
+  .dm-caption {
+    padding: 12px 14px; border-radius: 13px; background: var(--bg-surface);
+    font-size: 13px; line-height: 1.55; color: var(--text-secondary);
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .dm-copy {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 8px; border: none; cursor: pointer;
+    background: var(--blue-active-bg); color: var(--blue-mid);
+    font: 700 11.5px 'Inter', sans-serif; text-transform: none; letter-spacing: 0;
+  }
+  .dm-copy:hover { background: rgba(21,94,239,0.14); }
+  .dm-copy svg { width: 12px; height: 12px; }
+
+  .dm-progress { padding: 14px; border-radius: 14px; border: 1px solid var(--border); }
+  .dm-bar { height: 8px; margin-bottom: 12px; border-radius: 8px; overflow: hidden; background: var(--bg-surface); }
+  .dm-bar i { display: block; height: 100%; border-radius: 8px; background: linear-gradient(90deg, #155eef, #4d9ef5); transition: width 0.5s ease; }
+  .dm-bar.is-full i { background: linear-gradient(90deg, #12b76a, #34d399); }
+  .dm-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dm-check { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 600; background: var(--bg-surface); color: var(--text-muted); }
+  .dm-check svg { width: 12px; height: 12px; }
+  .dm-check.is-on { background: rgba(18,183,106,0.1); color: #047857; }
+
+  .dm-foot {
+    flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+    padding: 14px 24px; border-top: 1px solid var(--border); background: var(--bg-card);
+  }
+  .dm-spacer { flex: 1; }
+  .dm-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px 16px; border-radius: 11px; border: none; cursor: pointer; white-space: nowrap;
+    font: 700 13px 'Inter', sans-serif; transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .dm-btn svg { width: 15px; height: 15px; }
+  .dm-btn-ghost { background: var(--bg-surface); color: var(--text-secondary); }
+  .dm-btn-ghost:hover { background: rgba(15,23,42,0.09); }
+  .dm-btn-soft { background: var(--blue-active-bg); color: var(--blue-mid); }
+  .dm-btn-soft:hover { background: rgba(21,94,239,0.14); }
+  .dm-btn-primary { background: linear-gradient(135deg, var(--blue-mid), var(--blue-dark)); color: #fff; box-shadow: 0 6px 16px rgba(21,94,239,0.28); }
+  .dm-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(21,94,239,0.34); }
+  .dm-btn-green { background: linear-gradient(135deg, #12b76a, #059669); color: #fff; box-shadow: 0 6px 16px rgba(5,150,105,0.28); }
+  .dm-btn-green:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(5,150,105,0.34); }
+  .dm-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* Update Kelengkapan */
+  .cl-box { max-width: 580px; }
+  .cl-head { flex-shrink: 0; display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px 14px; }
+  .cl-head-ico {
+    width: 42px; height: 42px; border-radius: 13px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    background: linear-gradient(135deg, #12b76a, #059669); box-shadow: 0 8px 18px rgba(5,150,105,0.28);
+  }
+  .cl-head-ico svg { width: 20px; height: 20px; }
+  .cl-head-text { flex: 1; min-width: 0; }
+  .cl-head-text h3 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-primary); }
+  .cl-head-text p { margin: 3px 0 0; font-size: 12.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .cl-progress {
+    flex-shrink: 0; display: flex; align-items: center; gap: 14px;
+    margin: 0 24px 6px; padding: 12px 14px; border-radius: 14px; background: var(--bg-surface);
+  }
+  .cl-ring { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
+  .cl-ring svg { width: 48px; height: 48px; transform: rotate(-90deg); }
+  .cl-ring circle { fill: none; stroke-width: 5; }
+  .cl-ring .cl-ring-bg { stroke: rgba(15,23,42,0.08); }
+  .cl-ring .cl-ring-fg { stroke: #12b76a; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
+  .cl-ring span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 800; color: var(--text-primary); }
+  .cl-progress-text { min-width: 0; }
+  .cl-progress-text b { display: block; font-size: 14.5px; font-weight: 800; color: var(--text-primary); }
+  .cl-progress-text small { font-size: 12px; color: var(--text-muted); }
+  .cl-quick { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+  .cl-quick button {
+    padding: 6px 11px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+    font: 700 12px 'Inter', sans-serif; transition: all 0.15s;
+  }
+  .cl-quick button:hover { border-color: #12b76a; color: #059669; }
+
+  .cl-form { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; }
+  .cl-body { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 24px 20px; }
+  .cl-group + .cl-group { margin-top: 16px; }
+  .cl-group-title {
+    display: flex; align-items: center; margin-bottom: 8px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted);
+  }
+  .cl-group-title span { margin-left: auto; font-size: 11.5px; letter-spacing: 0; color: var(--text-secondary); }
+  .cl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .cl-item {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    padding: 11px 12px; border-radius: 12px; cursor: pointer; user-select: none;
+    border: 1.5px solid rgba(15,23,42,0.1); background: var(--bg-card);
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .cl-item:hover { border-color: rgba(18,183,106,0.5); }
+  .cl-item input { position: absolute; opacity: 0; pointer-events: none; }
+  .cl-tick {
+    width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid rgba(15,23,42,0.22); color: transparent;
+    transition: all 0.15s;
+  }
+  .cl-tick svg { width: 14px; height: 14px; }
+  .cl-item.is-on { border-color: #12b76a; background: rgba(18,183,106,0.07); }
+  .cl-item.is-on .cl-tick { background: #12b76a; border-color: #12b76a; color: #fff; }
+  .cl-item input:focus-visible + .cl-tick { outline: 3px solid rgba(21,94,239,0.35); outline-offset: 2px; }
 
   .form-group { margin-bottom: 16px; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
@@ -213,7 +335,7 @@
   .btn-cancel:hover { background: rgba(15,23,42,0.05); }
   .btn-submit { background: var(--blue-mid); color: #fff; }
   .btn-submit:hover { background: var(--blue-dark); }
-  
+
   /* Agenda List Section */
   .agenda-list-wrapper {
     margin-top: 32px;
@@ -256,27 +378,57 @@
 
   /* Loading Overlay for Calendar */
   #calLoading {
-    position: absolute; inset: 0; background: rgba(9, 14, 23, 0.7); backdrop-filter: blur(2px);
+    position: absolute; inset: 0; z-index: 10;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 10; color: var(--text-muted); font-size: 14px;
+    background: rgba(255,255,255,0.72); backdrop-filter: blur(2px);
+    font-size: 13px; font-weight: 600; color: var(--text-muted);
   }
 
   @media (max-width: 768px) {
-    .cal-grid {
-      grid-template-columns: repeat(7, minmax(60px, 1fr));
-      overflow-x: auto;
-    }
-    .cal-header-row {
-      grid-template-columns: repeat(7, minmax(60px, 1fr));
-    }
-    .cal-wrapper {
-      overflow-x: auto;
-    }
-    .event-pill {
-      font-size: 9px;
-      padding: 2px 4px;
-    }
-    .event-pill .event-time { display: none; } /* Sembunyikan jam di mobile agar muat */
+    .cal-toolbar { gap: 10px; }
+    .cal-title { font-size: 17px; }
+    .cal-today-btn { padding: 8px 11px; }
+    .cal-grid { grid-auto-rows: minmax(74px, auto); }
+    .cal-cell { padding: 5px 3px; gap: 3px; }
+    .cal-header-cell { padding: 9px 2px; text-align: center; font-size: 10px; letter-spacing: 0.03em; }
+    .cal-date { justify-content: center; min-height: 22px; }
+    .cal-date-num { width: 22px; height: 22px; font-size: 12px; }
+    .cal-today-tag, .cal-add { display: none; }
+    .event-pill { padding: 2px 4px; border-left-width: 2px; border-radius: 4px; font-size: 9.5px; }
+    .event-pill .event-time, .event-pill .event-done { display: none; }
+  }
+
+  /* Modal jadi bottom-sheet di HP */
+  @media (max-width: 640px) {
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-box { max-width: none; max-height: 92vh; border-radius: 22px 22px 0 0; transform: translateY(40px); }
+    .dm-head { padding: 18px 16px 14px; gap: 12px; }
+    .dm-tile { width: 54px; }
+    .dm-tile-d { font-size: 21px; }
+    #detTitle { font-size: 18px; }
+    .dm-body { padding: 4px 16px 18px; }
+    .dm-info { gap: 8px; }
+    .dm-info-item { padding: 9px 10px; gap: 9px; }
+    .dm-info-ico { width: 30px; height: 30px; border-radius: 9px; }
+    .dm-info-val { font-size: 13px; }
+    .dm-foot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); gap: 8px; }
+    .dm-foot .dm-btn-close { display: none; }
+    .dm-foot .dm-spacer { display: none; }
+    .dm-foot .dm-btn { flex: 1; padding: 11px 10px; }
+    .cl-head { padding: 18px 16px 12px; }
+    .cl-progress { margin: 0 16px 6px; }
+    .cl-body { padding: 12px 16px 18px; }
+  }
+  @media (max-width: 360px) {
+    .dm-info { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 440px) {
+    .cl-quick { flex-direction: column; }
+    .cl-grid { gap: 6px; }
+    .cl-item { padding: 10px; gap: 8px; font-size: 12.5px; }
+  }
+  @media (max-width: 340px) {
+    .cl-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -303,14 +455,20 @@
       </div>
 
       <!-- Calendar UI -->
-      <div class="cal-controls">
-        <button class="cal-btn" onclick="prevMonth()"><i data-lucide="chevron-left"></i></button>
-        <div class="cal-title" id="calTitle">Memuat...</div>
-        <button class="cal-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
-        <button class="cal-btn" onclick="goToday()" style="width:auto; padding:0 12px; font-size:13px; font-weight:600;">Hari Ini</button>
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="prevMonth()" title="Bulan sebelumnya" aria-label="Bulan sebelumnya"><i data-lucide="chevron-left"></i></button>
+          <button class="cal-nav-btn" onclick="nextMonth()" title="Bulan berikutnya" aria-label="Bulan berikutnya"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="cal-title-wrap">
+          <div class="cal-title" id="calTitle">Memuat...</div>
+          <div class="cal-subtitle" id="calSubtitle"></div>
+        </div>
+        <button class="cal-today-btn" onclick="goToday()"><i data-lucide="calendar-check"></i> Hari Ini</button>
       </div>
+      <div class="cal-legend" id="calLegend"></div>
 
-      <div class="cal-wrapper" style="position:relative;">
+      <div class="cal-wrapper">
         <div id="calLoading" style="display:none;">
           <div class="loading-spinner"></div>
           <div style="margin-top:12px;">Memuat jadwal...</div>
@@ -339,229 +497,106 @@
   </main>
 </div>
 
-<!-- Modal Tambah Agenda -->
-<div class="modal-overlay" id="addModalOverlay" onclick="if(event.target===this) closeAddModal()">
-  <div class="modal-box">
-    <h3>Tambah Silabus Baru</h3>
-    <form id="addForm" onsubmit="submitAgenda(event)">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
-        <!-- Kolom Kiri: Info Dasar & Waktu -->
-        <div>
-          <h4 style="margin-top:0; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="info" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Informasi Dasar</h4>
-          
-          <div class="form-group">
-            <label>Judul Acara / Silabus</label>
-            <input type="text" id="agendaTitle" name="title" required placeholder="Contoh: Pelatihan Digital Marketing">
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label>Kategori</label>
-              <select id="agendaCat" name="category" required>
-                <option value="" disabled selected>Pilih Kategori...</option>
-                <option>Pelatihan</option>
-                <option>Seminar</option>
-                <option>Workshop</option>
-                <option>Webinar</option>
-                <option>Coaching</option>
-                <option>Networking</option>
-                <option value="Silabus BD">Silabus BD</option>
-                <option value="UMIBA">UMIBA</option>
-                <option value="GBKP Moria">GBKP Moria</option>
-                <option value="Event">Event</option>
-                <option value="Audiensi">Audiensi</option>
-                <option value="Design">Design</option>
-                <option value="Sosmed">Sosmed</option>
-                <option value="Admin">Admin</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Tanggal Acara</label>
-              <input type="date" id="agendaDate" name="event_date" required>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Jam Mulai</label>
-              <input type="time" id="agendaStart" name="start_time">
-            </div>
-            <div class="form-group">
-              <label>Jam Selesai</label>
-              <input type="time" id="agendaEnd" name="end_time">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Lokasi / Platform</label>
-              <input type="text" id="agendaLoc" name="location" placeholder="Aula Lt.2 / Zoom">
-            </div>
-            <div class="form-group">
-              <label>Kelas</label>
-              <input type="text" id="agendaKelas" name="kelas" placeholder="Kelas A / Offline / Online">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Jenis Pelatihan</label>
-            <input type="text" id="agendaJenisPelatihan" name="jenis_pelatihan" placeholder="Soft Skill / Hard Skill">
-          </div>
-        </div>
-
-        <!-- Kolom Kanan: Tim & Tautan -->
-        <div>
-          <h4 style="margin-top:0; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="users" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tim Acara</h4>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Narasumber</label>
-              <input type="text" id="agendaSpeaker" name="speaker_name" placeholder="Nama narasumber">
-            </div>
-            <div class="form-group">
-              <label>PIC</label>
-              <input type="text" id="agendaPic" name="pic_name" placeholder="Nama PIC">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>MC</label>
-              <input type="text" id="agendaMC" name="mc" placeholder="Nama MC">
-            </div>
-            <div class="form-group">
-              <label>Target Peserta</label>
-              <input type="number" id="agendaPeserta" name="jumlah_peserta" placeholder="30">
-            </div>
-          </div>
-
-          <h4 style="margin-top:24px; margin-bottom:16px; font-size: 14px; color: var(--blue-mid); border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i data-lucide="link" style="width:16px; height:16px; vertical-align:-3px; margin-right:4px;"></i> Tautan (Opsional)</h4>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkZoom" name="link_zoom" placeholder="Link Zoom">
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkUmkm" name="link_umkm" placeholder="Link Pendataan UMKM">
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkGform" name="link_pendaftaran_gform" placeholder="Link GForm Pendaftaran">
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <input type="url" id="linkSheets" name="spreadsheets_data_peserta" placeholder="Link Spreadsheet Data">
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <textarea id="captionSosmed" name="caption_sosmed" placeholder="Caption singkat untuk publikasi..." style="min-height:70px;"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="closeAddModal()">Batal</button>
-        <button type="submit" class="btn-submit" id="btnSubmitAgenda">Simpan Acara</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Modal Detail Acara -->
 <div class="modal-overlay" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
-  <div class="modal-box">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-      <h3 id="detTitle" style="margin:0; font-size:22px; padding-right:20px;">Judul Acara</h3>
-      <button onclick="closeDetailModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
-    </div>
-    
-    <div style="margin-bottom:20px;">
-      <span id="detCat" style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(255, 255, 255, 0.08); color: var(--text-secondary);">Kategori</span>
-      <span id="detStatus" style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(34,197,94,0.15); color: #22c55e; margin-left:8px; display:none;">Selesai</span>
-    </div>
-
-    <div class="detail-meta-list">
-      <div class="detail-meta-item">
-        <i data-lucide="calendar"></i>
-        <div>
-          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Tanggal & Waktu</div>
-          <span id="detDate"></span> <br>
-          <span id="detTime" style="font-family:'JetBrains Mono',monospace;"></span>
+  <div class="modal-box" id="detBox" role="dialog" aria-modal="true" aria-labelledby="detTitle">
+    <div class="dm-head">
+      <div class="dm-tile" aria-hidden="true">
+        <span class="dm-tile-m" id="detTileMonth"></span>
+        <span class="dm-tile-d" id="detTileDay"></span>
+        <span class="dm-tile-w" id="detTileDow"></span>
+      </div>
+      <div class="dm-head-text">
+        <div class="dm-chips">
+          <span class="dm-chip dm-chip-cat" id="detCat"></span>
+          <span class="dm-chip" id="detStatus"></span>
+        </div>
+        <h3 id="detTitle">Judul Acara</h3>
+        <div class="dm-when">
+          <span><i data-lucide="calendar"></i><span id="detDate"></span></span>
+          <span><i data-lucide="clock"></i><span id="detTime"></span></span>
+          <span class="dm-rel" id="detRel"></span>
         </div>
       </div>
-      <div class="detail-meta-item" id="detLocWrap">
-        <i data-lucide="map-pin"></i>
-        <div>
-          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Lokasi</div>
-          <span id="detLoc"></span>
-        </div>
+      <button type="button" class="dm-close" onclick="closeDetailModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="dm-body" id="detBody">
+      <div class="dm-sec">
+        <div class="dm-sec-title">Detail Acara</div>
+        <div class="dm-info" id="detInfo"></div>
       </div>
-      <div class="detail-meta-item" id="detSpeakerWrap">
-        <i data-lucide="mic"></i>
-        <div>
-          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">Narasumber</div>
-          <span id="detSpeaker"></span>
-        </div>
+
+      <div class="dm-sec" id="detLinksWrap">
+        <div class="dm-sec-title">Tautan</div>
+        <div class="dm-links" id="detLinks"></div>
       </div>
-      <div class="detail-meta-item" id="detPicWrap">
-        <i data-lucide="user"></i>
-        <div>
-          <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:2px;">PIC</div>
-          <span id="detPic"></span>
+
+      <div class="dm-sec" id="detCaptionWrap">
+        <div class="dm-sec-title">Caption Sosmed
+          <button type="button" class="dm-copy" onclick="copyCaption()"><i data-lucide="copy"></i> Salin</button>
+        </div>
+        <div class="dm-caption" id="detCaption"></div>
+      </div>
+
+      <div class="dm-sec">
+        <div class="dm-sec-title">Kelengkapan <span class="dm-sec-aside" id="detProgressText"></span></div>
+        <div class="dm-progress">
+          <div class="dm-bar" id="detBar"><i></i></div>
+          <div class="dm-checks" id="detChecks"></div>
         </div>
       </div>
     </div>
 
-    <div class="detail-meta-list" id="detChecklistWrap" style="display:none;">
-      <div style="font-weight:600; color:var(--text-primary); font-size:13px; margin-bottom:8px;">Kelengkapan</div>
-      <div id="detChecklist" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; color:var(--text-secondary);"></div>
-    </div>
-
-    <div id="detCvWrap" style="margin-bottom:24px; display:none;">
-      <a href="#" id="detCvLink" target="_blank" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--blue-mid); color:#fff; text-decoration:none; border-radius:8px; font-weight:600; font-size:13px; transition:opacity 0.2s;">
-        <i data-lucide="download" style="width:16px;height:16px;"></i> Unduh CV Narasumber
-      </a>
-    </div>
-
-    <div class="modal-actions">
-      <button type="button" class="btn-cancel" onclick="closeDetailModal()">Tutup</button>
-      <button type="button" class="btn-cancel" onclick="shareAgendaToChat()" style="display:flex;align-items:center;gap:6px;">
-        <i data-lucide="send" style="width:14px;height:14px;"></i> Bagikan ke Chat
-      </button>
-      <button type="button" class="btn-submit" id="btnUpdateChecklist" onclick="openChecklistModal()" style="display:none;">Update Kelengkapan</button>
+    <div class="dm-foot">
+      <button type="button" class="dm-btn dm-btn-ghost dm-btn-close" onclick="closeDetailModal()">Tutup</button>
+      <span class="dm-spacer"></span>
+      <button type="button" class="dm-btn dm-btn-soft" onclick="shareAgendaToChat()"><i data-lucide="send"></i> Bagikan ke Chat</button>
+      <button type="button" class="dm-btn dm-btn-primary" id="btnUpdateChecklist" onclick="openChecklistModal()" style="display:none;"><i data-lucide="list-checks"></i> Update Kelengkapan</button>
     </div>
   </div>
 </div>
 
 <!-- Modal Update Checklist -->
 <div class="modal-overlay" id="checklistModalOverlay" onclick="if(event.target===this) closeChecklistModal()">
-  <div class="modal-box" style="max-width:400px;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-      <h3 style="margin:0; font-size:18px;">Update Kelengkapan</h3>
-      <button onclick="closeChecklistModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px; margin-top:-4px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
-    </div>
-    <form id="checklistForm" onsubmit="submitChecklist(event)">
-      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; font-size: 13px; margin-bottom: 24px;">
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="poster" id="cl_poster"> Poster</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="publikasi" id="cl_publikasi"> Publikasi</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="terlaksana" id="cl_terlaksana"> Terlaksana</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="cms" id="cl_cms"> CMS</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="rb_id" id="cl_rb_id"> RB ID</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="up_modul" id="cl_up_modul"> UP MODUL</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="cv_expert" id="cl_cv_expert"> CV EXPERT</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="flyer_sg_feed" id="cl_flyer_sg_feed"> FLYER SG FEED</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="katalog_cv_canva" id="cl_katalog_cv_canva"> KATALOG CV CANVA</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="blast_share_wa" id="cl_blast_share_wa"> BLAST SHARE WA</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="data_mentor_modul" id="cl_data_mentor_modul"> DATA MENTOR MODUL</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="follow_up" id="cl_follow_up"> FOLLOW UP</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="absen_kehadiran" id="cl_absen_kehadiran"> ABSEN KEHADIRAN</label>
-        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="surat_pernyataan" id="cl_surat_pernyataan"> SURAT PERNYATAAN</label>
+  <div class="modal-box cl-box" role="dialog" aria-modal="true" aria-labelledby="clHeadTitle">
+    <div class="cl-head">
+      <div class="cl-head-ico"><i data-lucide="list-checks"></i></div>
+      <div class="cl-head-text">
+        <h3 id="clHeadTitle">Update Kelengkapan</h3>
+        <p id="clEventTitle"></p>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="closeChecklistModal()">Batal</button>
-        <button type="submit" class="btn-submit" id="btnSubmitChecklist">Simpan Kelengkapan</button>
+      <button type="button" class="dm-close" onclick="closeChecklistModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="cl-progress">
+      <div class="cl-ring" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle class="cl-ring-bg" cx="24" cy="24" r="20"/><circle class="cl-ring-fg" id="clRing" cx="24" cy="24" r="20"/></svg>
+        <span id="clPercent">0%</span>
+      </div>
+      <div class="cl-progress-text">
+        <b id="clCount">0 dari 14 selesai</b>
+        <small>Klik item untuk menandai sudah beres.</small>
+      </div>
+      <div class="cl-quick">
+        <button type="button" onclick="setAllChecklist(true)">Tandai semua</button>
+        <button type="button" onclick="setAllChecklist(false)">Kosongkan</button>
+      </div>
+    </div>
+
+    <form id="checklistForm" class="cl-form" onsubmit="submitChecklist(event)">
+      <div class="cl-body" id="clBody"></div>
+      <div class="dm-foot">
+        <button type="button" class="dm-btn dm-btn-ghost" onclick="closeChecklistModal()">Batal</button>
+        <span class="dm-spacer"></span>
+        <button type="submit" class="dm-btn dm-btn-green" id="btnSubmitChecklist"><i data-lucide="check"></i> Simpan Kelengkapan</button>
       </div>
     </form>
   </div>
 </div>
 
 <script src="/js/shared.js"></script>
+<script src="/js/silabus-form.js?v=4"></script>
 <script>
   let currentDate = new Date();
   let isStaffUser = false; // set in initAppShell — checklist updates stay Staff Only
@@ -572,14 +607,48 @@
     "Juli", "Agustus", "September", "Oktober", "November", "Desember"
   ];
 
-  function getCategoryColorClass(cat) {
-    cat = (cat || '').toLowerCase();
-    if (cat.includes('bd') || cat.includes('business')) return 'bg-bd';
-    if (cat.includes('event')) return 'bg-event';
-    if (cat.includes('design')) return 'bg-design';
-    if (cat.includes('sosmed')) return 'bg-sosmed';
-    if (cat.includes('admin')) return 'bg-admin';
-    return 'bg-default';
+  // 14 item kelengkapan, dikelompokkan supaya gampang dicari. Key = nama
+  // kolom di tabel events (dipakai juga sebagai name checkbox yang dikirim
+  // ke PUT /api/events/:id/checklist).
+  const CHECKLIST = [
+    { group: 'Publikasi & Promosi', items: [['poster', 'Poster'], ['flyer_sg_feed', 'Flyer SG Feed'], ['publikasi', 'Publikasi'], ['blast_share_wa', 'Blast Share WA']] },
+    { group: 'Materi & Narasumber', items: [['cv_expert', 'CV Expert'], ['katalog_cv_canva', 'Katalog CV Canva'], ['up_modul', 'Up Modul'], ['data_mentor_modul', 'Data Mentor Modul']] },
+    { group: 'Administrasi & Sistem', items: [['cms', 'CMS'], ['rb_id', 'RB ID'], ['surat_pernyataan', 'Surat Pernyataan'], ['absen_kehadiran', 'Absen Kehadiran']] },
+    { group: 'Pelaksanaan', items: [['terlaksana', 'Terlaksana'], ['follow_up', 'Follow Up']] }
+  ];
+  const CL_ITEMS = CHECKLIST.flatMap(g => g.items);
+  const CL_FIELDS = CL_ITEMS.map(it => it[0]);
+
+  // Warna kategori sama dengan pilihan kategori di form Tambah Silabus.
+  function catColor(cat) {
+    return (window.SilabusForm && SilabusForm.categoryColor) ? SilabusForm.categoryColor(cat) : '#64748b';
+  }
+  function hexToRgba(hex, a) {
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
+    if (!m) return `rgba(100,116,139,${a})`;
+    return `rgba(${parseInt(m[1], 16)},${parseInt(m[2], 16)},${parseInt(m[3], 16)},${a})`;
+  }
+  // "YYYY-MM-DD" → Date lokal (new Date("YYYY-MM-DD") dibaca sebagai UTC).
+  function parseDateLocal(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+  }
+  function todayWIB() {
+    return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+  }
+  // Hanya izinkan link http/https — isi link diketik bebas oleh user, jangan
+  // sampai "javascript:..." ikut jadi href yang bisa diklik.
+  function safeUrl(u) {
+    try {
+      const url = new URL(String(u || '').trim());
+      return (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : null;
+    } catch (e) { return null; }
+  }
+  function fmtRange(ev) {
+    if (!ev.start_time) return 'Seharian';
+    const s = ev.start_time.substring(0, 5).replace(':', '.');
+    const e = ev.end_time ? ev.end_time.substring(0, 5).replace(':', '.') : '';
+    return (e ? `${s}–${e}` : s) + ' WIB';
   }
 
   function isEventCompleted(ev) {
@@ -631,55 +700,58 @@
   function renderCalendarGrid(year, month) {
     const grid = document.getElementById('calGrid');
     grid.innerHTML = '';
-    
+
     document.getElementById('calTitle').textContent = `${monthNames[month]} ${year}`;
 
-    // Calculate days
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    
-    // Day of week of the 1st day (0 = Sunday, 1 = Monday... 6 = Saturday)
-    let startDayOfWeek = firstDay.getDay();
-    
-    // We want Monday = 0, Sunday = 6 for our grid
-    let gridOffset = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+    // Ringkasan bulan + keterangan warna kategori yang muncul bulan ini
+    const doneCount = currentEvents.filter(isEventCompleted).length;
+    document.getElementById('calSubtitle').textContent = currentEvents.length
+      ? `${currentEvents.length} acara bulan ini · ${doneCount} selesai`
+      : 'Belum ada acara bulan ini — klik + di tanggal mana saja untuk menambah.';
+    const catCount = {};
+    currentEvents.forEach(ev => { const c = ev.category || 'Lainnya'; catCount[c] = (catCount[c] || 0) + 1; });
+    document.getElementById('calLegend').innerHTML = Object.keys(catCount).sort().map(c =>
+      `<span style="--c:${catColor(c)}">${escHtml(c)} <b>${catCount[c]}</b></span>`).join('');
 
-    // Create empty cells for offset
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    // Senin = kolom pertama
+    const startDayOfWeek = firstDay.getDay();
+    const gridOffset = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+    // Tanggal bulan sebelumnya (pudar) untuk mengisi awal minggu pertama
     for (let i = 0; i < gridOffset; i++) {
-      const emptyCell = document.createElement('div');
-      emptyCell.className = 'cal-cell empty';
-      grid.appendChild(emptyCell);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell outside';
+      cell.innerHTML = `<div class="cal-date"><span class="cal-date-num">${prevMonthDays - gridOffset + 1 + i}</span></div>`;
+      grid.appendChild(cell);
     }
 
     // toISOString() pakai UTC — jam 00:00–06:59 WIB masih kehitung tanggal
     // KEMARIN (WIB = UTC+7), jadi kalender bisa nyorot sel "hari ini" yang
     // salah. Kunci ke Asia/Jakarta biar selalu sama dengan tanggal WIB.
-    const todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const todayStr = todayWIB();
 
-    // Create cells for each day
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const isToday = dateStr === todayStr;
-      
-      // Determine if weekend based on grid position
-      const currentGridCol = (gridOffset + day - 1) % 7;
-      const isWeekend = currentGridCol === 5 || currentGridCol === 6;
+      const isPast = dateStr < todayStr;
+      const col = (gridOffset + day - 1) % 7;
+      const isWeekend = col === 5 || col === 6;
 
       const cell = document.createElement('div');
-      cell.className = `cal-cell${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
-      
-      let html = `<div class="cal-date"><span class="cal-date-num">${day}</span></div>`;
+      cell.className = `cal-cell${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}${isPast ? ' past' : ''}`;
+
+      let html = `<div class="cal-date"><span class="cal-date-num">${day}</span>`;
+      if (isToday) html += `<span class="cal-today-tag">Hari ini</span>`;
+      html += `<button type="button" class="cal-add" title="Tambah silabus di tanggal ini" aria-label="Tambah silabus tanggal ${day}" onclick="openAddModal('${dateStr}')"><i data-lucide="plus"></i></button></div>`;
       html += `<div class="cal-events">`;
-      
-      // Filter events for this date
-      const dayEvents = currentEvents.filter(ev => ev.event_date === dateStr);
-      
-      dayEvents.forEach(ev => {
+
+      currentEvents.filter(ev => ev.event_date === dateStr).forEach(ev => {
         const timeStr = ev.start_time ? ev.start_time.substring(0,5) : '';
-        const colorClass = getCategoryColorClass(ev.category);
-        
-        // Escape data for inline JSON parsing
+        const c = catColor(ev.category);
+        const done = isEventCompleted(ev);
         // encodeURIComponent, bukan cuma ganti tanda kutip dua — data event
         // ini teks bebas (judul, lokasi, dll). Kalau ada tanda kutip satu di
         // dalamnya, itu bisa lolos dari string JS di onclick di bawah dan
@@ -687,27 +759,27 @@
         // pernah menghasilkan karakter kutip/`<`/`>` sama sekali, jadi aman
         // dipakai di dalam atribut HTML maupun literal string JS.
         const safeData = encodeURIComponent(JSON.stringify(ev));
-        
         html += `
-          <div class="event-pill ${colorClass}" onclick="openDetailModal(event, '${safeData}')">
+          <div class="event-pill${done ? ' is-done' : ''}" style="--c:${c};--cbg:${hexToRgba(c, 0.1)}" title="${escHtml(ev.title)}" onclick="openDetailModal(event, '${safeData}')">
             ${timeStr ? `<span class="event-time">${timeStr}</span>` : ''}
-            <span>${escHtml(ev.title)}</span>
-          </div>
-        `;
+            <span class="event-title">${escHtml(ev.title)}</span>
+            ${done ? '<i data-lucide="check" class="event-done"></i>' : ''}
+          </div>`;
       });
-      
+
       html += `</div>`;
       cell.innerHTML = html;
       grid.appendChild(cell);
     }
 
-    // Fill remaining cells to complete the last row
+    // Tanggal bulan berikutnya (pudar) untuk melengkapi baris terakhir
     const totalCells = gridOffset + daysInMonth;
     const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-    for (let i = 0; i < remaining; i++) {
-      const emptyCell = document.createElement('div');
-      emptyCell.className = 'cal-cell empty';
-      grid.appendChild(emptyCell);
+    for (let i = 1; i <= remaining; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell outside';
+      cell.innerHTML = `<div class="cal-date"><span class="cal-date-num">${i}</span></div>`;
+      grid.appendChild(cell);
     }
   }
 
@@ -724,7 +796,6 @@
     sorted.forEach(ev => {
       let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
       if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
-      const colorClass = getCategoryColorClass(ev.category);
       const safeData = encodeURIComponent(JSON.stringify(ev));
       const isCompleted = isEventCompleted(ev);
       
@@ -732,11 +803,10 @@
         ? `<span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Selesai</span>`
         : `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Menunggu</span>`;
 
-      const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
-      let checkedCount = 0;
-      clFields.forEach(f => { if(ev[f]) checkedCount++; });
-      const progressColor = checkedCount === 14 ? '#22c55e' : (checkedCount > 0 ? '#3b82f6' : 'var(--text-muted)');
-      const progressBadge = `<span style="display:flex; align-items:center; gap:4px; color:${progressColor};" title="Progress Kelengkapan"><i data-lucide="check-square"></i> ${checkedCount}/14</span>`;
+      const checkedCount = CL_FIELDS.filter(f => ev[f]).length;
+      const clTotal = CL_FIELDS.length;
+      const progressColor = checkedCount === clTotal ? '#22c55e' : (checkedCount > 0 ? '#3b82f6' : 'var(--text-muted)');
+      const progressBadge = `<span style="display:flex; align-items:center; gap:4px; color:${progressColor};" title="Progress Kelengkapan"><i data-lucide="check-square"></i> ${checkedCount}/${clTotal}</span>`;
 
       html += `
         <div class="agenda-list-item" style="cursor:pointer;" onclick="openDetailModal(event, '${safeData}')">
@@ -750,7 +820,7 @@
             </div>
           </div>
           <div>
-            <span class="agenda-badge-cat ${colorClass}" style="font-size:11px; padding:4px 10px; border-radius:20px; font-weight:600; background-color: var(--bg-surface);">${escHtml(ev.category)}</span>
+            <span class="agenda-badge-cat" style="font-size:11px; padding:4px 10px; border-radius:20px; font-weight:700; color:#fff; background:${catColor(ev.category)};">${escHtml(ev.category)}</span>
           </div>
         </div>
       `;
@@ -775,94 +845,149 @@
   }
 
   // Modals
-  function openAddModal() {
-    document.getElementById('addForm').reset();
-    document.getElementById('addModalOverlay').classList.add('open');
-  }
-  function closeAddModal() {
-    document.getElementById('addModalOverlay').classList.remove('open');
-  }
+  // Form tambah silabus = komponen bersama (public/js/silabus-form.js),
+  // sama persis dengan yang dipakai di Event Hub. Dari tombol + di sel
+  // kalender, tanggalnya langsung terisi.
+  function openAddModal(date) { SilabusForm.open(date ? { event_date: date } : undefined); }
+  function closeAddModal() { SilabusForm.close(); }
+
+  const DETAIL_FIELDS = [
+    ['location', 'Lokasi', 'map-pin', '#ea580c'],
+    ['kelas', 'Kelas / Format', 'graduation-cap', '#0891b2'],
+    ['jenis_pelatihan', 'Jenis Pelatihan', 'layers', '#7c5cfc'],
+    ['speaker_name', 'Narasumber', 'presentation', '#7c5cfc'],
+    ['pic_name', 'PIC', 'user-check', '#155eef'],
+    ['mc', 'MC', 'mic', '#db2777'],
+    ['jumlah_peserta', 'Target Peserta', 'users', '#12b76a']
+  ];
+  const DETAIL_LINKS = [
+    ['link_zoom', 'Zoom', 'video', '#2d8cff'],
+    ['link_umkm', 'Pendataan UMKM', 'store', '#ea580c'],
+    ['link_pendaftaran_gform', 'Form Pendaftaran', 'clipboard-list', '#7c5cfc'],
+    ['spreadsheets_data_peserta', 'Spreadsheet Peserta', 'table', '#12b76a'],
+    ['cv_narasumber_url', 'CV Narasumber', 'download', '#0b3b8f']
+  ];
 
   function openDetailModal(e, dataStr) {
-    if(e) e.stopPropagation();
+    if (e) e.stopPropagation();
     const ev = JSON.parse(decodeURIComponent(dataStr));
-    
-    document.getElementById('detTitle').textContent = ev.title;
-    document.getElementById('detCat').textContent = ev.category;
-    document.getElementById('detCat').className = `agenda-badge-cat ${getCategoryColorClass(ev.category)}`;
-    
-    const statusEl = document.getElementById('detStatus');
-    const isCompleted = isEventCompleted(ev);
-    if (isCompleted) {
-      statusEl.style.display = 'inline-block';
-      statusEl.textContent = 'Selesai';
-      statusEl.style.color = '#22c55e';
-      statusEl.style.background = 'rgba(34,197,94,0.15)';
-    } else {
-      statusEl.style.display = 'inline-block';
-      statusEl.textContent = 'Menunggu';
-      statusEl.style.color = '#f59e0b';
-      statusEl.style.background = 'rgba(245,158,11,0.15)';
-    }
-
-    const dateObj = new Date(ev.event_date);
-    document.getElementById('detDate').textContent = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    
-    let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
-    if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
-    document.getElementById('detTime').textContent = timeStr;
-
-    const wrapLoc = document.getElementById('detLocWrap');
-    if(ev.location) { wrapLoc.style.display = 'flex'; document.getElementById('detLoc').textContent = ev.location; } 
-    else wrapLoc.style.display = 'none';
-
-    const wrapSpeak = document.getElementById('detSpeakerWrap');
-    if(ev.speaker_name) { wrapSpeak.style.display = 'flex'; document.getElementById('detSpeaker').textContent = ev.speaker_name; } 
-    else wrapSpeak.style.display = 'none';
-
-    const wrapPic = document.getElementById('detPicWrap');
-    if(ev.pic_name) { wrapPic.style.display = 'flex'; document.getElementById('detPic').textContent = ev.pic_name; } 
-    else wrapPic.style.display = 'none';
-
-    const cvWrap = document.getElementById('detCvWrap');
-    if(ev.cv_narasumber_url) {
-      cvWrap.style.display = 'block';
-      document.getElementById('detCvLink').href = ev.cv_narasumber_url;
-    } else {
-      cvWrap.style.display = 'none';
-    }
-
-    const checkWrap = document.getElementById('detChecklistWrap');
-    const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
-    
-    const hasChecklist = clFields.some(f => ev[f]);
-    if(hasChecklist) {
-      checkWrap.style.display = 'flex';
-      let html = '';
-      clFields.forEach(f => {
-        if(ev[f]) {
-           const label = f.replace(/_/g, ' ').toUpperCase();
-           html += `<div><i data-lucide="check" style="width:13px;height:13px;vertical-align:-2px;margin-right:4px;color:#22c55e;"></i>${label}</div>`;
-        }
-      });
-      document.getElementById('detChecklist').innerHTML = html;
-    } else {
-      checkWrap.style.display = 'none';
-    }
-
-    document.getElementById('detailModalOverlay').classList.add('open');
-    if (window.lucide) window.lucide.createIcons();
-    
-    // Store active event ID globally for updates, and show button if staff
     window.currentActiveEvent = ev;
-    const btnUpdate = document.getElementById('btnUpdateChecklist');
+
+    // Warna aksen modal = warna kategori
+    const c = catColor(ev.category);
+    const box = document.getElementById('detBox');
+    box.style.setProperty('--c', c);
+    box.style.setProperty('--cbg', hexToRgba(c, 0.08));
+
+    const d = parseDateLocal(ev.event_date);
+    document.getElementById('detTileMonth').textContent = d.toLocaleDateString('id-ID', { month: 'short' }).replace('.', '');
+    document.getElementById('detTileDay').textContent = d.getDate();
+    document.getElementById('detTileDow').textContent = d.toLocaleDateString('id-ID', { weekday: 'short' });
+
+    document.getElementById('detTitle').textContent = ev.title;
+    document.getElementById('detCat').textContent = ev.category || 'Tanpa kategori';
+
+    const statusEl = document.getElementById('detStatus');
+    if (isEventCompleted(ev)) {
+      statusEl.className = 'dm-chip dm-chip-done';
+      statusEl.innerHTML = '<i data-lucide="circle-check"></i> Selesai';
+    } else {
+      statusEl.className = 'dm-chip dm-chip-wait';
+      statusEl.innerHTML = '<i data-lucide="hourglass"></i> Menunggu';
+    }
+
+    document.getElementById('detDate').textContent = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('detTime').textContent = fmtRange(ev);
+
+    // Hitung selisih hari pakai tanggal WIB, bukan jam lokal browser
+    const t = todayWIB().split('-').map(Number);
+    const diff = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(t[0], t[1] - 1, t[2])) / 86400000);
+    const rel = document.getElementById('detRel');
+    rel.textContent = diff === 0 ? 'Hari ini' : diff === 1 ? 'Besok' : diff > 1 ? `${diff} hari lagi` : diff === -1 ? 'Kemarin' : `${-diff} hari lalu`;
+    rel.className = 'dm-rel' + (diff < 0 ? ' is-past' : '');
+
+    // Detail acara — hanya yang terisi. Dibangun pakai textContent (bukan
+    // innerHTML) karena isinya teks bebas dari user.
+    const info = document.getElementById('detInfo');
+    info.textContent = '';
+    DETAIL_FIELDS.forEach(([key, label, icon, color]) => {
+      let val = ev[key];
+      if (val === null || val === undefined || String(val).trim() === '') return;
+      if (key === 'jumlah_peserta') val = `${val} orang`;
+      const item = document.createElement('div');
+      item.className = 'dm-info-item';
+      item.style.setProperty('--ic', color);
+      item.innerHTML = `<span class="dm-info-ico"><i data-lucide="${icon}"></i></span><div class="dm-info-text"><div class="dm-info-label"></div><div class="dm-info-val"></div></div>`;
+      item.querySelector('.dm-info-label').textContent = label;
+      item.querySelector('.dm-info-val').textContent = val;
+      info.appendChild(item);
+    });
+    if (!info.children.length) info.innerHTML = '<div class="dm-empty" style="grid-column:1/-1;">Belum ada detail tambahan untuk acara ini.</div>';
+
+    // Tautan (Zoom, form, spreadsheet, CV) — hanya link http/https yang valid
+    const links = document.getElementById('detLinks');
+    links.textContent = '';
+    DETAIL_LINKS.forEach(([key, label, icon, color]) => {
+      const href = safeUrl(ev[key]);
+      if (!href) return;
+      const a = document.createElement('a');
+      a.className = 'dm-link';
+      a.href = href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.setProperty('--lc', color);
+      a.innerHTML = `<i data-lucide="${icon}"></i><span></span><i data-lucide="external-link" class="dm-ext"></i>`;
+      a.querySelector('span').textContent = label;
+      links.appendChild(a);
+    });
+    document.getElementById('detLinksWrap').style.display = links.children.length ? '' : 'none';
+
+    const caption = (ev.caption_sosmed || '').trim();
+    document.getElementById('detCaption').textContent = caption;
+    document.getElementById('detCaptionWrap').style.display = caption ? '' : 'none';
+
+    renderDetailProgress(ev);
+
     // Checklist updates hit a Staff Only endpoint — gate on the user's
     // actual role, not on "Tambah Agenda" visibility (that button is now
     // shown to everyone too).
-    btnUpdate.style.display = isStaffUser ? 'inline-flex' : 'none';
+    document.getElementById('btnUpdateChecklist').style.display = isStaffUser ? 'inline-flex' : 'none';
+
+    document.getElementById('detBody').scrollTop = 0;
+    document.getElementById('detailModalOverlay').classList.add('open');
+    if (window.lucide) window.lucide.createIcons();
+  }
+  function renderDetailProgress(ev) {
+    const done = CL_FIELDS.filter(f => ev[f]).length;
+    const total = CL_FIELDS.length;
+    document.getElementById('detProgressText').textContent = done === total ? 'Lengkap ✓' : `${done}/${total} selesai`;
+    const bar = document.getElementById('detBar');
+    bar.classList.toggle('is-full', done === total);
+    // Selalu isi dari 0 — jangan "turun" dari lebar milik acara sebelumnya.
+    const fill = bar.querySelector('i');
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    void fill.offsetWidth;
+    fill.style.transition = '';
+    requestAnimationFrame(() => { fill.style.width = (done / total * 100) + '%'; });
+    document.getElementById('detChecks').innerHTML = CL_ITEMS.map(([key, label]) =>
+      `<span class="dm-check${ev[key] ? ' is-on' : ''}"><i data-lucide="${ev[key] ? 'check' : 'circle'}"></i>${label}</span>`).join('');
   }
   function closeDetailModal() {
     document.getElementById('detailModalOverlay').classList.remove('open');
+  }
+  function copyCaption() {
+    const text = document.getElementById('detCaption').textContent;
+    if (!text) return;
+    const done = () => showSwalToast('Caption disalin', 'success');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(() => showSwalToast('Gagal menyalin caption', 'error'));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (err) { showSwalToast('Gagal menyalin caption', 'error'); }
+      ta.remove();
+    }
   }
 
   // Menaruh detail acara di sessionStorage lalu pindah ke Chat, di sana
@@ -882,14 +1007,59 @@
     window.location.href = '/chat.html?share_agenda=1';
   }
 
+  // ── Update Kelengkapan ──
+  (function renderChecklistForm() {
+    document.getElementById('clBody').innerHTML = CHECKLIST.map(g => `
+      <div class="cl-group">
+        <div class="cl-group-title">${g.group}<span data-cl-group="${g.group}"></span></div>
+        <div class="cl-grid">
+          ${g.items.map(([key, label]) => `
+            <label class="cl-item" data-cl-item="${key}">
+              <input type="checkbox" name="${key}" id="cl_${key}">
+              <span class="cl-tick"><i data-lucide="check"></i></span>
+              <span>${label}</span>
+            </label>`).join('')}
+        </div>
+      </div>`).join('');
+    document.getElementById('checklistForm').addEventListener('change', updateChecklistProgress);
+  })();
+
+  function updateChecklistProgress() {
+    let done = 0;
+    CL_FIELDS.forEach(f => {
+      const on = document.getElementById('cl_' + f).checked;
+      if (on) done++;
+      document.querySelector(`[data-cl-item="${f}"]`).classList.toggle('is-on', on);
+    });
+    CHECKLIST.forEach(g => {
+      const n = g.items.filter(([key]) => document.getElementById('cl_' + key).checked).length;
+      document.querySelector(`[data-cl-group="${g.group}"]`).textContent = `${n}/${g.items.length}`;
+    });
+    const total = CL_FIELDS.length;
+    const pct = Math.round(done / total * 100);
+    const circ = 2 * Math.PI * 20;
+    const ring = document.getElementById('clRing');
+    ring.style.strokeDasharray = circ;
+    ring.style.strokeDashoffset = circ * (1 - done / total);
+    document.getElementById('clPercent').textContent = pct + '%';
+    document.getElementById('clCount').textContent = done === total ? 'Semua sudah lengkap! 🎉' : `${done} dari ${total} selesai`;
+  }
+  function setAllChecklist(on) {
+    CL_FIELDS.forEach(f => { document.getElementById('cl_' + f).checked = on; });
+    updateChecklistProgress();
+  }
+
   function openChecklistModal() {
     const ev = window.currentActiveEvent;
-    if(!ev) return;
-    const clFields = ['poster', 'publikasi', 'terlaksana', 'cms', 'rb_id', 'up_modul', 'cv_expert', 'flyer_sg_feed', 'katalog_cv_canva', 'blast_share_wa', 'data_mentor_modul', 'follow_up', 'absen_kehadiran', 'surat_pernyataan'];
-    clFields.forEach(f => {
+    if (!ev) return;
+    CL_FIELDS.forEach(f => {
       const el = document.getElementById('cl_' + f);
-      if(el) el.checked = !!ev[f];
+      if (el) el.checked = !!ev[f];
     });
+    document.getElementById('clEventTitle').textContent = ev.title || '';
+    updateChecklistProgress();
+    if (window.lucide) window.lucide.createIcons();
+    document.querySelector('#checklistModalOverlay .cl-body').scrollTop = 0;
     document.getElementById('checklistModalOverlay').classList.add('open');
   }
   function closeChecklistModal() {
@@ -898,72 +1068,50 @@
 
   function submitChecklist(e) {
     e.preventDefault();
-    if(!window.currentActiveEvent) return;
-    const eventId = window.currentActiveEvent.id;
+    if (!window.currentActiveEvent) return;
+    const ev = window.currentActiveEvent;
     const btn = document.getElementById('btnSubmitChecklist');
+    const btnHtml = btn.innerHTML;
     btn.disabled = true;
     btn.textContent = 'Menyimpan...';
 
-    const form = document.getElementById('checklistForm');
-    const formData = new FormData(form);
-    
-    fetch('/api/events/' + eventId + '/checklist', {
+    const formData = new FormData(document.getElementById('checklistForm'));
+
+    fetch('/api/events/' + ev.id + '/checklist', {
       method: 'PUT',
       // Convert FormData to URLSearchParams since our backend doesn't use multer for this PUT route
       body: new URLSearchParams(formData)
     })
     .then(r => r.json())
     .then(res => {
-      btn.disabled = false;
-      btn.textContent = 'Simpan Kelengkapan';
-      if(res.error) {
-        Swal.fire({ icon: 'error', title: 'Gagal', text: res.error });
-      } else {
-        Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Checklist berhasil diperbarui!' });
-        closeChecklistModal();
-        closeDetailModal();
-        fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+      if (res.error) {
+        showSwalToast(res.error, 'error');
+        return;
       }
+      // Modal detail tetap terbuka & langsung menampilkan progres terbaru.
+      const updated = Object.assign({}, ev, res.data || {});
+      CL_FIELDS.forEach(f => { if (!res.data) updated[f] = formData.has(f); });
+      closeChecklistModal();
+      openDetailModal(null, encodeURIComponent(JSON.stringify(updated)));
+      showSwalToast('Kelengkapan berhasil disimpan!', 'success');
+      fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
     })
     .catch(err => {
       console.error(err);
-      btn.disabled = false;
-      btn.textContent = 'Simpan Kelengkapan';
-    });
-  }
-
-  function submitAgenda(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnSubmitAgenda');
-    btn.disabled = true;
-    btn.textContent = 'Menyimpan...';
-
-    const form = document.getElementById('addForm');
-    const formData = new FormData(form);
-
-    fetch('/api/events', {
-      method: 'POST',
-      body: formData
-    })
-    .then(r => r.json())
-    .then(res => {
-      btn.disabled = false;
-      btn.textContent = 'Simpan Silabus';
-      if (res.error) {
-        showSwalToast(res.error, 'error');
-      } else {
-        showSwalToast('Silabus berhasil disimpan!', 'success');
-        closeAddModal();
-        // Reload current month
-        fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.textContent = 'Simpan Silabus';
       showSwalToast('Terjadi kesalahan koneksi server', 'error');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = btnHtml;
     });
   }
+
+  // Esc menutup modal paling atas (Kelengkapan dulu, baru Detail).
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || (window.Swal && Swal.isVisible && Swal.isVisible() && !(Swal.getPopup() && Swal.getPopup().classList.contains('swal2-toast')))) return;
+    if (document.getElementById('checklistModalOverlay').classList.contains('open')) closeChecklistModal();
+    else if (document.getElementById('detailModalOverlay').classList.contains('open')) closeDetailModal();
+  });
 
   initAppShell('agenda', function(user) {
     document.getElementById('topbarContainer').innerHTML = buildTopbar('Silabus');
@@ -971,6 +1119,14 @@
     // Menambah agenda/event terbuka untuk semua user login (termasuk
     // intern), bukan cuma Staff.
     document.getElementById('btnAddAgenda').style.display = 'flex';
+    SilabusForm.init({
+      // Setelah tersimpan, kalender langsung pindah ke bulan acara itu.
+      onSaved: function (saved) {
+        const d = saved.event_date ? new Date(saved.event_date + 'T00:00:00') : currentDate;
+        currentDate = new Date(d.getFullYear(), d.getMonth(), 1);
+        fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
+      }
+    });
     // Render initial calendar
     fetchEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
   });

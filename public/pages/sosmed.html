@@ -6,6 +6,7 @@
 <title>Social Media — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Content Planner dan database operasional divisi Social Media Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/form-modal.css?v=1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -53,7 +54,9 @@
 
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-    z-index: 2000; opacity: 0; pointer-events: none;
+    /* 1055, bukan 2000: harus di bawah SweetAlert2 (1060) supaya konfirmasi
+       "Hapus" & pesan error tidak tertutup modal detail. */
+    z-index: 1055; opacity: 0; pointer-events: none;
     display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
@@ -216,54 +219,76 @@
   </main>
 </div>
 
-<!-- Modal Tambah Content Plan -->
-<div class="modal-overlay" id="addContentModal" onclick="if(event.target===this) closeAddContentModal()">
-  <div class="modal-box">
-    <h3>Tambah Rencana Konten</h3>
-    <form id="contentForm" onsubmit="submitContentPlan(event)">
-      <div class="form-group">
-        <label>Judul Konten</label>
-        <input type="text" id="cpTitleInput" required placeholder="Contoh: Tips UMKM Go Digital">
+<!-- Modal Tambah Content Plan (gaya & perilaku: /css/form-modal.css + /js/form-modal.js) -->
+<div class="fm-overlay" id="addContentModal" style="--fm-a:#d97706; --fm-a2:#b45309; --fm-rgb:217,119,6;">
+  <div class="fm-box" role="dialog" aria-modal="true" aria-labelledby="cpModalTitle">
+    <div class="fm-head">
+      <div class="fm-head-ico"><i data-lucide="calendar-heart"></i></div>
+      <div class="fm-head-text">
+        <h3 id="cpModalTitle">Tambah Rencana Konten</h3>
+        <p>Susun rencana posting — statusnya otomatis <b>Draft</b> dulu.</p>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Platform</label>
-          <select id="cpPlatform" required>
-            <option value="" disabled selected>Pilih Platform...</option>
-            <option value="Instagram">Instagram</option>
-            <option value="TikTok">TikTok</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Twitter">Twitter / X</option>
-            <option value="Facebook">Facebook</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Jenis Konten</label>
-          <select id="cpType">
-            <option value="">Pilih...</option>
-            <option value="Feed">Feed</option>
-            <option value="Reels">Reels</option>
-            <option value="Story">Story</option>
-            <option value="Carousel">Carousel</option>
-            <option value="Video">Video</option>
-          </select>
-        </div>
+      <button type="button" class="fm-close" onclick="closeAddContentModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+
+    <form id="contentForm" class="fm-form" onsubmit="submitContentPlan(event)" novalidate>
+      <input type="hidden" id="cpPlatform">
+      <input type="hidden" id="cpType">
+
+      <div class="fm-body" id="cpBody">
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="megaphone"></i></span> Konten</div>
+          <div class="fm-field">
+            <label for="cpTitleInput">Judul Konten <span class="fm-req">*</span><span class="fm-aside" data-count-for="cpTitleInput" data-max="150"></span></label>
+            <input type="text" id="cpTitleInput" class="fm-input fm-input-lg" maxlength="150" placeholder="Contoh: Tips UMKM Go Digital" autocomplete="off">
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Judul konten wajib diisi.</div>
+          </div>
+          <div class="fm-field">
+            <div class="fm-label">Platform <span class="fm-req">*</span></div>
+            <div class="fm-choices" id="cpPlatformChoices"></div>
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Pilih platformnya dulu.</div>
+          </div>
+          <div class="fm-field">
+            <div class="fm-label">Jenis Konten <span class="fm-aside">Opsional · klik lagi untuk batal pilih</span></div>
+            <div class="fm-choices" id="cpTypeChoices"></div>
+          </div>
+        </section>
+
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="calendar-days"></i></span> Jadwal Tayang</div>
+          <div class="fm-field">
+            <label for="cpDate">Tanggal Publish <span class="fm-req">*</span></label>
+            <div class="fm-input-wrap"><i data-lucide="calendar" class="fm-ico"></i>
+              <input type="date" id="cpDate" class="fm-input"></div>
+            <div class="fm-quick">
+              <button type="button" class="fm-qchip" data-date-for="cpDate" data-days="0">Hari ini</button>
+              <button type="button" class="fm-qchip" data-date-for="cpDate" data-days="1">Besok</button>
+              <button type="button" class="fm-qchip" data-date-for="cpDate" data-days="2">Lusa</button>
+              <button type="button" class="fm-qchip" data-date-for="cpDate" data-days="7">Minggu depan</button>
+            </div>
+            <div class="fm-hint" data-hint-for="cpDate" hidden></div>
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Tanggal publish wajib diisi.</div>
+          </div>
+        </section>
+
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="pen-line"></i></span> Caption &amp; Catatan <span class="fm-pill">Opsional</span></div>
+          <div class="fm-field">
+            <label for="cpCaption">Draft Caption <span class="fm-aside" id="cpCaptionCount" data-count-for="cpCaption"></span></label>
+            <textarea id="cpCaption" class="fm-input" placeholder="Tulis draft caption di sini..."></textarea>
+          </div>
+          <div class="fm-field">
+            <label for="cpNotes">Catatan untuk Tim</label>
+            <div class="fm-input-wrap"><i data-lucide="sticky-note" class="fm-ico"></i>
+              <input type="text" id="cpNotes" class="fm-input" placeholder="Catatan internal tim" autocomplete="off"></div>
+          </div>
+        </section>
       </div>
-      <div class="form-group">
-        <label>Tanggal Publish</label>
-        <input type="date" id="cpDate" required>
-      </div>
-      <div class="form-group">
-        <label>Draft Caption (Opsional)</label>
-        <textarea id="cpCaption" placeholder="Tulis draft caption di sini..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Catatan (Opsional)</label>
-        <input type="text" id="cpNotes" placeholder="Catatan internal tim">
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="closeAddContentModal()">Batal</button>
-        <button type="submit" class="btn-submit" id="btnSubmitContent">Simpan Konten</button>
+
+      <div class="fm-foot">
+        <span class="fm-foot-info"><span class="fm-req">*</span> wajib diisi</span>
+        <button type="button" class="fm-btn fm-btn-ghost" onclick="closeAddContentModal()">Batal</button>
+        <button type="submit" class="fm-btn fm-btn-primary" id="btnSubmitContent"><i data-lucide="save"></i> Simpan Konten</button>
       </div>
     </form>
   </div>
@@ -296,6 +321,7 @@
 </div>
 
 <script src="/js/shared.js"></script>
+<script src="/js/form-modal.js?v=2"></script>
 <script>
   let cpDate = new Date();
   let cpPlans = [];
@@ -303,16 +329,7 @@
 
   function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-  function getPlatformIconHTML(p) {
-    const m = { 
-      'Instagram': '<i data-lucide="instagram" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
-      'TikTok': '<i data-lucide="video" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
-      'LinkedIn': '<i data-lucide="linkedin" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
-      'Twitter': '<i data-lucide="twitter" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>', 
-      'Facebook': '<i data-lucide="facebook" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>' 
-    };
-    return m[p] || '<i data-lucide="share-2" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i>';
-  }
+  function getPlatformIconHTML(p) { return brandSvg(p, 12); }
   function getPlatformBadgeClass(p) {
     const m = { 'Instagram': 'badge-ig', 'TikTok': 'badge-tiktok', 'LinkedIn': 'badge-linkedin', 'Twitter': 'badge-twitter', 'Facebook': 'badge-facebook' };
     return m[p] || '';
@@ -422,12 +439,12 @@
               <span class="badge ${getStatusBadgeClass(p.status)}">${getStatusLabel(p.status)}</span>
             </div>
             <div class="cp-list-meta">
-              <span style="display:flex;align-items:center;gap:3px;">${getPlatformIconHTML(p.platform)} ${p.platform}</span>
-              ${p.content_type ? `<span style="display:flex;align-items:center;gap:3px;"><i data-lucide="file-text" style="width:12px;height:12px;"></i> ${p.content_type}</span>` : ''}
+              <span style="display:flex;align-items:center;gap:3px;">${getPlatformIconHTML(p.platform)} ${escHtml(p.platform)}</span>
+              ${p.content_type ? `<span style="display:flex;align-items:center;gap:3px;"><i data-lucide="file-text" style="width:12px;height:12px;"></i> ${escHtml(p.content_type)}</span>` : ''}
               <span style="display:flex;align-items:center;gap:3px;"><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${dateStr}</span>
             </div>
           </div>
-          <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:11px; padding:4px 10px;">${p.platform}</span>
+          <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:11px; padding:4px 10px;">${escHtml(p.platform)}</span>
         </div>`;
     });
     div.innerHTML = html;
@@ -439,11 +456,53 @@
   function cpToday() { cpDate = new Date(); fetchContentPlans(); }
 
   // Modals
-  function openAddContentModal() {
-    document.getElementById('contentForm').reset();
-    document.getElementById('addContentModal').classList.add('open');
+  // Ikon brand (Instagram, LinkedIn, dst.) sudah tidak ada di Lucide versi
+  // baru — pakai SVG inline supaya ikon platform tetap muncul.
+  const BRAND_PATHS = {
+    Instagram: '<rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>',
+    TikTok: '<path d="M9 12a4 4 0 1 0 4 4V2.5c.6 2.7 2.6 4.5 5.5 4.5"/>',
+    LinkedIn: '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>',
+    Twitter: '<path d="M4 4l16 16"/><path d="M20 4L4 20"/>',
+    Facebook: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'
+  };
+  function brandSvg(p, size) {
+    const path = BRAND_PATHS[p] || '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>';
+    const st = size ? ` style="width:${size}px;height:${size}px;vertical-align:-1px;margin-right:3px;"` : '';
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${st}>${path}</svg>`;
   }
-  function closeAddContentModal() { document.getElementById('addContentModal').classList.remove('open'); }
+
+  // Batas panjang caption per platform (informasi saja, tidak memblokir simpan)
+  const CAPTION_LIMITS = { Instagram: 2200, Twitter: 280, LinkedIn: 3000 };
+
+  const cpForm = FormModal.setup({
+    overlay: 'addContentModal', form: 'contentForm', body: 'cpBody', focus: 'cpTitleInput',
+    choices: [
+      { input: 'cpPlatform', container: 'cpPlatformChoices', items: [
+        { value: 'Instagram', color: '#e1306c', icon: brandSvg('Instagram') },
+        { value: 'TikTok', color: '#fe2c55', icon: brandSvg('TikTok') },
+        { value: 'LinkedIn', color: '#0a66c2', icon: brandSvg('LinkedIn') },
+        { value: 'Twitter', label: 'Twitter / X', color: '#0f172a', icon: brandSvg('Twitter') },
+        { value: 'Facebook', color: '#1877f2', icon: brandSvg('Facebook') }
+      ] },
+      { input: 'cpType', container: 'cpTypeChoices', toggle: true, empty: '', items: [
+        { value: 'Feed', color: '#d97706', icon: '<i data-lucide="square"></i>' },
+        { value: 'Reels', color: '#db2777', icon: '<i data-lucide="clapperboard"></i>' },
+        { value: 'Story', color: '#7c3aed', icon: '<i data-lucide="smartphone"></i>' },
+        { value: 'Carousel', color: '#0891b2', icon: '<i data-lucide="gallery-horizontal"></i>' },
+        { value: 'Video', color: '#dc2626', icon: '<i data-lucide="video"></i>' }
+      ] }
+    ],
+    onChange: function () {
+      // Penghitung caption ikut batas platform yang dipilih
+      const max = CAPTION_LIMITS[document.getElementById('cpPlatform').value];
+      const counter = document.getElementById('cpCaptionCount');
+      if (max) counter.dataset.max = max; else delete counter.dataset.max;
+      cpForm && cpForm.refresh();
+    }
+  });
+
+  function openAddContentModal(prefill) { cpForm.open(prefill); }
+  function closeAddContentModal(force) { cpForm.close(force); }
 
   let activeContentPlan = null;
   function openDetailContent(dataStr) {
@@ -451,8 +510,8 @@
     activeContentPlan = p;
     document.getElementById('detCpTitle').textContent = p.title;
     document.getElementById('detCpBadges').innerHTML = `
-      <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:12px; padding:4px 12px;">${getPlatformIconHTML(p.platform)} ${p.platform}</span>
-      ${p.content_type ? `<span class="badge" style="background:var(--bg-surface); color:var(--text-secondary); font-size:12px; padding:4px 12px; margin-left:6px;"><i data-lucide="file-text" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> ${p.content_type}</span>` : ''}
+      <span class="badge ${getPlatformBadgeClass(p.platform)}" style="font-size:12px; padding:4px 12px;">${getPlatformIconHTML(p.platform)} ${escHtml(p.platform)}</span>
+      ${p.content_type ? `<span class="badge" style="background:var(--bg-surface); color:var(--text-secondary); font-size:12px; padding:4px 12px; margin-left:6px;"><i data-lucide="file-text" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> ${escHtml(p.content_type)}</span>` : ''}
       <span class="badge ${getStatusBadgeClass(p.status)}" style="font-size:12px; padding:4px 12px; margin-left:6px;">${getStatusLabel(p.status)}</span>
     `;
     const dateStr = new Date(p.publish_date).toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -502,41 +561,43 @@
 
   function submitContentPlan(e) {
     e.preventDefault();
+    if (!cpForm.validate([{ id: 'cpTitleInput' }, { id: 'cpPlatform' }, { id: 'cpDate' }])) return;
     const btn = document.getElementById('btnSubmitContent');
-    btn.disabled = true; btn.textContent = 'Menyimpan...';
     const payload = {
-      title: document.getElementById('cpTitleInput').value,
+      title: document.getElementById('cpTitleInput').value.trim(),
       platform: document.getElementById('cpPlatform').value,
       content_type: document.getElementById('cpType').value || null,
       publish_date: document.getElementById('cpDate').value,
       caption: document.getElementById('cpCaption').value || null,
       notes: document.getElementById('cpNotes').value || null
     };
+    cpForm.setBusy(btn, true, 'Menyimpan...');
     fetch('/api/content-plans', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
     .then(r => r.json())
     .then(res => {
-      btn.disabled = false; btn.textContent = 'Simpan Konten';
-      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
-      Swal.fire({ icon:'success', title:'Berhasil!', text:'Konten berhasil ditambahkan!', timer:1500, showConfirmButton:false });
-      closeAddContentModal();
+      cpForm.setBusy(btn, false);
+      if (res.error) { showSwalToast(res.error, 'error'); return; }
+      closeAddContentModal(true);
+      showSwalToast('Konten berhasil ditambahkan!', 'success');
       fetchContentPlans();
     })
     .catch(() => {
-      btn.disabled = false; btn.textContent = 'Simpan Konten';
-      Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' });
+      cpForm.setBusy(btn, false);
+      showSwalToast('Terjadi kesalahan jaringan.', 'error');
     });
   }
 
   function applyPrefillFromQuery() {
     const p = new URLSearchParams(window.location.search);
     if (p.get('prefill') !== '1') return;
-    openAddContentModal();
-    if (p.get('title')) document.getElementById('cpTitleInput').value = p.get('title');
-    if (p.get('date')) document.getElementById('cpDate').value = p.get('date');
-    if (p.get('notes')) document.getElementById('cpNotes').value = p.get('notes');
+    openAddContentModal({
+      cpTitleInput: p.get('title'),
+      cpDate: /^\d{4}-\d{2}-\d{2}$/.test(p.get('date') || '') ? p.get('date') : '',
+      cpNotes: p.get('notes')
+    });
     history.replaceState(null, '', window.location.pathname);
   }
 

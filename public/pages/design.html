@@ -6,6 +6,7 @@
 <title>Design — Database Rumah BUMN Jakarta</title>
 <meta name="description" content="Design Request Dashboard dan database operasional divisi Design Rumah BUMN Jakarta.">
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/form-modal.css?v=1">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -80,7 +81,9 @@
   /* Modals */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-    z-index: 2000; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
+    /* 1055, bukan 2000: harus di bawah SweetAlert2 (1060) supaya pesan
+       error/sukses tidak tertutup modal detail. */
+    z-index: 1055; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
     transition: opacity 0.3s ease;
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
@@ -215,65 +218,84 @@
   </main>
 </div>
 
-<!-- Modal Ajukan Request -->
-<div class="modal-overlay" id="requestModal" onclick="if(event.target===this) closeRequestModal()">
-  <div class="modal-box">
-    <h3>Ajukan Design Request</h3>
-    <form id="requestForm" onsubmit="submitRequest(event)">
-      <div class="form-group">
-        <label>Judul / Deskripsi Singkat</label>
-        <input type="text" id="drTitle" required placeholder="Contoh: Poster Pelatihan Digital Marketing">
+<!-- Modal Ajukan Request (gaya & perilaku: /css/form-modal.css + /js/form-modal.js) -->
+<div class="fm-overlay" id="requestModal" style="--fm-a:#c026d3; --fm-a2:#a21caf; --fm-rgb:192,38,211;">
+  <div class="fm-box" role="dialog" aria-modal="true" aria-labelledby="drModalTitle">
+    <div class="fm-head">
+      <div class="fm-head-ico"><i data-lucide="palette"></i></div>
+      <div class="fm-head-text">
+        <h3 id="drModalTitle">Ajukan Design Request</h3>
+        <p>Request akan masuk ke kolom <b>Pending</b> tim desain.</p>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Jenis Desain</label>
-          <select id="drType" required>
-            <option value="" disabled selected>Pilih Jenis Desain...</option>
-            <option value="Poster">Poster</option>
-            <option value="Flyer">Flyer</option>
-            <option value="Banner">Banner</option>
-            <option value="Feed IG">Feed IG</option>
-            <option value="Story IG">Story IG</option>
-            <option value="Carousel">Carousel</option>
-            <option value="Logo">Logo</option>
-            <option value="Sertifikat">Sertifikat</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Divisi Pemohon</label>
-          <select id="drDivision" required>
-            <option value="" disabled selected>Pilih Divisi...</option>
-            <option value="Business Development">Business Dev</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Event">Event</option>
-            <option value="Admin">Admin</option>
-            <option value="Administrasi">Administrasi</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
+      <button type="button" class="fm-close" onclick="closeRequestModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+
+    <form id="requestForm" class="fm-form" onsubmit="submitRequest(event)" novalidate>
+      <input type="hidden" id="drType">
+      <input type="hidden" id="drDivision">
+      <input type="hidden" id="drPriority">
+
+      <div class="fm-body" id="drBody">
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="image-plus"></i></span> Kebutuhan Desain</div>
+          <div class="fm-field">
+            <label for="drTitle">Judul / Deskripsi Singkat <span class="fm-req">*</span><span class="fm-aside" data-count-for="drTitle" data-max="150"></span></label>
+            <input type="text" id="drTitle" class="fm-input fm-input-lg" maxlength="150" placeholder="Contoh: Poster Pelatihan Digital Marketing" autocomplete="off">
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Judul request wajib diisi.</div>
+          </div>
+          <div class="fm-field">
+            <div class="fm-label">Jenis Desain <span class="fm-req">*</span></div>
+            <div class="fm-choices" id="drTypeChoices"></div>
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Pilih jenis desainnya dulu.</div>
+          </div>
+          <div class="fm-field">
+            <div class="fm-label">Divisi Pemohon <span class="fm-req">*</span></div>
+            <div class="fm-choices" id="drDivisionChoices"></div>
+            <div class="fm-err"><i data-lucide="circle-alert"></i> Pilih divisi pemohonnya.</div>
+          </div>
+        </section>
+
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="pen-line"></i></span> Detail Brief <span class="fm-pill">Opsional</span></div>
+          <div class="fm-field">
+            <label for="drDesc">Deskripsi Detail <span class="fm-aside" data-count-for="drDesc"></span></label>
+            <textarea id="drDesc" class="fm-input" placeholder="Jelaskan kebutuhan desain secara detail (warna, teks, ukuran, dll.)..."></textarea>
+            <div class="fm-quick">
+              <span class="fm-quick-label">Tambah poin:</span>
+              <button type="button" class="fm-qchip" data-append-for="drDesc" data-text="• Ukuran: "><i data-lucide="ruler"></i> Ukuran</button>
+              <button type="button" class="fm-qchip" data-append-for="drDesc" data-text="• Warna: "><i data-lucide="pipette"></i> Warna</button>
+              <button type="button" class="fm-qchip" data-append-for="drDesc" data-text="• Teks utama: "><i data-lucide="type"></i> Teks utama</button>
+              <button type="button" class="fm-qchip" data-append-for="drDesc" data-text="• Logo yang dipakai: "><i data-lucide="hexagon"></i> Logo</button>
+              <button type="button" class="fm-qchip" data-append-for="drDesc" data-text="• Referensi: "><i data-lucide="link"></i> Referensi</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="fm-sec">
+          <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="clock"></i></span> Waktu &amp; Prioritas</div>
+          <div class="fm-field">
+            <label for="drDeadline">Deadline <span class="fm-aside">Opsional</span></label>
+            <div class="fm-input-wrap"><i data-lucide="calendar" class="fm-ico"></i>
+              <input type="date" id="drDeadline" class="fm-input"></div>
+            <div class="fm-quick">
+              <button type="button" class="fm-qchip" data-date-for="drDeadline" data-days="1">Besok</button>
+              <button type="button" class="fm-qchip" data-date-for="drDeadline" data-days="3">3 hari lagi</button>
+              <button type="button" class="fm-qchip" data-date-for="drDeadline" data-days="7">1 minggu</button>
+            </div>
+            <div class="fm-hint" data-hint-for="drDeadline" hidden></div>
+          </div>
+          <div class="fm-field">
+            <div class="fm-label">Prioritas</div>
+            <div class="fm-choices" id="drPriorityChoices"></div>
+            <div class="fm-hint is-warn" id="drRushTip" hidden><i data-lucide="zap"></i> Deadline-nya mepet — pertimbangkan pilih prioritas Urgent.</div>
+          </div>
+        </section>
       </div>
-      <div class="form-group">
-        <label>Deskripsi Detail</label>
-        <textarea id="drDesc" placeholder="Jelaskan kebutuhan desain secara detail (warna, teks, ukuran, dll.)..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Deadline (Opsional)</label>
-          <input type="date" id="drDeadline">
-        </div>
-        <div class="form-group">
-          <label>Prioritas</label>
-          <select id="drPriority">
-            <option value="normal">Normal</option>
-            <option value="urgent">Urgent</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick="closeRequestModal()">Batal</button>
-        <button type="submit" class="btn-submit" id="btnSubmitRequest">Kirim Request</button>
+
+      <div class="fm-foot">
+        <span class="fm-foot-info"><span class="fm-req">*</span> wajib diisi</span>
+        <button type="button" class="fm-btn fm-btn-ghost" onclick="closeRequestModal()">Batal</button>
+        <button type="submit" class="fm-btn fm-btn-primary" id="btnSubmitRequest"><i data-lucide="send"></i> Kirim Request</button>
       </div>
     </form>
   </div>
@@ -313,6 +335,7 @@
 </div>
 
 <script src="/js/shared.js"></script>
+<script src="/js/form-modal.js?v=2"></script>
 <script>
   let allRequests = [];
   let currentFilter = 'all';
@@ -430,11 +453,44 @@
   }
 
   // Modals
-  function openRequestModal() {
-    document.getElementById('requestForm').reset();
-    document.getElementById('requestModal').classList.add('open');
-  }
-  function closeRequestModal() { document.getElementById('requestModal').classList.remove('open'); }
+  const drForm = FormModal.setup({
+    overlay: 'requestModal', form: 'requestForm', body: 'drBody', focus: 'drTitle',
+    choices: [
+      { input: 'drType', container: 'drTypeChoices', items: [
+        { value: 'Poster', color: '#c026d3', icon: '<i data-lucide="image"></i>' },
+        { value: 'Flyer', color: '#c026d3', icon: '<i data-lucide="file-image"></i>' },
+        { value: 'Banner', color: '#c026d3', icon: '<i data-lucide="rectangle-horizontal"></i>' },
+        { value: 'Feed IG', color: '#c026d3', icon: '<i data-lucide="square"></i>' },
+        { value: 'Story IG', color: '#c026d3', icon: '<i data-lucide="smartphone"></i>' },
+        { value: 'Carousel', color: '#c026d3', icon: '<i data-lucide="gallery-horizontal"></i>' },
+        { value: 'Logo', color: '#c026d3', icon: '<i data-lucide="hexagon"></i>' },
+        { value: 'Sertifikat', color: '#c026d3', icon: '<i data-lucide="award"></i>' },
+        { value: 'Lainnya', color: '#c026d3', icon: '<i data-lucide="ellipsis"></i>' }
+      ] },
+      { input: 'drDivision', container: 'drDivisionChoices', items: [
+        { value: 'Business Development', label: 'Business Dev', color: '#ea580c' },
+        { value: 'Social Media', color: '#d97706' },
+        { value: 'Event', color: '#dc2626' },
+        { value: 'Admin', color: '#0891b2' },
+        { value: 'Administrasi', color: '#155eef' },
+        { value: 'Lainnya', color: '#64748b' }
+      ] },
+      { input: 'drPriority', container: 'drPriorityChoices', initial: 'normal', items: [
+        { value: 'low', label: 'Low', color: '#64748b' },
+        { value: 'normal', label: 'Normal', color: '#2563eb' },
+        { value: 'urgent', label: 'Urgent', color: '#dc2626', icon: '<i data-lucide="zap"></i>' }
+      ] }
+    ],
+    onChange: function () {
+      // Saran pilih Urgent kalau deadline ≤ 2 hari lagi
+      const dl = document.getElementById('drDeadline').value;
+      const days = dl ? Math.round((Date.parse(dl) - Date.parse(FormModal.todayISO(0))) / 86400000) : null;
+      document.getElementById('drRushTip').hidden = !(days !== null && days >= 0 && days <= 2 && document.getElementById('drPriority').value !== 'urgent');
+    }
+  });
+
+  function openRequestModal(prefill) { drForm.open(prefill); }
+  function closeRequestModal(force) { drForm.close(force); }
 
   let activeRequest = null;
   function openDetailRequest(dataStr) {
@@ -496,43 +552,47 @@
 
   function submitRequest(e) {
     e.preventDefault();
+    if (!drForm.validate([{ id: 'drTitle' }, { id: 'drType' }, { id: 'drDivision' }])) return;
     const btn = document.getElementById('btnSubmitRequest');
-    btn.disabled = true; btn.textContent = 'Mengirim...';
     const payload = {
-      title: document.getElementById('drTitle').value,
+      title: document.getElementById('drTitle').value.trim(),
       design_type: document.getElementById('drType').value,
       requester_division: document.getElementById('drDivision').value,
       description: document.getElementById('drDesc').value || null,
       deadline: document.getElementById('drDeadline').value || null,
-      priority: document.getElementById('drPriority').value
+      priority: document.getElementById('drPriority').value || 'normal'
     };
+    drForm.setBusy(btn, true, 'Mengirim...');
     fetch('/api/design-requests', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
     .then(r => r.json())
     .then(res => {
-      btn.disabled = false; btn.textContent = 'Kirim Request';
-      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
-      Swal.fire({ icon:'success', title:'Terkirim!', text:'Design request berhasil diajukan!', timer:1500, showConfirmButton:false });
-      closeRequestModal();
+      drForm.setBusy(btn, false);
+      if (res.error) { showSwalToast(res.error, 'error'); return; }
+      closeRequestModal(true);
+      showSwalToast('Design request berhasil diajukan!', 'success');
       fetchRequests();
     })
     .catch(() => {
-      btn.disabled = false; btn.textContent = 'Kirim Request';
-      Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' });
+      drForm.setBusy(btn, false);
+      showSwalToast('Terjadi kesalahan jaringan.', 'error');
     });
   }
 
   function applyPrefillFromQuery() {
     const p = new URLSearchParams(window.location.search);
     if (p.get('prefill') !== '1') return;
-    openRequestModal();
-    if (p.get('title')) document.getElementById('drTitle').value = p.get('title');
-    if (p.get('type')) document.getElementById('drType').value = p.get('type');
-    if (p.get('division')) document.getElementById('drDivision').value = p.get('division');
-    if (p.get('desc')) document.getElementById('drDesc').value = p.get('desc');
-    if (p.get('deadline')) document.getElementById('drDeadline').value = p.get('deadline');
+    // Jenis desain & divisi hanya diterima kalau ada di daftar pilihan
+    // (FormModal.setChoice menolak nilai lain) — link ini bisa dibuat siapa saja.
+    openRequestModal({
+      drTitle: p.get('title'),
+      drType: p.get('type'),
+      drDivision: p.get('division'),
+      drDesc: p.get('desc'),
+      drDeadline: /^\d{4}-\d{2}-\d{2}$/.test(p.get('deadline') || '') ? p.get('deadline') : ''
+    });
     history.replaceState(null, '', window.location.pathname);
   }
 

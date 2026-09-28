@@ -13,369 +13,249 @@
 <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-/* ─── Absen Page Specific ─── */
-.absen-container {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding-bottom: 90px; /* room for bottom nav */
-}
+/* ─── Absen Page ───
+   Alur intern: 1) Lokasi GPS → 2) Foto selfie → 3) Kirim absen.
+   Kiri: alat ambil data (peta & kamera). Kanan: status, tombol kirim,
+   izin, dan riwayat. Di HP jadi satu kolom dengan urutan sesuai alur. */
+.absen-container { max-width: 1120px; margin: 0 auto; padding-bottom: 90px; }
+.absen-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; align-items: start; }
+.absen-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.absen-container svg { flex-shrink: 0; }
 
-/* Two-column workspace: capture tools on the left, status & history on the
-   right. Collapses to the original single column on narrow screens. */
-.absen-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 18px;
-  align-items: start;
-}
-.absen-col { display: flex; flex-direction: column; gap: 16px; }
-
-/* Hero greeting + live clock */
-.absen-hero-date {
-  font-size: 12.5px; color: rgba(255,255,255,0.75);
-  margin-bottom: 6px; font-weight: 500;
-}
-.absen-hero-clock {
-  position: relative; z-index: 1;
-  text-align: right; flex-shrink: 0;
-}
+/* Hero: sapaan + jam + status singkat */
+.absen-hero-date { font-size: 12.5px; color: rgba(255,255,255,0.78); margin-bottom: 6px; font-weight: 600; }
+.absen-hero-clock { position: relative; z-index: 1; text-align: right; flex-shrink: 0; }
 .ahc-time {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(28px, 4vw, 38px); font-weight: 700;
-  color: #fff; line-height: 1; letter-spacing: -0.01em;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums;
+  font-size: clamp(30px, 4vw, 42px); font-weight: 700; color: #fff; line-height: 1;
+  letter-spacing: -0.01em; text-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
-.ahc-label {
-  font-size: 11px; color: rgba(255,255,255,0.7);
-  margin-top: 6px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.08em;
+.ahc-label { font-size: 11px; color: rgba(255,255,255,0.72); margin-top: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+  padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.28);
 }
+.hero-pill svg { width: 14px; height: 14px; }
+.hero-pill.is-done { background: rgba(16,185,129,0.9); border-color: transparent; }
 
-/* Status today */
-.absen-status-row {
-  display: flex;
-  gap: 10px;
+/* Kartu dasar */
+.ab-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
+  overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,0.05);
 }
-.absen-status-card {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 18px 14px;
-  text-align: center;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-.absen-status-card.filled {
-  border-color: rgba(34,197,94,0.3);
-  background: rgba(34,197,94,0.05);
-}
-.absen-status-card.missed {
-  border-color: rgba(239,68,68,0.2);
-}
-.absen-status-icon { font-size: 22px; margin-bottom: 4px; }
-.absen-status-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.absen-status-time { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
-
-/* GPS Card */
-.gps-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
-}
-.gps-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.gps-icon {
-  width: 34px; height: 34px;
-  background: rgba(48,127,226,0.12);
-  border-radius: 10px;
+.ab-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.ab-step {
+  width: 30px; height: 30px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
+  font-size: 13px; font-weight: 800; color: var(--blue-mid); background: var(--blue-active-bg);
+  transition: background 0.2s, color 0.2s;
 }
-.gps-info { flex: 1; min-width: 0; }
-.gps-status { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.gps-coords { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-.gps-address { font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+.ab-step svg { width: 16px; height: 16px; }
+.ab-step.is-ok { background: #12b76a; color: #fff; }
+.ab-head-text { flex: 1; min-width: 0; }
+.ab-title { font-size: 14px; font-weight: 800; color: var(--text-primary); }
+.ab-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-pill { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 5px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.ab-pill svg { width: 13px; height: 13px; }
+.ab-pill.is-wait { background: var(--bg-surface); color: var(--text-muted); }
+.ab-pill.is-ok { background: rgba(18,183,106,0.12); color: #047857; }
+.ab-pill.is-bad { background: rgba(220,38,38,0.1); color: #dc2626; }
+.ab-pill.is-info { background: var(--blue-active-bg); color: var(--blue-mid); }
 
-#map {
-  height: 180px;
-  width: 100%;
-  background: var(--bg-card);
+/* 1 · Lokasi */
+.map-wrap { position: relative; }
+#map { height: 230px; width: 100%; background: var(--bg-surface); z-index: 0; }
+.map-chip {
+  position: absolute; left: 12px; bottom: 12px; z-index: 400;
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px;
+  font-size: 11.5px; font-weight: 700; color: var(--text-secondary);
+  background: rgba(255,255,255,0.94); box-shadow: 0 2px 8px rgba(15,23,42,0.15);
 }
+.map-chip svg { width: 13px; height: 13px; }
+.map-btn {
+  position: absolute; right: 12px; bottom: 12px; z-index: 400;
+  width: 36px; height: 36px; border-radius: 11px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--blue-mid); box-shadow: 0 2px 8px rgba(15,23,42,0.18);
+}
+.map-btn:hover { background: var(--blue-mid); color: #fff; }
+.map-btn svg { width: 17px; height: 17px; }
+.map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 11px 16px; font-size: 12px; color: var(--text-secondary); }
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-dot { width: 10px; height: 10px; border-radius: 50%; background: #155eef; box-shadow: 0 0 0 3px rgba(21,94,239,0.2); }
+.lg-area { width: 12px; height: 12px; border-radius: 50%; border: 2px dashed #12b76a; background: rgba(18,183,106,0.12); }
+.gps-coords { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+.gps-msg { padding: 10px 16px; font-size: 12.5px; font-weight: 600; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.gps-msg svg { width: 15px; height: 15px; }
+.gps-msg.is-bad { background: rgba(220,38,38,0.05); color: #b91c1c; }
+.gps-msg.is-ok { background: rgba(18,183,106,0.06); color: #047857; }
+.gps-msg[hidden] { display: none; }
+/* Titik lokasi user berdenyut */
+.me-dot { width: 16px; height: 16px; border-radius: 50%; background: #155eef; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.35); position: relative; }
+.me-dot::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; background: rgba(21,94,239,0.3); animation: mePulse 1.8s ease-out infinite; }
+@keyframes mePulse { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+.office-pin { width: 30px; height: 30px; border-radius: 10px; background: #12b76a; color: #fff; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.3); }
+.office-pin svg { width: 16px; height: 16px; }
 
-/* Camera / Selfie */
-.camera-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
-}
-.camera-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* 2 · Selfie */
 .camera-preview-area {
-  position: relative;
-  background: #0a0f1a;
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  position: relative; background: #0b1220; aspect-ratio: 4 / 3; max-height: 320px; width: 100%;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-#cameraVideo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: none;
-}
+#cameraVideo, #selfiePreview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
 #cameraCanvas { display: none; }
-#selfiePreview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: none;
-}
-.camera-placeholder {
-  text-align: center;
-  color: var(--text-muted);
-}
-.camera-placeholder svg { margin-bottom: 8px; opacity: 0.4; }
-.camera-placeholder p { font-size: 13px; }
-
-.camera-actions {
-  padding: 12px 16px;
-  display: flex;
-  gap: 10px;
-}
+.camera-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: #94a3b8; padding: 16px; }
+.cam-ph-ico { width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); color: #cbd5e1; }
+.cam-ph-ico svg { width: 28px; height: 28px; }
+.camera-placeholder b { color: #e2e8f0; font-size: 14px; }
+.camera-placeholder p { margin: 0; font-size: 12.5px; max-width: 260px; line-height: 1.5; }
+/* Panduan posisi wajah saat kamera aktif */
+.cam-guide { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; }
+.cam-guide::before { content: ''; width: 46%; aspect-ratio: 3 / 4; border-radius: 50%; border: 2.5px dashed rgba(255,255,255,0.75); box-shadow: 0 0 0 999px rgba(0,0,0,0.25); }
+.cam-guide span { position: absolute; bottom: 12px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; color: #fff; background: rgba(0,0,0,0.45); }
+.camera-preview-area.is-live .cam-guide { display: flex; }
+.cam-badge { position: absolute; top: 12px; left: 12px; display: none; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; background: rgba(18,183,106,0.95); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+.cam-badge svg { width: 14px; height: 14px; }
+.camera-preview-area.is-shot .cam-badge { display: inline-flex; }
+.camera-actions { padding: 12px 16px; display: flex; gap: 10px; }
 .btn-camera {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.15s;
+  flex: 1; padding: 11px; border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
+  font: 700 13px 'Inter', sans-serif; transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
 }
+.btn-camera svg { width: 16px; height: 16px; }
 .btn-camera:hover { background: var(--bg-card-hover); }
-.btn-camera.primary {
-  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(8,87,195,0.3);
-}
+.btn-camera.primary { border-color: transparent; color: #fff; background: linear-gradient(135deg, var(--blue-mid), var(--blue-dark)); box-shadow: 0 6px 16px rgba(21,94,239,0.3); }
+.btn-camera.primary:hover { transform: translateY(-1px); }
 
-/* Clock In/Out buttons */
-.absen-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
+/* Status hari ini */
+.status-card { display: flex; align-items: center; gap: 14px; padding: 18px; }
+.status-ico { width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--text-muted); }
+.status-ico svg { width: 26px; height: 26px; }
+.status-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.status-value { font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em; margin-top: 2px; }
+.status-note { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.status-card.is-done { background: linear-gradient(135deg, rgba(18,183,106,0.1), rgba(18,183,106,0.02)); border-color: rgba(18,183,106,0.3); }
+.status-card.is-done .status-ico { background: #12b76a; color: #fff; box-shadow: 0 8px 18px rgba(18,183,106,0.3); }
+.status-card.is-done .status-value { color: #047857; }
+
+/* 3 · Kirim absen: checklist syarat + tombol */
+.ready-list { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 4px; }
+.ready-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.ready-ico { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--text-muted); transition: all 0.2s; }
+.ready-ico svg { width: 13px; height: 13px; }
+.ready-item.is-ok { color: var(--text-primary); }
+.ready-item.is-ok .ready-ico { background: #12b76a; color: #fff; }
+.ready-item.is-bad .ready-ico { background: rgba(220,38,38,0.12); color: #dc2626; }
+.ready-item small { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.absen-actions { padding: 14px 16px 16px; }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn-absen {
-  padding: 16px;
-  border: none;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.2s;
-  flex-direction: column;
-  gap: 4px;
-  line-height: 1.3;
+  width: 100%; padding: 15px 14px; border: none; border-radius: 14px; cursor: pointer;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  font-family: 'Inter', sans-serif; color: #fff; transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
 }
-.btn-clock-in {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(5,150,105,0.35);
-}
-.btn-clock-in:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(5,150,105,0.45); }
-.btn-clock-out {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(220,38,38,0.3);
-}
-.btn-clock-out:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(220,38,38,0.4); }
-.btn-absen:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-.btn-absen-icon { font-size: 22px; }
-.btn-absen-text { font-size: 14px; }
-.btn-absen-sub { font-size: 11px; opacity: 0.8; font-weight: 500; }
+.btn-absen-icon { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); }
+.btn-absen-icon svg { width: 21px; height: 21px; }
+.btn-absen-text { display: block; font-size: 15px; font-weight: 800; }
+.btn-absen-sub { display: block; font-size: 11.5px; font-weight: 500; opacity: 0.88; margin-top: 1px; }
+.btn-clock-in { background: linear-gradient(135deg, #12b76a, #059669); box-shadow: 0 8px 20px rgba(5,150,105,0.3); }
+.btn-clock-in:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(5,150,105,0.36); }
+.btn-wfh { background: linear-gradient(135deg, var(--blue-mid), var(--blue-dark)); box-shadow: 0 8px 20px rgba(21,94,239,0.3); }
+.btn-wfh:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(21,94,239,0.36); }
+.btn-absen:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none; filter: grayscale(0.3); }
+.absen-note { display: flex; align-items: center; gap: 7px; margin-top: 10px; padding: 8px 11px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--bg-surface); color: var(--text-muted); }
+.absen-note svg { width: 14px; height: 14px; }
 
-/* Today's record */
-.today-log {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+/* Izin / sakit */
+.izin-card { display: flex; align-items: center; gap: 14px; padding: 16px; }
+.izin-ico { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(217,119,6,0.12); color: #d97706; }
+.izin-ico svg { width: 21px; height: 21px; }
+.izin-text { flex: 1; min-width: 0; }
+.izin-text b { display: block; font-size: 13.5px; font-weight: 800; color: var(--text-primary); }
+.izin-text span { font-size: 12px; color: var(--text-muted); }
+.izin-btn {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; padding: 10px 14px; border-radius: 11px; text-decoration: none;
+  font-size: 12.5px; font-weight: 700; color: #b45309; background: rgba(217,119,6,0.1); transition: background 0.15s;
 }
-.today-log-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #15803d;
-  background: rgba(34,197,94,0.1);
-  border: 1px solid rgba(34,197,94,0.2);
-  padding: 2px 8px;
-  border-radius: 20px;
-}
-.live-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: #4ade80;
-  animation: livePulse 1.5s ease-in-out infinite;
-}
-@keyframes livePulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
-}
+.izin-btn:hover { background: rgba(217,119,6,0.18); }
+.izin-btn svg { width: 15px; height: 15px; }
 
-.log-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  animation: fadeInRow 0.3s ease both;
-}
+/* Riwayat hari ini */
+.live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: #15803d; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); padding: 2px 8px; border-radius: 20px; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: livePulse 1.5s ease-in-out infinite; }
+@keyframes livePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+.log-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); animation: fadeInRow 0.3s ease both; }
 .log-item:last-child { border-bottom: none; }
-@keyframes fadeInRow { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-
-.log-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff;
-  flex-shrink: 0; overflow: hidden;
-}
+@keyframes fadeInRow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.log-avatar { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--blue-mid), var(--blue-dark)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; overflow: hidden; }
 .log-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .log-info { flex: 1; min-width: 0; }
-.log-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.log-type-time { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-.log-type-badge {
-  font-size: 10.5px; font-weight: 600;
-  padding: 4px 10px; border-radius: 50px;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-}
-.log-type-badge.clock_in { background: rgba(5, 150, 105, 0.08); color: #059669; border: 1px solid rgba(5, 150, 105, 0.15); }
-.log-type-badge.clock_out { background: rgba(220, 38, 38, 0.08); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.15); }
+.log-name { font-size: 13px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-type-time { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); margin-top: 2px; min-width: 0; }
+.log-type-time b { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
+.log-type-time span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-badges { display: flex; gap: 5px; flex-shrink: 0; }
+.log-type-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+.log-type-badge.clock_in { background: rgba(5,150,105,0.1); color: #047857; }
+.log-type-badge.clock_out { background: rgba(220,38,38,0.08); color: #dc2626; }
+.log-type-badge.wfh { background: var(--blue-active-bg); color: var(--blue-mid); }
+.log-type-badge.wfo { background: rgba(100,116,139,0.1); color: #475569; }
+.log-photo-thumb { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); cursor: zoom-in; flex-shrink: 0; padding: 0; background: none; }
+.log-map-btn { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--blue-active-bg); color: var(--blue-mid); transition: all 0.15s; }
+.log-map-btn:hover { background: var(--blue-mid); color: #fff; }
+.log-map-btn svg { width: 16px; height: 16px; }
+.log-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.log-empty svg { width: 26px; height: 26px; opacity: 0.5; }
 
-.log-photo-thumb {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.log-map-btn {
-  width: 34px; height: 34px;
-  background: var(--blue-subtle);
-  border: 1px solid var(--border-mid);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-.log-map-btn:hover {
-  background: var(--blue-mid);
-  color: #fff;
-  border-color: var(--blue-mid);
-}
-.log-map-btn:hover svg {
-  color: #fff !important;
-}
-.log-empty { padding: 30px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+/* Kelola WFH (staff) */
+.wfh-date { font: 600 12px 'Inter', sans-serif; padding: 7px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); color: var(--text-primary); cursor: pointer; }
+.wfh-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+.wfh-summary b { font-size: 13px; color: var(--text-primary); }
+.wfh-summary span { font-size: 12px; color: var(--text-muted); }
+.wfh-bulk { display: flex; gap: 8px; }
+.wfh-bulk button { font: 700 12px 'Inter', sans-serif; padding: 7px 12px; border-radius: 9px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); }
+.wfh-bulk button.is-primary { border-color: transparent; color: #fff; background: linear-gradient(135deg, var(--blue-mid), var(--blue-dark)); }
+/* Saklar izin WFH per intern */
+.wfh-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; cursor: pointer; }
+.wfh-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.wfh-switch span { position: absolute; inset: 0; border-radius: 24px; background: #cbd5e1; transition: background 0.2s; }
+.wfh-switch span::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform 0.2s; }
+.wfh-switch input:checked + span { background: var(--blue-mid); }
+.wfh-switch input:checked + span::after { transform: translateX(20px); }
+.wfh-switch input:focus-visible + span { outline: 3px solid rgba(21,94,239,0.35); outline-offset: 2px; }
+.wfh-switch input:disabled + span { opacity: 0.5; }
 
-/* Photo lightbox */
-.lightbox {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(6px);
-}
-.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 12px; }
-.lightbox-close {
-  position: fixed; top: 16px; right: 16px;
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  color: #fff; border-radius: 50%; width: 40px; height: 40px;
-  cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center;
-}
+/* Lightbox foto */
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 14px; }
+.lightbox-close { position: fixed; top: 16px; right: 16px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Submit overlay */
-.submit-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 500;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.submit-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-mid);
-  border-radius: 20px;
-  padding: 32px;
-  text-align: center;
-  width: 280px;
-}
-.submit-spinner {
-  width: 40px; height: 40px;
-  border: 3px solid rgba(48,127,226,0.2);
-  border-top-color: var(--blue-mid);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
+/* Overlay kirim absen — di atas bottom-nav mobile (1000), di bawah toast */
+.submit-overlay { position: fixed; inset: 0; background: rgba(8,18,30,0.6); z-index: 1055; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.submit-box { background: var(--bg-card); border-radius: 22px; padding: 30px 28px; text-align: center; width: 300px; max-width: calc(100vw - 32px); box-shadow: 0 30px 80px rgba(15,23,42,0.3); animation: popIn 0.25s ease both; }
+@keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+.submit-spinner { width: 44px; height: 44px; border: 4px solid rgba(21,94,239,0.15); border-top-color: var(--blue-mid); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
 .submit-success { margin-bottom: 12px; display: flex; justify-content: center; }
-.submit-msg { font-size: 14px; color: var(--text-secondary); }
+.submit-title { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+.submit-msg { font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; }
+
 @media (max-width: 900px) {
-  /* Back to the original single-column flow on narrow screens */
-  .absen-grid { grid-template-columns: 1fr; gap: 16px; }
+  /* Satu kolom; kartu diurutkan sesuai alur: status → lokasi → selfie → kirim */
+  .absen-grid { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+  .absen-col { display: contents; }
+  #cardStatus { order: 1; } #cardGps { order: 2; } #cardCamera { order: 3; } #cardSubmit { order: 4; }
+  #quickLinkPerizinan { order: 5; } #cardLog { order: 6; } #wfhManageCard { order: 7; }
   .absen-hero-clock { text-align: left; }
+}
+@media (max-width: 480px) {
+  #map { height: 200px; }
+  .btn-grid { grid-template-columns: 1fr; }
+  .izin-card { flex-wrap: wrap; }
+  .izin-btn { width: 100%; justify-content: center; }
+  .log-badges .log-type-badge.clock_in { display: none; }
 }
 </style>
 </head>
@@ -402,102 +282,144 @@
     <div id="appContent" class="app-content" style="display:none;">
       <div class="absen-container">
 
-        <!-- Greeting & Clock -->
+        <!-- Sapaan, jam, status singkat -->
         <div class="page-hero ph-blue">
           <div class="page-hero-c">
             <div class="absen-hero-date" id="greetDate">Memuat tanggal...</div>
             <h1><span id="greetIconWrap"></span> <span id="greetName">Halo!</span></h1>
             <p id="greetSub">Selamat bekerja hari ini</p>
+            <span class="hero-pill" id="heroStatus" style="display:none;"></span>
           </div>
           <div class="absen-hero-clock">
             <div class="ahc-time" id="liveClock">--:--:--</div>
-            <div class="ahc-label">Waktu Sekarang</div>
+            <div class="ahc-label">Waktu Sekarang · WIB</div>
           </div>
         </div>
 
         <div class="absen-grid" id="absenGrid">
-        <!-- LEFT: capture tools -->
+        <!-- KIRI: ambil data (lokasi & selfie) -->
         <div class="absen-col" id="absenLeftCol">
 
-        <!-- GPS & Map -->
-        <div class="gps-card">
-          <div class="gps-header">
-            <div class="gps-icon"><i data-lucide="map-pin" style="color:var(--blue-mid);width:18px;height:18px;"></i></div>
-            <div class="gps-info">
-              <div class="gps-status" id="gpsStatus">Meminta akses lokasi...</div>
-              <div class="gps-coords" id="gpsCoords">—</div>
-              <div class="gps-address" id="gpsAddress">Mohon izinkan akses lokasi</div>
+          <!-- 1 · Lokasi -->
+          <div class="ab-card" id="cardGps">
+            <div class="ab-head">
+              <div class="ab-step" id="gpsStepBadge">1</div>
+              <div class="ab-head-text">
+                <div class="ab-title">Lokasi Kamu</div>
+                <div class="ab-sub" id="gpsAddress">Mohon izinkan akses lokasi</div>
+              </div>
+              <span class="ab-pill is-wait" id="gpsStatus"><i data-lucide="loader"></i> Mencari...</span>
+            </div>
+            <div class="map-wrap">
+              <div id="map"></div>
+              <span class="map-chip" id="mapChip" style="display:none;"><i data-lucide="crosshair"></i><span></span></span>
+              <button type="button" class="map-btn" id="btnRecenter" onclick="recenterMap()" title="Pusatkan peta" aria-label="Pusatkan peta"><i data-lucide="locate-fixed"></i></button>
+            </div>
+            <div class="map-legend">
+              <span><i class="lg-dot"></i> Posisi kamu</span>
+              <span><i class="lg-area"></i> Area kantor (maks 50 m)</span>
+              <span class="gps-coords" id="gpsCoords">—</span>
+            </div>
+            <div class="gps-msg" id="gpsMsg" hidden></div>
+          </div>
+
+          <!-- 2 · Selfie -->
+          <div class="ab-card" id="cardCamera">
+            <div class="ab-head">
+              <div class="ab-step" id="camStepBadge">2</div>
+              <div class="ab-head-text">
+                <div class="ab-title">Foto Selfie</div>
+                <div class="ab-sub">Pastikan wajah terlihat jelas & pencahayaan cukup</div>
+              </div>
+            </div>
+            <div class="camera-preview-area" id="cameraArea">
+              <div class="camera-placeholder" id="cameraPlaceholder">
+                <div class="cam-ph-ico"><i data-lucide="camera"></i></div>
+                <b>Kamera belum aktif</b>
+                <p>Tekan <b>Buka Kamera</b>, posisikan wajah di dalam bingkai, lalu ambil foto.</p>
+              </div>
+              <video id="cameraVideo" autoplay playsinline muted style="transform: scaleX(-1);"></video>
+              <canvas id="cameraCanvas"></canvas>
+              <img id="selfiePreview" alt="Preview foto selfie">
+              <div class="cam-guide"><span>Posisikan wajah di dalam bingkai</span></div>
+              <span class="cam-badge"><i data-lucide="check"></i> Foto siap</span>
+            </div>
+            <div class="camera-actions">
+              <button class="btn-camera primary" onclick="startCamera()" id="btnStartCam"><i data-lucide="camera"></i> Buka Kamera</button>
+              <button class="btn-camera primary" onclick="takeSelfie()" id="btnSnap" style="display:none;"><i data-lucide="aperture"></i> Ambil Foto</button>
+              <button class="btn-camera" onclick="retakeSelfie()" id="btnRetake" style="display:none;"><i data-lucide="rotate-ccw"></i> Foto Ulang</button>
             </div>
           </div>
-          <div id="map"></div>
-        </div>
 
-        <!-- Camera / Selfie -->
-        <div class="camera-card">
-          <div class="camera-header">
-            <i data-lucide="camera" style="width:16px;height:16px;"></i>
-            Foto Selfie
-          </div>
-          <div class="camera-preview-area">
-            <div class="camera-placeholder" id="cameraPlaceholder">
-              <i data-lucide="camera" style="width:36px;height:36px;opacity:0.4;"></i>
-              <p>Belum ada foto</p>
-            </div>
-            <video id="cameraVideo" autoplay playsinline muted style="transform: scaleX(-1);"></video>
-            <canvas id="cameraCanvas"></canvas>
-            <img id="selfiePreview" alt="Selfie preview">
-          </div>
-          <div class="camera-actions">
-            <button class="btn-camera" onclick="startCamera()" id="btnStartCam"><i data-lucide="camera" style="width:16px;height:16px;"></i> Buka Kamera</button>
-            <button class="btn-camera primary" onclick="takeSelfie()" id="btnSnap" style="display:none;"><i data-lucide="aperture" style="width:16px;height:16px;"></i> Ambil Foto</button>
-            <button class="btn-camera" onclick="retakeSelfie()" id="btnRetake" style="display:none;"><i data-lucide="rotate-ccw" style="width:16px;height:16px;"></i> Ulangi</button>
-          </div>
-        </div>
+        </div><!-- /.absen-col KIRI -->
 
-        </div><!-- /.absen-col LEFT -->
-
-        <!-- RIGHT: status, action & history -->
+        <!-- KANAN: status, kirim, izin, riwayat -->
         <div class="absen-col">
 
-        <!-- Today Status -->
-        <div class="absen-status-row" id="absenStatusRow">
-          <div class="absen-status-card" id="statusClockIn" style="width: 100%; flex: none;">
-            <div class="absen-status-icon"><i data-lucide="clock" style="color:var(--blue-mid);width:22px;height:22px;"></i></div>
-            <div class="absen-status-label">Status Absensi Hari Ini</div>
-            <div class="absen-status-time" id="timeClockIn">Belum Absen</div>
+          <!-- Status hari ini -->
+          <div class="ab-card status-card" id="cardStatus">
+            <div class="status-ico" id="statusIco"><i data-lucide="clock"></i></div>
+            <div id="absenStatusRow" style="min-width:0;">
+              <div class="status-label">Status Absensi Hari Ini</div>
+              <div class="status-value" id="timeClockIn">Belum Absen</div>
+              <div class="status-note" id="statusNote">Lengkapi lokasi & selfie, lalu kirim absen.</div>
+            </div>
           </div>
-        </div>
 
-        <!-- Absen Buttons -->
-        <div class="absen-actions" id="absenActionsWrap" style="display: block;"></div>
-
-        <!-- Quick Link Perizinan -->
-        <div id="quickLinkPerizinan" style="margin-top: 16px; text-align: center; background: rgba(48,127,226,0.08); border: 1px solid rgba(48,127,226,0.2); border-radius: 14px; padding: 16px;">
-          <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Halangan hadir atau perlu izin/sakit?</div>
-          <a href="/perizinan.html" style="display:inline-flex; align-items:center; gap:8px; padding: 10px 18px; font-size: 13px; font-weight:700; color:#ffffff; background:linear-gradient(135deg, #307fe2 0%, #1e5bb8 100%); border-radius:10px; text-decoration: none;">
-            <i data-lucide="file-check-2" style="width:16px;height:16px;"></i> Ajukan Izin / Sakit
-          </a>
-        </div>
-
-        <!-- Today's Log (Realtime) -->
-        <div class="today-log">
-          <div class="today-log-header">
-            <span>Riwayat Absen Hari Ini</span>
-            <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+          <!-- 3 · Kirim absen -->
+          <div class="ab-card" id="cardSubmit">
+            <div class="ab-head">
+              <div class="ab-step" id="submitStepBadge">3</div>
+              <div class="ab-head-text">
+                <div class="ab-title">Kirim Absen</div>
+                <div class="ab-sub">Cek syarat di bawah sebelum mengirim</div>
+              </div>
+            </div>
+            <div class="ready-list" id="readyList">
+              <div class="ready-item" id="rdGps"><span class="ready-ico"><i data-lucide="map-pin"></i></span> Lokasi GPS terdeteksi</div>
+              <div class="ready-item" id="rdArea"><span class="ready-ico"><i data-lucide="building-2"></i></span> Berada di area kantor <small id="rdAreaNote">wajib untuk WFO</small></div>
+              <div class="ready-item" id="rdPhoto"><span class="ready-ico"><i data-lucide="camera"></i></span> Foto selfie sudah diambil</div>
+            </div>
+            <div class="absen-actions" id="absenActionsWrap"></div>
           </div>
-          <div id="logList"><div class="log-empty">Memuat data absensi...</div></div>
-        </div>
 
-        <!-- WFH Management (Staff only) -->
-        <div class="today-log" id="wfhManageCard" style="display:none;">
-          <div class="today-log-header">
-            <span>Kelola Izin WFH Intern</span>
-            <input type="date" id="wfhDate" style="font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text-primary);font-family:'Inter',sans-serif;">
+          <!-- Izin / sakit -->
+          <div class="ab-card izin-card" id="quickLinkPerizinan">
+            <div class="izin-ico"><i data-lucide="file-heart"></i></div>
+            <div class="izin-text">
+              <b>Berhalangan hadir?</b>
+              <span>Ajukan izin atau sakit supaya tetap tercatat.</span>
+            </div>
+            <a class="izin-btn" href="/perizinan.html"><i data-lucide="file-check"></i> Ajukan Izin / Sakit</a>
           </div>
-          <div id="wfhInternList"><div class="log-empty">Memuat data intern...</div></div>
-        </div>
 
-        </div><!-- /.absen-col RIGHT -->
+          <!-- Riwayat hari ini -->
+          <div class="ab-card" id="cardLog">
+            <div class="ab-head">
+              <div class="ab-step" style="background:var(--bg-surface);color:var(--text-secondary);"><i data-lucide="history"></i></div>
+              <div class="ab-head-text">
+                <div class="ab-title">Riwayat Absen Hari Ini</div>
+                <div class="ab-sub">Diperbarui otomatis tiap 30 detik</div>
+              </div>
+              <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+            </div>
+            <div id="logList"><div class="log-empty">Memuat data absensi...</div></div>
+          </div>
+
+          <!-- Kelola izin WFH (Staff) -->
+          <div class="ab-card" id="wfhManageCard" style="display:none;">
+            <div class="ab-head">
+              <div class="ab-step"><i data-lucide="house"></i></div>
+              <div class="ab-head-text">
+                <div class="ab-title">Kelola Izin WFH Intern</div>
+                <div class="ab-sub">Nyalakan saklar untuk mengizinkan WFH di tanggal ini</div>
+              </div>
+              <input type="date" id="wfhDate" class="wfh-date">
+            </div>
+            <div id="wfhInternList"><div class="log-empty">Memuat data intern...</div></div>
+          </div>
+
+        </div><!-- /.absen-col KANAN -->
         </div><!-- /.absen-grid -->
 
       </div><!-- .absen-container -->
@@ -595,6 +517,7 @@ initAppShell('absen', function(user) {
 // ─── Absen Buttons ───
 // Staff selalu bebas pilih WFO/WFH sendiri. Intern hanya boleh WFH kalau
 // sudah diizinkan staff untuk hari ini (lihat /api/wfh-assignments/mine).
+var wfhAllowedToday = false;
 async function renderAbsenButtons(user) {
   const wrap = document.getElementById('absenActionsWrap');
   if (!wrap) return;
@@ -609,47 +532,72 @@ async function renderAbsenButtons(user) {
       wfhAllowed = false;
     }
   }
+  wfhAllowedToday = wfhAllowed;
 
   if (wfhAllowed) {
     wrap.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="btn-grid">
         <button class="btn-absen btn-clock-in" id="btnWFO" onclick="submitAbsen('wfo')">
-          <span class="btn-absen-icon"><i data-lucide="building-2" style="width:24px;height:24px;"></i></span>
-          <span class="btn-absen-text">Absen WFO</span>
-          <span class="btn-absen-sub">Wajib di lokasi kantor</span>
+          <span class="btn-absen-icon"><i data-lucide="building-2"></i></span>
+          <span><span class="btn-absen-text">Absen WFO</span><span class="btn-absen-sub">Wajib di area kantor</span></span>
         </button>
-        <button class="btn-absen" id="btnWFH" onclick="submitAbsen('wfh')" style="background:linear-gradient(135deg,#307fe2,#1e5bb8);color:#fff;box-shadow:0 4px 16px rgba(48,127,226,0.35);">
-          <span class="btn-absen-icon"><i data-lucide="home" style="width:24px;height:24px;"></i></span>
-          <span class="btn-absen-text">Absen WFH</span>
-          <span class="btn-absen-sub">Lokasi bebas</span>
+        <button class="btn-absen btn-wfh" id="btnWFH" onclick="submitAbsen('wfh')">
+          <span class="btn-absen-icon"><i data-lucide="house"></i></span>
+          <span><span class="btn-absen-text">Absen WFH</span><span class="btn-absen-sub">Lokasi bebas</span></span>
         </button>
-      </div>`;
+      </div>
+      <div class="absen-note"><i data-lucide="info"></i> Kamu diizinkan WFH hari ini — pilih salah satu.</div>`;
   } else {
     wrap.innerHTML = `
-      <button class="btn-absen btn-clock-in" id="btnWFO" onclick="submitAbsen('wfo')" style="width: 100%;">
-        <span class="btn-absen-icon"><i data-lucide="check-circle-2" style="width:24px;height:24px;"></i></span>
-        <span class="btn-absen-text">Absen Sekarang</span>
-        <span class="btn-absen-sub">Kirim Foto &amp; Lokasi GPS</span>
+      <button class="btn-absen btn-clock-in" id="btnWFO" onclick="submitAbsen('wfo')">
+        <span class="btn-absen-icon"><i data-lucide="circle-check"></i></span>
+        <span><span class="btn-absen-text">Absen Sekarang</span><span class="btn-absen-sub">Kirim foto & lokasi GPS (WFO)</span></span>
       </button>
-      <div style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:8px;">WFH belum diizinkan staff untuk hari ini.</div>`;
+      <div class="absen-note"><i data-lucide="info"></i> WFH belum diizinkan staff untuk hari ini.</div>`;
   }
+  updateReadiness();
+  if (typeof renderIcons === 'function') renderIcons();
+}
+
+// ─── Syarat absen (checklist langkah 3) — diperbarui tiap lokasi/foto berubah ───
+function fmtDist(m) {
+  return m < 1000 ? `${m} m` : `${(m / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} km`;
+}
+function setReady(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('is-ok', state === 'ok');
+  el.classList.toggle('is-bad', state === 'bad');
+}
+function updateReadiness() {
+  const hasGps = gpsData.lat !== null && gpsData.lng !== null;
+  const dist = hasGps ? calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG) : null;
+  const inArea = hasGps && dist <= MAX_RADIUS;
+  setReady('rdGps', hasGps ? 'ok' : '');
+  setReady('rdArea', !hasGps ? '' : inArea ? 'ok' : (wfhAllowedToday ? '' : 'bad'));
+  const note = document.getElementById('rdAreaNote');
+  if (note) note.textContent = !hasGps ? 'wajib untuk WFO' : inArea ? `${fmtDist(dist)} dari kantor` : `${fmtDist(dist)} dari kantor${wfhAllowedToday ? ' · WFH tetap bisa' : ''}`;
+  setReady('rdPhoto', selfieBase64 ? 'ok' : '');
+
+  const badge = (id, ok, n) => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.classList.toggle('is-ok', ok);
+    b.innerHTML = ok ? '<i data-lucide="check"></i>' : n;
+  };
+  badge('gpsStepBadge', inArea || (hasGps && wfhAllowedToday), '1');
+  badge('camStepBadge', !!selfieBase64, '2');
   if (typeof renderIcons === 'function') renderIcons();
 }
 
 // ─── Staff tidak perlu absen sendiri — sembunyikan GPS, kamera, dan tombol absen ───
 function applyStaffLayout(user) {
   if (user.role !== 'staff' && user.role !== 'sistem') return;
-
+  const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
   const grid = document.getElementById('absenGrid');
-  const leftCol = document.getElementById('absenLeftCol');
-  const statusRow = document.getElementById('absenStatusRow');
-  const actionsWrap = document.getElementById('absenActionsWrap');
-  const topbarSub = document.getElementById('topbarSub');
-
   if (grid) grid.style.gridTemplateColumns = '1fr';
-  if (leftCol) leftCol.style.display = 'none';
-  if (statusRow) statusRow.style.display = 'none';
-  if (actionsWrap) actionsWrap.style.display = 'none';
+  hide('absenLeftCol'); hide('cardStatus'); hide('cardSubmit'); hide('heroStatus');
+  const topbarSub = document.getElementById('topbarSub');
   if (topbarSub) topbarSub.textContent = 'Pantau kehadiran & kelola WFH intern';
 }
 
@@ -674,7 +622,7 @@ async function loadWfhManage(date) {
   try {
     const [usersRes, assignRes] = await Promise.all([
       fetch('/api/users'),
-      fetch(`/api/wfh-assignments?date=${date}`)
+      fetch(`/api/wfh-assignments?date=${encodeURIComponent(date)}`)
     ]);
     const users = await usersRes.json();
     const assignments = await assignRes.json();
@@ -682,37 +630,63 @@ async function loadWfhManage(date) {
     const assignedIds = new Set((assignments || []).map(a => a.user_id));
 
     if (!interns.length) {
-      listEl.innerHTML = '<div class="log-empty">Belum ada akun intern.</div>';
+      listEl.innerHTML = '<div class="log-empty"><i data-lucide="users"></i>Belum ada akun intern.</div>';
+      if (typeof renderIcons === 'function') renderIcons();
       return;
     }
 
     const rows = interns.map(u => {
       const allowed = assignedIds.has(u.id);
-      const initial = (u.name || u.email || '?').charAt(0).toUpperCase();
+      const initial = escHtml((u.name || u.email || '?').charAt(0).toUpperCase());
+      const avatar = u.avatar_url && /^https?:\/\//.test(u.avatar_url)
+        ? `<img src="${escHtml(u.avatar_url)}" alt="" onerror="this.remove()">` : '';
       return `<div class="log-item">
-        <div class="log-avatar">
-          ${u.avatar_url && u.avatar_url.startsWith('http') ? `<img src="${u.avatar_url}" alt="" onerror="this.style.display='none'">` : initial}
-        </div>
+        <div class="log-avatar">${avatar || initial}</div>
         <div class="log-info">
           <div class="log-name">${escHtml(u.name || u.email)}</div>
-          <div class="log-type-time">${escHtml(u.email)}</div>
+          <div class="log-type-time"><span>${escHtml(u.email)}</span></div>
         </div>
-        <span class="log-type-badge" style="background:${allowed ? 'rgba(48,127,226,0.08)' : 'rgba(107,114,128,0.08)'};color:${allowed ? '#307fe2' : '#6b7280'};border:1px solid ${allowed ? 'rgba(48,127,226,0.15)' : 'rgba(107,114,128,0.15)'};">${allowed ? 'WFH Diizinkan' : 'WFO'}</span>
+        <span class="log-type-badge ${allowed ? 'wfh' : 'wfo'}" id="wfhBadge-${escHtml(u.id)}">${allowed ? 'WFH' : 'WFO'}</span>
+        <label class="wfh-switch" title="${allowed ? 'Cabut izin WFH' : 'Izinkan WFH'}">
+          <input type="checkbox" ${allowed ? 'checked' : ''} data-uid="${escHtml(u.id)}" onchange="toggleWfh(this)">
+          <span></span>
+        </label>
       </div>`;
     }).join('');
 
     listEl.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;">
-        <div style="font-size:12.5px;color:var(--text-secondary);font-weight:600;">${assignedIds.size} dari ${interns.length} intern diizinkan WFH</div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="bulkSetWfh(true)" style="font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#307fe2,#1e5bb8);color:#fff;cursor:pointer;font-family:'Inter',sans-serif;">Izinkan Semua WFH</button>
-          <button onclick="bulkSetWfh(false)" style="font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;font-family:'Inter',sans-serif;">Cabut Semua</button>
+      <div class="wfh-summary">
+        <div><b>${assignedIds.size} dari ${interns.length}</b> <span>intern diizinkan WFH</span></div>
+        <div class="wfh-bulk">
+          <button class="is-primary" onclick="bulkSetWfh(true)">Izinkan Semua</button>
+          <button onclick="bulkSetWfh(false)">Cabut Semua</button>
         </div>
       </div>
       ${rows}`;
     if (typeof renderIcons === 'function') renderIcons();
   } catch (e) {
     listEl.innerHTML = '<div class="log-empty">Gagal memuat data.</div>';
+  }
+}
+
+// Saklar per intern — pakai POST / DELETE /api/wfh-assignments yang sudah ada.
+async function toggleWfh(input) {
+  const date = document.getElementById('wfhDate').value;
+  const allow = input.checked;
+  input.disabled = true;
+  try {
+    const res = await fetch('/api/wfh-assignments', {
+      method: allow ? 'POST' : 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: input.dataset.uid, date })
+    });
+    if (!res.ok) throw new Error();
+    showToastMsg(allow ? 'Izin WFH diberikan.' : 'Izin WFH dicabut.', false);
+    loadWfhManage(date);
+  } catch (e) {
+    input.checked = !allow;
+    input.disabled = false;
+    showToastMsg('Gagal memperbarui izin WFH.', true);
   }
 }
 
@@ -739,28 +713,73 @@ function updateClock() {
 }
 
 // ─── Map Init ───
+// Peta dibuka di lokasi kantor + lingkaran area absen (radius MAX_RADIUS),
+// supaya user langsung tahu harus berada di mana untuk absen WFO.
+var accuracyCircle = null;
 function initMap() {
   if(map) { try{map.remove()}catch(e){} }
-  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-6.2088, 106.8456], 14);
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([TARGET_LAT, TARGET_LNG], 17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
   }).addTo(map);
   L.control.attribution({ prefix: false }).addTo(map);
+  L.circle([TARGET_LAT, TARGET_LNG], {
+    radius: MAX_RADIUS, color: '#12b76a', weight: 2, dashArray: '6 6', fillColor: '#12b76a', fillOpacity: 0.12
+  }).addTo(map);
+  L.marker([TARGET_LAT, TARGET_LNG], {
+    icon: L.divIcon({
+      html: '<div class="office-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg></div>',
+      iconSize: [30, 30], iconAnchor: [15, 15], className: ''
+    }),
+    title: 'Rumah BUMN Jakarta'
+  }).addTo(map);
   setTimeout(() => map.invalidateSize(), 200);
+  // Leaflet cuma otomatis menyesuaikan ukuran saat jendela di-resize — kalau
+  // lebar kartunya yang berubah (mis. sidebar dibuka/tutup), ukur ulang juga.
+  if (window.ResizeObserver) new ResizeObserver(() => map && map.invalidateSize()).observe(document.getElementById('map'));
+}
+
+// Posisi peta: kalau user dekat kantor (≤ 3 km) tampilkan keduanya,
+// kalau jauh cukup fokus ke posisi user.
+function recenterMap() {
+  if (!map) return;
+  if (gpsData.lat === null) { map.setView([TARGET_LAT, TARGET_LNG], 17); return; }
+  const dist = calculateDistance(gpsData.lat, gpsData.lng, TARGET_LAT, TARGET_LNG);
+  if (dist <= 3000) {
+    map.fitBounds(L.latLngBounds([[gpsData.lat, gpsData.lng], [TARGET_LAT, TARGET_LNG]]).pad(0.35), { maxZoom: 18 });
+  } else {
+    map.setView([gpsData.lat, gpsData.lng], 16);
+  }
 }
 
 // ─── GPS ───
+function setGpsPill(state, icon, text) {
+  const el = document.getElementById('gpsStatus');
+  el.className = 'ab-pill ' + state;
+  el.innerHTML = `<i data-lucide="${icon}"></i> ${escHtml(text)}`;
+}
+function setGpsMsg(state, icon, text) {
+  const el = document.getElementById('gpsMsg');
+  if (!state) { el.hidden = true; return; }
+  el.hidden = false;
+  el.className = 'gps-msg ' + state;
+  el.innerHTML = `<i data-lucide="${icon}"></i><span></span>`;
+  el.querySelector('span').textContent = text;
+}
+
 function getLocation() {
-  const statusEl = document.getElementById('gpsStatus');
   const coordsEl = document.getElementById('gpsCoords');
   const addressEl = document.getElementById('gpsAddress');
 
   if (!navigator.geolocation) {
-    setStatusIcon(statusEl, 'x-circle', '#dc2626', 'GPS tidak didukung browser ini');
+    setGpsPill('is-bad', 'circle-x', 'Tidak didukung');
+    setGpsMsg('is-bad', 'circle-x', 'Browser ini tidak mendukung GPS. Coba pakai Chrome/Safari terbaru.');
+    if (typeof renderIcons === 'function') renderIcons();
     return;
   }
 
-  setStatusIcon(statusEl, 'radio', 'var(--blue-mid)', 'Mendapatkan lokasi...');
+  setGpsPill('is-wait', 'loader', 'Mencari...');
+  let firstFix = true;
 
   gpsWatchId = navigator.geolocation.watchPosition(
     (pos) => {
@@ -774,50 +793,56 @@ function getLocation() {
       var btnWFH = document.getElementById('btnWFH');
 
       if (distance <= MAX_RADIUS) {
-        setStatusIcon(statusEl, 'check-circle-2', '#059669', `<span style="color:#059669;font-weight:700;">Jarak: ${distance}m (Dalam Area)</span> — ±${gpsData.accuracy}m`);
+        setGpsPill('is-ok', 'circle-check', `Dalam area · ${fmtDist(distance)}`);
+        setGpsMsg(null);
         if (btnWFO) btnWFO.disabled = false;
       } else {
-        setStatusIcon(statusEl, 'alert-triangle', '#dc2626', `<span style="color:#dc2626;font-weight:700;">Jarak: ${distance}m (Di luar area - Maks ${MAX_RADIUS}m)</span>`);
+        setGpsPill('is-bad', 'triangle-alert', `Di luar area · ${fmtDist(distance)}`);
+        setGpsMsg('is-bad', 'triangle-alert', `Kamu ${fmtDist(distance)} dari kantor (maks ${MAX_RADIUS} m) — mendekatlah ke area hijau untuk absen WFO.`);
         if (btnWFO) btnWFO.disabled = true;
       }
       if (btnWFH) btnWFH.disabled = false;
 
       coordsEl.textContent = `${gpsData.lat.toFixed(6)}, ${gpsData.lng.toFixed(6)}`;
+      const chip = document.getElementById('mapChip');
+      chip.style.display = '';
+      chip.querySelector('span').textContent = `Akurasi ±${gpsData.accuracy} m`;
 
-      // Update map
+      // Update peta: titik user + lingkaran akurasi ikut pindah
       if (map) {
-        map.setView([gpsData.lat, gpsData.lng], 16);
         if (myMarker) {
           myMarker.setLatLng([gpsData.lat, gpsData.lng]);
+          if (accuracyCircle) accuracyCircle.setLatLng([gpsData.lat, gpsData.lng]).setRadius(gpsData.accuracy);
         } else {
-          const icon = L.divIcon({
-            html: `<div style="background:#307fe2;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7],
-            className: ''
-          });
-          myMarker = L.marker([gpsData.lat, gpsData.lng], { icon }).addTo(map);
-          L.circle([gpsData.lat, gpsData.lng], {
+          const icon = L.divIcon({ html: '<div class="me-dot"></div>', iconSize: [16, 16], iconAnchor: [8, 8], className: '' });
+          myMarker = L.marker([gpsData.lat, gpsData.lng], { icon, zIndexOffset: 1000 }).addTo(map);
+          accuracyCircle = L.circle([gpsData.lat, gpsData.lng], {
             radius: gpsData.accuracy,
             color: '#307fe2', fillColor: '#307fe2', fillOpacity: 0.08, weight: 1
           }).addTo(map);
         }
+        if (firstFix) { recenterMap(); firstFix = false; }
       }
 
       // Reverse geocode via Nominatim (OpenStreetMap)
       if (!gpsData.address || gpsData.address === '—') {
+        gpsData.address = '…';
         fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gpsData.lat}&lon=${gpsData.lng}&format=json`)
           .then(r => r.json())
           .then(data => {
-            const addr = data.address;
+            const addr = data.address || {};
             const parts = [addr.road, addr.suburb, addr.city || addr.county].filter(Boolean);
-            gpsData.address = parts.join(', ') || data.display_name.split(',').slice(0,3).join(',');
+            gpsData.address = parts.join(', ') || String(data.display_name || '').split(',').slice(0,3).join(',');
             addressEl.textContent = gpsData.address;
           })
-          .catch(() => { gpsData.address = `${gpsData.lat.toFixed(4)}, ${gpsData.lng.toFixed(4)}`; });
-      } else {
+          .catch(() => {
+            gpsData.address = `${gpsData.lat.toFixed(4)}, ${gpsData.lng.toFixed(4)}`;
+            addressEl.textContent = gpsData.address;
+          });
+      } else if (gpsData.address !== '…') {
         addressEl.textContent = gpsData.address;
       }
+      updateReadiness();
     },
     (err) => {
       // err.code 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT —
@@ -826,11 +851,14 @@ function getLocation() {
       // semua jadi "izin ditolak", user malah disuruh benerin izin browser
       // yang sebenarnya sudah benar, padahal solusinya cuma pindah dekat
       // jendela/ruang terbuka.
-      let msg = 'Akses lokasi ditolak — GPS diperlukan untuk absen';
-      if (err.code === 2) msg = 'Sinyal GPS tidak ditemukan — coba pindah ke dekat jendela/ruang terbuka';
-      else if (err.code === 3) msg = 'GPS lambat merespons (timeout) — coba lagi sebentar';
-      setStatusIcon(statusEl, 'alert-triangle', '#dc2626', msg);
-      coordsEl.textContent = err.code === 1 ? 'Izinkan akses lokasi di browser' : 'Mencoba ulang otomatis...';
+      let msg = 'Akses lokasi ditolak — GPS diperlukan untuk absen. Izinkan akses lokasi di pengaturan browser.';
+      let pill = 'Izin ditolak';
+      if (err.code === 2) { msg = 'Sinyal GPS tidak ditemukan — coba pindah ke dekat jendela/ruang terbuka.'; pill = 'Sinyal lemah'; }
+      else if (err.code === 3) { msg = 'GPS lambat merespons — mencoba lagi otomatis...'; pill = 'Timeout'; }
+      setGpsPill('is-bad', 'triangle-alert', pill);
+      setGpsMsg('is-bad', 'triangle-alert', msg);
+      coordsEl.textContent = err.code === 1 ? '—' : 'Mencoba ulang...';
+      if (typeof renderIcons === 'function') renderIcons();
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
   );
@@ -842,6 +870,7 @@ function startCamera() {
   const placeholder = document.getElementById('cameraPlaceholder');
   const btnStart = document.getElementById('btnStartCam');
   const btnSnap = document.getElementById('btnSnap');
+  const area = document.getElementById('cameraArea');
 
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
     .then(stream => {
@@ -849,11 +878,13 @@ function startCamera() {
       video.srcObject = stream;
       video.style.display = 'block';
       placeholder.style.display = 'none';
+      area.classList.add('is-live');
+      area.classList.remove('is-shot');
       btnStart.style.display = 'none';
       btnSnap.style.display = 'flex';
     })
     .catch(() => {
-      alert('Tidak dapat membuka kamera. Pastikan izin akses kamera diberikan pada browser Anda.');
+      showToastMsg('Tidak dapat membuka kamera. Pastikan izin akses kamera diberikan di browser.', true);
     });
 }
 
@@ -863,6 +894,7 @@ function takeSelfie() {
   const preview = document.getElementById('selfiePreview');
   const btnSnap = document.getElementById('btnSnap');
   const btnRetake = document.getElementById('btnRetake');
+  const area = document.getElementById('cameraArea');
 
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -875,26 +907,29 @@ function takeSelfie() {
   preview.src = selfieBase64;
   preview.style.display = 'block';
   video.style.display = 'none';
+  area.classList.remove('is-live');
+  area.classList.add('is-shot');
 
   // Stop camera stream
   if (window.cameraStream) cameraStream.getTracks().forEach(t => t.stop());
 
   btnSnap.style.display = 'none';
   btnRetake.style.display = 'flex';
+  updateReadiness();
 }
 
 function retakeSelfie() {
   const preview = document.getElementById('selfiePreview');
-  const placeholder = document.getElementById('cameraPlaceholder');
-  const btnStart = document.getElementById('btnStartCam');
-  const btnRetake = document.getElementById('btnRetake');
+  const area = document.getElementById('cameraArea');
 
   selfieBase64 = null;
   preview.style.display = 'none';
   preview.src = '';
-  placeholder.style.display = 'flex';
-  btnStart.style.display = 'flex';
-  btnRetake.style.display = 'none';
+  area.classList.remove('is-shot');
+  document.getElementById('btnRetake').style.display = 'none';
+  updateReadiness();
+  // Langsung buka kamera lagi, tidak perlu klik "Buka Kamera" dua kali.
+  startCamera();
 }
 
 // ─── Submit Absen ───
@@ -945,7 +980,8 @@ async function submitAbsen(mode) {
   overlay.innerHTML = `
     <div class="submit-box">
       <div class="submit-spinner"></div>
-      <div class="submit-msg">Mengirim data absensi...</div>
+      <div class="submit-title">Mengirim absensi...</div>
+      <div class="submit-msg">Mengunggah foto & lokasi, tunggu sebentar.</div>
     </div>`;
   document.body.appendChild(overlay);
 
@@ -965,11 +1001,10 @@ async function submitAbsen(mode) {
     const data = await res.json();
 
     overlay.querySelector('.submit-box').innerHTML = `
-      <div class="submit-success"><i data-lucide="${res.ok ? 'check-circle-2' : 'x-circle'}" style="width:52px;height:52px;color:${res.ok ? '#16a34a' : '#dc2626'};"></i></div>
-      <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
-        ${res.ok ? 'Berhasil!' : 'Gagal!'}
-      </div>
-      <div class="submit-msg">${data.message || data.error}</div>`;
+      <div class="submit-success"><i data-lucide="${res.ok ? 'circle-check' : 'circle-x'}" style="width:56px;height:56px;color:${res.ok ? '#12b76a' : '#dc2626'};"></i></div>
+      <div class="submit-title">${res.ok ? 'Absen berhasil!' : 'Absen gagal'}</div>
+      <div class="submit-msg"></div>`;
+    overlay.querySelector('.submit-msg').textContent = data.message || data.error || '';
     if (typeof renderIcons === 'function') renderIcons();
     if (res.ok) stopGpsWatch();
 
@@ -999,63 +1034,73 @@ function updateStatusCards(records) {
   const myRecords = records.filter(r => r.user_email === currentUser.email);
   const clockIn = myRecords.find(r => r.type === 'clock_in');
 
-  const ciEl = document.getElementById('statusClockIn');
+  const card = document.getElementById('cardStatus');
+  const ico = document.getElementById('statusIco');
+  const note = document.getElementById('statusNote');
+  const pill = document.getElementById('heroStatus');
+  const isIntern = currentUser.role !== 'staff' && currentUser.role !== 'sistem';
 
   if (clockIn) {
-    const time = new Date(clockIn.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
-    document.getElementById('timeClockIn').textContent = `Sudah Absen (${time})`;
-    ciEl.classList.add('filled');
+    const time = new Date(clockIn.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const mode = clockIn.work_mode === 'wfh' ? 'WFH' : clockIn.work_mode === 'wfo' ? 'WFO' : '';
+    document.getElementById('timeClockIn').textContent = 'Sudah Absen';
+    note.textContent = `Tercatat pukul ${time} WIB${mode ? ' · ' + mode : ''}`;
+    card.classList.add('is-done');
+    ico.innerHTML = '<i data-lucide="circle-check"></i>';
+    if (isIntern) { pill.style.display = ''; pill.className = 'hero-pill is-done'; pill.innerHTML = `<i data-lucide="circle-check"></i> Sudah absen · ${time}`; }
   } else {
     document.getElementById('timeClockIn').textContent = 'Belum Absen';
-    ciEl.classList.remove('filled');
+    note.textContent = 'Lengkapi lokasi & selfie, lalu kirim absen.';
+    card.classList.remove('is-done');
+    ico.innerHTML = '<i data-lucide="clock"></i>';
+    if (isIntern) { pill.style.display = ''; pill.className = 'hero-pill'; pill.innerHTML = '<i data-lucide="clock"></i> Belum absen hari ini'; }
   }
+  if (typeof renderIcons === 'function') renderIcons();
 }
 
 
 function renderLog(records) {
   const list = document.getElementById('logList');
   if (!records.length) {
-    list.innerHTML = '<div class="log-empty">Belum ada absensi hari ini</div>';
+    list.innerHTML = '<div class="log-empty"><i data-lucide="inbox"></i>Belum ada absensi hari ini</div>';
+    if (typeof renderIcons === 'function') renderIcons();
     return;
   }
 
+  const isHttp = u => typeof u === 'string' && /^https?:\/\//.test(u);
   list.innerHTML = records.map(r => {
-    const initial = (r.user_name || r.user_email || '?').charAt(0).toUpperCase();
+    const initial = escHtml((r.user_name || r.user_email || '?').charAt(0).toUpperCase());
     const time = new Date(r.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}).replace(/\./g, ':');
     const label = r.type === 'clock_in' ? 'Clock In' : 'Clock Out';
-    const mapsUrl = `https://www.google.com/maps?q=${r.latitude},${r.longitude}`;
-    const modeLabel = r.work_mode === 'wfh' ? 'WFH' : (r.work_mode === 'wfo' ? 'WFO' : '');
-    const modeBadge = modeLabel ? `<span class="log-type-badge" style="background:${r.work_mode === 'wfh' ? 'rgba(48,127,226,0.08)' : 'rgba(107,114,128,0.08)'};color:${r.work_mode === 'wfh' ? '#307fe2' : '#6b7280'};border:1px solid ${r.work_mode === 'wfh' ? 'rgba(48,127,226,0.15)' : 'rgba(107,114,128,0.15)'};">${modeLabel}</span>` : '';
+    const lat = Number(r.latitude), lng = Number(r.longitude);
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    const mode = r.work_mode === 'wfh' ? 'wfh' : (r.work_mode === 'wfo' ? 'wfo' : '');
+    const avatar = isHttp(r.user_avatar) ? `<img src="${escHtml(r.user_avatar)}" alt="" onerror="this.remove()">` : '';
 
     return `<div class="log-item">
-      <div class="log-avatar">
-        ${r.user_avatar && r.user_avatar.startsWith('http') ? `<img src="${r.user_avatar}" alt="" onerror="this.style.display='none'">` : initial}
-      </div>
+      <div class="log-avatar">${avatar || initial}</div>
       <div class="log-info">
         <div class="log-name">${escHtml(r.user_name || r.user_email)}</div>
-        <div class="log-type-time">${time} · ${r.address ? escHtml(r.address.substring(0,40)) : 'Lokasi tercatat'}</div>
+        <div class="log-type-time"><b>${time}</b><span>${r.address ? escHtml(r.address) : 'Lokasi tercatat'}</span></div>
       </div>
-      ${modeBadge}
-      <span class="log-type-badge ${r.type}">${label}</span>
-      ${r.photo_url && r.photo_url.startsWith('http') ? `<img class="log-photo-thumb" src="${r.photo_url}" onclick="showLightbox('${r.photo_url}')" alt="Selfie">` : ''}
-      <a class="log-map-btn" href="${mapsUrl}" target="_blank" title="Lihat di Maps"><i data-lucide="map-pin" style="width:16px;height:16px;color:var(--blue-mid);"></i></a>
+      <div class="log-badges">
+        ${mode ? `<span class="log-type-badge ${mode}">${mode.toUpperCase()}</span>` : ''}
+        <span class="log-type-badge ${r.type === 'clock_out' ? 'clock_out' : 'clock_in'}">${label}</span>
+      </div>
+      ${isHttp(r.photo_url) ? `<img class="log-photo-thumb" src="${escHtml(r.photo_url)}" data-src="${escHtml(r.photo_url)}" onclick="showLightbox(this.dataset.src)" alt="Foto selfie" title="Lihat foto">` : ''}
+      ${Number.isFinite(lat) && Number.isFinite(lng) ? `<a class="log-map-btn" href="${mapsUrl}" target="_blank" rel="noopener noreferrer" title="Lihat di Maps"><i data-lucide="map-pin"></i></a>` : ''}
     </div>`;
   }).join('');
+  if (typeof renderIcons === 'function') renderIcons();
 }
 
 function showLightbox(src) {
   const lb = document.createElement('div');
   lb.className = 'lightbox';
-  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()"><i data-lucide="x" style="width:18px;height:18px;"></i></button><img src="${src}">`;
+  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()" aria-label="Tutup"><i data-lucide="x" style="width:18px;height:18px;"></i></button><img alt="Foto selfie">`;
+  lb.querySelector('img').src = src;
   lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
   document.body.appendChild(lb);
-  if (typeof renderIcons === 'function') renderIcons();
-}
-
-// Renders a lucide icon inline ahead of a status message.
-function setStatusIcon(el, icon, color, html) {
-  if (!el) return;
-  el.innerHTML = `<i data-lucide="${icon}" style="width:14px;height:14px;vertical-align:-2px;margin-right:5px;color:${color};"></i>${html}`;
   if (typeof renderIcons === 'function') renderIcons();
 }
 

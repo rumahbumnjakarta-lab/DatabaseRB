@@ -45,35 +45,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:admin@rbjakarta.id', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
 
-// ─── Resend Email ─────────────────────────────────────────────────────────────
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 const REGISTER_GATE_PASSWORD = process.env.REGISTER_GATE_PASSWORD || '12345678';
-
-// Gagal kirim email tidak boleh menggagalkan registrasi — selalu ditelan di
-// sini (logged, tidak di-throw) supaya caller tidak perlu try/catch lagi.
-async function sendResendEmail({ to, subject, html }) {
-  if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY belum diset di .env — email tidak dikirim.');
-    return;
-  }
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ from: RESEND_FROM_EMAIL, to, subject, html })
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => '');
-      console.error('Resend gagal kirim email:', res.status, errBody);
-    }
-  } catch (err) {
-    console.error('Resend request error:', err.message);
-  }
-}
 
 function mapDbError(err, fallback) {
   if (!err) return fallback;
@@ -293,43 +265,6 @@ app.post('/auth/register', async (req, res) => {
       meta: { role, divisi: cleanDivisi }
     });
 
-    // Email ditunggu sebelum response: di Vercel, fungsi dibekukan begitu
-    // response terkirim, jadi fetch ke Resend yang belum selesai ikut hilang.
-    // sendResendEmail tidak pernah throw, jadi kegagalan kirim tidak
-    // menggagalkan registrasi.
-    const ROLE_LABELS = { staff: 'Staff', internship: 'Internship', sistem: 'Sistem' };
-    const roleLabel = ROLE_LABELS[role] || role;
-    const welcomeEmail = sendResendEmail({
-      to: cleanEmail,
-      subject: 'Selamat Datang di Database Hub Rumah BUMN Jakarta',
-      html: `<p>Halo <strong>${cleanName}</strong>,</p>
-        <p>Akun Anda berhasil dibuat dengan detail berikut:</p>
-        <ul>
-          <li>Email: ${cleanEmail}</li>
-          <li>Divisi: ${cleanDivisi}</li>
-          <li>Role: ${roleLabel}</li>
-        </ul>
-        <p>Silakan login menggunakan email dan kata sandi yang sudah Anda daftarkan.</p>`
-    });
-
-    const staffEmail = supabase.from('users').select('email').in('role', ['staff', 'sistem']).then(({ data: staffUsers, error: staffErr }) => {
-      if (staffErr || !staffUsers || staffUsers.length === 0) return;
-      const staffEmails = staffUsers.map(u => u.email).filter(Boolean);
-      if (staffEmails.length === 0) return;
-      return sendResendEmail({
-        to: staffEmails,
-        subject: 'Registrasi Akun Baru — Database Hub',
-        html: `<p>Ada akun baru yang mendaftar:</p>
-          <ul>
-            <li>Nama: ${cleanName}</li>
-            <li>Email: ${cleanEmail}</li>
-            <li>Divisi: ${cleanDivisi}</li>
-            <li>Role: ${roleLabel}</li>
-          </ul>`
-      });
-    }, err => console.error('Gagal ambil email staff untuk notifikasi:', err));
-
-    await Promise.all([welcomeEmail, staffEmail]);
     res.status(201).json({ message: 'Registrasi berhasil. Silakan login.' });
   } catch (err) {
     console.error('Registration error:', err);
@@ -2372,7 +2307,7 @@ async function getRoomMembers(room) {
   }
   if (room.type === 'division') {
     const { data } = await supabase.from('users').select('id, name, email, role, divisi, avatar_url')
-      .or(`divisi.eq.${room.division},role.eq.staff`);
+      .or(`divisi.eq."${room.division}",role.in.(staff,sistem)`);
     return data || [];
   }
   if (room.type === 'dm') {
@@ -2710,10 +2645,24 @@ app.get('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       .select(CHAT_MSG_COLUMNS)
       .eq('room_id', room.id);
 
-    const after = req.query.after;
+    // Timestamp dari query string dinormalisasi lewat Date → ISO, supaya
+    // aman dipakai di filter .or() PostgREST (bukan string mentah dari klien).
+    const isoOrNull = v => { const t = v ? Date.parse(v) : NaN; return Number.isFinite(t) ? new Date(t).toISOString() : null; };
+    const after = isoOrNull(req.query.after);
+    const before = isoOrNull(req.query.before);
+    const changedSince = isoOrNull(req.query.changed_since);
+
     if (after) {
-      // Polling incremental: hanya pesan setelah timestamp yang klien punya.
-      query = query.gt('created_at', after).order('created_at', { ascending: true });
+      // Polling incremental: pesan baru setelah `after`, PLUS pesan lama yang
+      // diedit/dihapus sejak `changed_since` — supaya edit & hapus dari orang
+      // lain ikut muncul tanpa harus membuka ulang ruangnya.
+      query = changedSince
+        ? query.or(`created_at.gt."${after}",edited_at.gt."${changedSince}",deleted_at.gt."${changedSince}"`)
+        : query.gt('created_at', after);
+      query = query.order('created_at', { ascending: true });
+    } else if (before) {
+      // Riwayat lebih lama (scroll ke atas).
+      query = query.lt('created_at', before).order('created_at', { ascending: false }).limit(50);
     } else {
       query = query.order('created_at', { ascending: false }).limit(100);
     }
@@ -2848,9 +2797,10 @@ app.put('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) => 
     let mentions = Array.isArray(req.body.mentions) ? req.body.mentions : [];
     mentions = [...new Set(mentions.map(String))].slice(0, CHAT_MENTIONS_MAX);
     if (mentions.length) {
-      const { data: validUsers } = await supabase.from('users').select('id').in('id', mentions);
-      const validIds = new Set((validUsers || []).map(u => String(u.id)));
-      mentions = mentions.filter(id => validIds.has(id));
+      // Sama seperti kirim pesan: hanya anggota ruang ini yang boleh di-tag.
+      const members = await getRoomMembers(room);
+      const memberIds = new Set(members.map(m => String(m.id)));
+      mentions = mentions.filter(id => memberIds.has(id));
     }
 
     const { data, error } = await supabase
