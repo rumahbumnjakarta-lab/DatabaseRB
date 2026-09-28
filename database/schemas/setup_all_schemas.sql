@@ -442,5 +442,7 @@ CREATE POLICY "Service role full access" ON public.activity_log
 INSERT INTO storage.buckets (id, name, public) VALUES
   ('attendance-photos', 'attendance-photos', true),
   ('bd-catalog-photos', 'bd-catalog-photos', true),
-  ('cv_narasumber',     'cv_narasumber',     true)
+  ('cv_narasumber',     'cv_narasumber',     true),
+  -- Foto di chat (dibuat otomatis juga oleh server saat foto pertama dikirim)
+  ('chat-images',       'chat-images',       true)
 ON CONFLICT (id) DO NOTHING;

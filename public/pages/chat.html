@@ -161,6 +161,15 @@
   .msg-meta { float: right; display: inline-flex; align-items: center; gap: 4px; margin: 6px 0 -3px 12px; font-size: 10.5px; font-style: normal; line-height: 1; color: var(--text-muted); white-space: nowrap; user-select: none; }
   .msg.mine .msg-meta { color: rgba(255,255,255,0.78); }
   .msg-meta svg { width: 13px; height: 13px; }
+  .tick { display: inline-flex; align-items: center; margin-left: 1px; }
+  .tick svg { width: 16px; height: 16px; }
+  .msg.mine .tick { color: rgba(255,255,255,0.72); }
+  /* Sudah dibaca: centang biru menyala (dikasih "badge" putih supaya birunya
+     tetap kelihatan jelas di atas bubble yang juga biru). */
+  .msg.mine .tick.is-read { color: #0b63f6; background: #fff; border-radius: 6px; padding: 0 1px; box-shadow: 0 0 0 1px rgba(255,255,255,0.6); }
+  .msg.mine .tick.is-failed { color: #b91c1c; }
+  .msg-time-below .tick { color: var(--text-muted); }
+  .msg-time-below .tick.is-read { color: #0b63f6; background: none; box-shadow: none; }
   .msg.pending .msg-bubble { opacity: 0.75; }
   .msg.failed .msg-bubble { background: #fee2e2; color: #991b1b; }
   .msg.failed .msg-meta { color: #b91c1c; }
@@ -335,6 +344,101 @@
   .contact-name { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
   .contact-sub { margin-top: 1px; font-size: 12px; color: var(--text-muted); }
 
+  /* ── Kirim foto ── */
+  .btn-attach {
+    width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: var(--bg-surface); color: var(--text-secondary);
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-attach:hover, .btn-attach.open { background: var(--blue-active-bg); color: var(--blue-mid); }
+  .btn-attach svg { width: 20px; height: 20px; }
+  .attach-menu {
+    position: absolute; bottom: calc(100% + 6px); left: 16px; z-index: 21; display: none;
+    min-width: 230px; padding: 6px; background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: 0 16px 36px rgba(15,23,42,0.18);
+  }
+  .attach-menu.open { display: block; }
+  .attach-item {
+    display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border: none; border-radius: 11px;
+    background: none; cursor: pointer; text-align: left; font: 700 13.5px 'Inter', sans-serif; color: var(--text-primary);
+  }
+  .attach-item:hover { background: var(--bg-surface); }
+  .attach-item small { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 500; color: var(--text-muted); }
+  .ai-ico { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .ai-ico svg { width: 18px; height: 18px; }
+
+  .attach-preview { display: none; align-items: center; gap: 12px; padding: 10px 16px; flex-shrink: 0; background: var(--bg-card); border-top: 1px solid var(--border); }
+  .attach-preview.open { display: flex; }
+  .ap-thumb {
+    width: 58px; height: 58px; border-radius: 12px; flex-shrink: 0; overflow: hidden; cursor: zoom-in;
+    display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--text-muted);
+  }
+  .ap-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .ap-thumb svg { width: 22px; height: 22px; }
+  .ap-info { flex: 1; min-width: 0; }
+  .ap-title { font-size: 13.5px; font-weight: 800; color: var(--text-primary); }
+  .ap-sub { margin-top: 2px; font-size: 12px; color: var(--text-muted); }
+  .ap-sub b { color: #059669; }
+  .ap-spin { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid rgba(21,94,239,0.2); border-top-color: var(--blue-mid); animation: spin 0.8s linear infinite; }
+
+  /* Bubble foto */
+  .msg-bubble.has-image { width: min(300px, 70vw); max-width: 100%; padding: 4px; }
+  .msg-img {
+    position: relative; display: block; width: 100%; max-height: 380px; min-height: 90px; padding: 0; overflow: hidden;
+    border: none; border-radius: 12px; cursor: zoom-in; background: rgba(15,23,42,0.08);
+  }
+  .msg.mine .msg-img { background: rgba(255,255,255,0.18); }
+  .msg-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .msg-caption { padding: 6px 8px 3px; }
+  .msg-bubble.has-image .msg-reply-quote { margin: 0 0 4px; }
+  .msg-bubble.img-only .msg-meta {
+    position: absolute; right: 10px; bottom: 9px; float: none; margin: 0; padding: 4px 7px; border-radius: 10px;
+    color: #fff; background: rgba(15,23,42,0.55);
+  }
+  .msg.mine .msg-bubble.img-only .msg-meta .tick { color: rgba(255,255,255,0.9); }
+  .img-progress {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 13px; font-weight: 800; color: #fff; background: rgba(15,23,42,0.4);
+  }
+  .img-progress::before { content: ''; width: 22px; height: 22px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.35); border-top-color: #fff; animation: spin 0.8s linear infinite; }
+
+  /* Lihat foto layar penuh */
+  .img-viewer { position: fixed; inset: 0; z-index: 3500; display: none; flex-direction: column; background: rgba(2,6,23,0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .img-viewer.open { display: flex; }
+  .iv-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #fff; }
+  .iv-who { flex: 1; min-width: 0; }
+  .iv-who b { display: block; font-size: 14px; }
+  .iv-who span { font-size: 12px; color: #94a3b8; }
+  .iv-btn { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border: none; color: #fff; background: rgba(255,255,255,0.12); }
+  .iv-btn:hover { background: rgba(255,255,255,0.22); }
+  .iv-btn svg { width: 19px; height: 19px; }
+  .iv-body { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 6px 16px 16px; }
+  .iv-body img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+  .iv-caption { padding: 0 20px 22px; text-align: center; font-size: 14px; line-height: 1.5; color: #e2e8f0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .iv-caption:empty { display: none; }
+
+  /* Kamera (laptop) */
+  .cam-box { max-width: 560px; }
+  .cam-stage { position: relative; aspect-ratio: 4 / 3; background: #0b1220; display: flex; align-items: center; justify-content: center; }
+  .cam-stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam-msg { position: relative; z-index: 1; padding: 20px; text-align: center; font-size: 13px; color: #cbd5e1; }
+  .cam-msg button { margin-top: 10px; padding: 8px 14px; border: none; border-radius: 10px; cursor: pointer; font: 700 12.5px 'Inter', sans-serif; color: #fff; background: var(--blue-mid); }
+  .cam-actions { position: relative; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .cam-shutter { width: 64px; height: 64px; border-radius: 50%; cursor: pointer; border: 4px solid #fff; background: var(--blue-mid); box-shadow: 0 0 0 3px var(--blue-mid), 0 8px 20px rgba(21,94,239,0.35); transition: transform 0.12s; }
+  .cam-shutter:active { transform: scale(0.92); }
+  .cam-shutter:disabled { opacity: 0.4; cursor: not-allowed; }
+  .cam-switch { position: absolute; right: 18px; }
+  .cam-switch[hidden] { display: none; }
+
+  /* Tarik-lepas foto ke percakapan */
+  .drop-overlay {
+    position: absolute; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    border: 3px dashed var(--blue-mid); background: rgba(21,94,239,0.08); color: var(--blue-mid); font-size: 15px; font-weight: 800; pointer-events: none;
+  }
+  .drop-overlay svg { width: 40px; height: 40px; }
+  .chat-main.dragging .drop-overlay { display: flex; }
+
   /* ── Mobile: satu panel penuh layar ── */
   @media (max-width: 860px) {
     .chat-wrap { grid-template-columns: 1fr; }
@@ -411,6 +515,7 @@
             </div>
 
             <div class="chat-messages" id="messageList"></div>
+            <div class="drop-overlay"><i data-lucide="image-plus"></i> Lepas foto di sini untuk dikirim</div>
             <button class="jump-btn" id="jumpBtn" onclick="scrollToBottom(true)"><i data-lucide="arrow-down"></i> Pesan terbaru <span class="jb-count" id="jumpCount"></span></button>
             <div class="msg-ctx-menu" id="msgCtxMenu"></div>
 
@@ -419,8 +524,23 @@
               <span class="cc-text" id="composerContextText">Mengedit pesan</span>
               <button class="cc-close" onclick="closeComposerContext()" title="Batal" aria-label="Batal"><i data-lucide="x"></i></button>
             </div>
+            <div class="attach-preview" id="attachPreview">
+              <div class="ap-thumb" id="apThumb" onclick="viewAttachment()"></div>
+              <div class="ap-info">
+                <div class="ap-title" id="apTitle">Foto siap dikirim</div>
+                <div class="ap-sub" id="apSub"></div>
+              </div>
+              <button class="cc-close" onclick="clearAttachment()" title="Batalkan foto" aria-label="Batalkan foto"><i data-lucide="x"></i></button>
+            </div>
             <div class="chat-composer">
               <div class="mention-pop" id="mentionPop"></div>
+              <div class="attach-menu" id="attachMenu">
+                <button class="attach-item" onclick="pickImage('gallery')"><span class="ai-ico" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);"><i data-lucide="images"></i></span><span>Galeri / File<small>Pilih foto dari perangkat</small></span></button>
+                <button class="attach-item" onclick="pickImage('camera')"><span class="ai-ico" style="background:linear-gradient(135deg,#db2777,#f472b6);"><i data-lucide="camera"></i></span><span>Kamera<small>Ambil foto sekarang</small></span></button>
+              </div>
+              <input type="file" id="fileGallery" accept="image/*" hidden onchange="onImagePicked(this)">
+              <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden onchange="onImagePicked(this)">
+              <button class="btn-attach" id="btnAttach" onclick="toggleAttachMenu(event)" title="Kirim foto" aria-label="Kirim foto"><i data-lucide="image-plus"></i></button>
               <div class="composer-box">
                 <textarea id="msgInput" rows="1" placeholder="Tulis pesan... (@ untuk tag)"
                           oninput="handleComposerInput(this)" onkeydown="handleComposerKey(event)"></textarea>
@@ -466,6 +586,35 @@
   </div>
 </div>
 
+<!-- Lihat foto layar penuh -->
+<div class="img-viewer" id="imgViewer" onclick="if(event.target===this || event.target.classList.contains('iv-body')) closeImageViewer()">
+  <div class="iv-head">
+    <div class="iv-who"><b id="ivName"></b><span id="ivTime"></span></div>
+    <button class="iv-btn" onclick="downloadViewerImage()" title="Unduh foto" aria-label="Unduh foto"><i data-lucide="download"></i></button>
+    <button class="iv-btn" onclick="closeImageViewer()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+  </div>
+  <div class="iv-body"><img id="ivImg" alt="Foto"></div>
+  <div class="iv-caption" id="ivCaption"></div>
+</div>
+
+<!-- Kamera (laptop/desktop) -->
+<div class="modal-overlay" id="cameraModal" onclick="if(event.target===this) closeCameraModal()">
+  <div class="modal-box cam-box">
+    <div class="modal-head">
+      <h3>Ambil Foto</h3>
+      <button class="btn-icon ghost" onclick="closeCameraModal()" title="Tutup" aria-label="Tutup"><i data-lucide="x"></i></button>
+    </div>
+    <div class="cam-stage">
+      <video id="camVideo" autoplay playsinline muted></video>
+      <div class="cam-msg" id="camMsg">Membuka kamera...</div>
+    </div>
+    <div class="cam-actions">
+      <button class="cam-shutter" id="camShutter" onclick="captureCamera()" disabled aria-label="Ambil foto" title="Ambil foto"></button>
+      <button class="btn-icon ghost cam-switch" id="camSwitch" onclick="switchCamera()" title="Ganti kamera" aria-label="Ganti kamera" hidden><i data-lucide="switch-camera"></i></button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/shared.js"></script>
 <script>
 document.documentElement.classList.add('chat-page');
@@ -477,6 +626,7 @@ var ROOM_MSGS = [];           // pesan ruang aktif, urut lama → baru
 var ROOM_LOADED = false;      // riwayat awal ruang aktif sudah dimuat
 var LAST_AT = null;           // created_at pesan terbaru dari server
 var LAST_SYNC = null;         // waktu server terakhir sinkron (untuk edit/hapus orang lain)
+var READS = [];               // [{user_id, last_read_at}] anggota LAIN di ruang aktif — untuk centang biru
 var HAS_MORE = false;         // masih ada riwayat lebih lama di server
 var LOADING_OLDER = false;
 var POLLING = false;
@@ -503,6 +653,7 @@ initAppShell('chat', function(user) {
   ME = user;
   initMsgContextMenu();
   initScrollWatch();
+  initImageInputs();
   // Kontak dimuat di awal supaya autocomplete @mention langsung siap.
   const contactsPromise = fetch('/api/chat/contacts').then(r => r.json()).then(list => { if (Array.isArray(list)) CONTACTS = list; }).catch(() => {});
   Promise.all([loadRooms(true), contactsPromise]).then(() => {
@@ -646,6 +797,8 @@ function openRoom(id) {
   EDITING_ID = null; REPLYING_ID = null;
   document.getElementById('composerContext').classList.remove('open');
   closeMentionPopup();
+  closeAttachMenu();
+  clearAttachment();
 
   ACTIVE = room;
   ROOM_MSGS = [];
@@ -654,6 +807,7 @@ function openRoom(id) {
   LAST_SYNC = null;
   HAS_MORE = false;
   NEW_WHILE_AWAY = 0;
+  READS = [];
   hideJump();
   const unreadAtOpen = room.unread || 0;
 
@@ -677,12 +831,14 @@ function openRoom(id) {
   renderRooms();
   renderIcons();
 
-  fetch(`/api/chat/rooms/${encodeURIComponent(room.id)}/messages`)
-    .then(r => { const serverNow = serverTimeOf(r); return r.json().then(msgs => ({ msgs, serverNow })); })
-    .then(({ msgs, serverNow }) => {
+  fetch(`/api/chat/rooms/${encodeURIComponent(room.id)}/messages?with_reads=1`)
+    .then(r => { const serverNow = serverTimeOf(r); return r.json().then(data => ({ data, serverNow })); })
+    .then(({ data, serverNow }) => {
       // User sudah pindah ruang sebelum request ini selesai — jangan timpa.
       if (ACTIVE !== room) return;
-      if (msgs && msgs.error) throw new Error(msgs.error);
+      if (data && data.error) throw new Error(data.error);
+      const msgs = Array.isArray(data) ? data : (data && data.messages);
+      READS = (data && Array.isArray(data.reads)) ? data.reads : [];
       ROOM_MSGS = Array.isArray(msgs) ? msgs : [];
       HAS_MORE = ROOM_MSGS.length >= 100;
       LAST_AT = ROOM_MSGS.length ? ROOM_MSGS[ROOM_MSGS.length - 1].created_at : null;
@@ -697,7 +853,9 @@ function openRoom(id) {
     });
 
   ensureRoomMembers(room.id).then(members => {
-    if (ACTIVE === room) document.getElementById('threadSub').textContent = roomSubtitle(room, members);
+    if (ACTIVE !== room) return;
+    document.getElementById('threadSub').textContent = roomSubtitle(room, members);
+    refreshTicks();
   });
   if (!IS_TOUCH) setTimeout(() => input.focus(), 50);
 }
@@ -728,6 +886,8 @@ function ensureRoomMembers(roomId) {
 
 function showRoomList() {
   saveDraft();
+  closeAttachMenu();
+  clearAttachment();
   ACTIVE = null;
   ROOM_LOADED = false;
   document.getElementById('chatWrap').setAttribute('data-view', 'list');
@@ -828,13 +988,45 @@ function msgAvatarHTML(m, color) {
 }
 
 const SVG_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-const SVG_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+const SVG_CHECK2 = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>';
 const SVG_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>';
 
+// Status pesan sendiri ala WhatsApp:
+//   ⏱ sedang dikirim · ✓✓ abu-abu terkirim · ✓✓ biru sudah dibaca.
+// "Dibaca" = ada anggota lain yang membuka ruang ini SETELAH pesan dikirim
+// (dari chat_reads). Di ruang grup cukup 1 orang — kalau harus semua, di
+// "Semua Anggota" hampir tidak pernah jadi biru. Jumlahnya tampil di tooltip.
+function readInfo(m) {
+  const t = new Date(m.created_at).getTime();
+  const count = READS.filter(r => r.last_read_at && new Date(r.last_read_at).getTime() >= t).length;
+  const members = ACTIVE ? ROOM_MEMBERS_CACHE[ACTIVE.id] : null;
+  return { read: count > 0, count, total: Array.isArray(members) && members.length ? members.length : null };
+}
+function tickHTML(m) {
+  if (!m.mine || m.deleted) return '';
+  if (m.failed) return `<span class="tick is-failed" title="Gagal terkirim">${SVG_ALERT}</span>`;
+  if (m.pending) return `<span class="tick" title="Mengirim...">${SVG_CLOCK}</span>`;
+  const ri = readInfo(m);
+  const isDm = ACTIVE && ACTIVE.type === 'dm';
+  const title = ri.read
+    ? (isDm ? 'Dibaca' : `Dibaca oleh ${ri.count}${ri.total ? ' dari ' + ri.total : ''} anggota`)
+    : 'Terkirim · belum dibaca';
+  return `<span class="tick${ri.read ? ' is-read' : ''}" title="${title}">${SVG_CHECK2}</span>`;
+}
 function msgMetaInner(m) {
   const edited = !m.deleted && m.edited_at ? 'diedit · ' : '';
-  const status = !m.mine || m.deleted ? '' : m.failed ? SVG_ALERT : m.pending ? SVG_CLOCK : SVG_CHECK;
-  return `${edited}${hhmm(m.created_at)}${status}`;
+  return `${edited}${hhmm(m.created_at)}${tickHTML(m)}`;
+}
+// Perbarui centang pesan sendiri tanpa merender ulang bubble-nya.
+function refreshTicks() {
+  ROOM_MSGS.forEach(m => {
+    if (!m.mine || m.pending || m.deleted) return;
+    const el = document.getElementById('msg-' + m.id);
+    const meta = el && (el.querySelector('.msg-meta') || el.querySelector('.msg-time-below'));
+    if (!meta) return;
+    const html = msgMetaInner(m);
+    if (meta.dataset.html !== html) { meta.innerHTML = html; meta.dataset.html = html; }
+  });
 }
 
 // Tombol titik-tiga — jalur pasti-jalan untuk membuka menu di desktop.
@@ -858,6 +1050,14 @@ function msgBubbleHTML(m) {
   const meta = `<span class="msg-meta">${msgMetaInner(m)}</span>`;
   if (m.deleted) {
     return `<div class="msg-bubble deleted"><i data-lucide="ban"></i>Pesan ini telah dihapus${meta}</div>`;
+  }
+  if (m.msg_type === 'image' && m.meta && m.meta.url) {
+    const w = m.meta.width, h = m.meta.height;
+    const ratio = w && h ? `aspect-ratio:${w}/${h};` : 'aspect-ratio:4/3;';
+    const src = /^(https?:|blob:)/.test(m.meta.url) ? m.meta.url : '';
+    const hasCap = !!(m.body && m.body.trim());
+    const prog = m.pending ? `<span class="img-progress" id="prog-${escHtml(m.id)}">${m.progress >= 100 ? 'Memproses...' : (m.progress || 0) + '%'}</span>` : '';
+    return `<div class="msg-bubble has-image${hasCap ? '' : ' img-only'}">${msgReplyPreviewHTML(m)}<button type="button" class="msg-img" style="${ratio}" onclick="openImageViewer('${escHtml(m.id)}')" aria-label="Lihat foto"><img src="${escHtml(src)}" alt="Foto" loading="lazy" decoding="async">${prog}</button>${hasCap ? `<div class="msg-caption">${highlightMentions(escHtml(m.body), m.mentions)}${meta}</div>` : meta}</div>`;
   }
   if (m.msg_type === 'agenda' && m.meta) {
     const meta2 = m.meta;
@@ -980,7 +1180,8 @@ function appendNewMessages(msgs) {
     // Pesan kita sendiri yang ikut terambil polling sebelum respons kirim
     // selesai — ganti bubble "mengirim..." miliknya, jangan digandakan.
     if (m.mine && !m.pending) {
-      const tmpId = Object.keys(PENDING).find(k => PENDING[k].roomId === String(ACTIVE && ACTIVE.id) && PENDING[k].body === m.body && document.getElementById('msg-' + k));
+      const tmpId = Object.keys(PENDING).find(k => PENDING[k].roomId === String(ACTIVE && ACTIVE.id) && PENDING[k].body === m.body
+        && (PENDING[k].type || 'text') === (m.msg_type || 'text') && document.getElementById('msg-' + k));
       if (tmpId) { delete PENDING[tmpId]; patchMessageInPlace(m, tmpId); bumpLastAt(m); return; }
     }
     const prev = ROOM_MSGS[ROOM_MSGS.length - 1] || null;
@@ -1006,13 +1207,19 @@ function pollMessages() {
   const after = LAST_AT || LAST_SYNC;
   if (!after) return;
   POLLING = true;
-  let url = `/api/chat/rooms/${encodeURIComponent(room.id)}/messages?after=${encodeURIComponent(after)}`;
+  let url = `/api/chat/rooms/${encodeURIComponent(room.id)}/messages?with_reads=1&after=${encodeURIComponent(after)}`;
   if (LAST_SYNC) url += `&changed_since=${encodeURIComponent(LAST_SYNC)}`;
   fetch(url)
-    .then(r => { const serverNow = serverTimeOf(r); return r.json().then(msgs => ({ msgs, serverNow })); })
-    .then(({ msgs, serverNow }) => {
+    .then(r => { const serverNow = serverTimeOf(r); return r.json().then(data => ({ data, serverNow })); })
+    .then(({ data, serverNow }) => {
+      const msgs = Array.isArray(data) ? data : (data && data.messages);
       if (ACTIVE !== room || !Array.isArray(msgs)) return;
       LAST_SYNC = serverNow;
+      if (data && Array.isArray(data.reads)) {
+        const changed = JSON.stringify(data.reads) !== JSON.stringify(READS);
+        READS = data.reads;
+        if (changed) refreshTicks();
+      }
       const fresh = [];
       msgs.forEach(m => {
         if (document.getElementById('msg-' + m.id)) {
@@ -1047,6 +1254,7 @@ function markRead(roomId) {
 // Pesan langsung tampil (status jam ⏱) tanpa menunggu server, lalu diganti
 // versi server (✓) begitu terkirim — terasa instan walau koneksi lambat.
 function sendMessage() {
+  if (ATTACH && !EDITING_ID) { sendImageMessage(); return; }
   const input = document.getElementById('msgInput');
   const body = input.value.trim();
   if (!body || !ACTIVE || !ROOM_LOADED) return;
@@ -1082,9 +1290,9 @@ function sendMessage() {
     id: tmpId, sender_id: ME.id, sender_name: ME.name, body, created_at: new Date().toISOString(),
     msg_type: 'text', meta: null, mentions, mine: true, pending: true,
     reply_to: replyTo || null,
-    reply_preview: rpSrc ? { sender_name: rpSrc.sender_name, body: rpSrc.msg_type === 'agenda' ? '📅 ' + ((rpSrc.meta && rpSrc.meta.title) || 'Agenda') : rpSrc.body, deleted: !!rpSrc.deleted } : null
+    reply_preview: rpSrc ? { sender_name: rpSrc.sender_name, body: previewOf(rpSrc), deleted: !!rpSrc.deleted } : null
   };
-  PENDING[tmpId] = { body, roomId: String(targetRoom.id) };
+  PENDING[tmpId] = { body, roomId: String(targetRoom.id), type: 'text' };
   input.value = '';
   autoGrow(input);
   delete DRAFTS[targetRoom.id];
@@ -1127,7 +1335,7 @@ function sendMessage() {
 function updateSendState() {
   const input = document.getElementById('msgInput');
   const len = input.value.trim().length;
-  document.getElementById('btnSend').disabled = !len || len > MSG_MAX;
+  document.getElementById('btnSend').disabled = ATTACH_BUSY || (!len && !ATTACH) || len > MSG_MAX;
   const cc = document.getElementById('charCount');
   cc.textContent = input.value.length > MSG_MAX - 500 ? `${input.value.length.toLocaleString('id-ID')}/${MSG_MAX.toLocaleString('id-ID')}` : '';
   cc.classList.toggle('is-bad', input.value.length > MSG_MAX);
@@ -1159,7 +1367,7 @@ function startReplyMessage(id) {
   if (!m || m.deleted || m.pending) return;
   if (EDITING_ID) cancelEdit();
   REPLYING_ID = id;
-  const preview = m.msg_type === 'agenda' ? '📅 ' + ((m.meta && m.meta.title) || 'Agenda') : (m.body || '').slice(0, 80);
+  const preview = previewOf(m).slice(0, 80);
   setComposerContext('corner-up-left', `Membalas ${m.mine ? 'diri sendiri' : m.sender_name}: ${preview}`);
   document.getElementById('msgInput').focus();
 }
@@ -1214,6 +1422,10 @@ function msgCtxItems(m) {
   if (m.deleted || m.pending) return [];
   const items = [{ action: 'reply', icon: 'corner-up-left', label: 'Balas' }];
   if (m.msg_type === 'text' && !m.failed) items.push({ action: 'copy', icon: 'copy', label: 'Salin teks' });
+  if (m.msg_type === 'image' && m.meta && m.meta.url) {
+    items.push({ action: 'view', icon: 'maximize-2', label: 'Lihat foto' });
+    if (!m.failed) items.push({ action: 'download', icon: 'download', label: 'Unduh foto' });
+  }
   if (!m.failed) items.push({ action: 'forward', icon: 'forward', label: 'Teruskan' });
   if (m.mine && m.msg_type === 'text' && !m.failed) items.push({ action: 'edit', icon: 'pencil', label: 'Edit' });
   if (m.mine && !m.failed) items.push({ action: 'delete', icon: 'trash-2', label: 'Hapus', danger: true });
@@ -1297,6 +1509,8 @@ function runMsgCtxAction(action) {
       .then(() => showSwalToast('Teks disalin', 'success'))
       .catch(() => showSwalToast('Gagal menyalin teks', 'error'));
   }
+  else if (action === 'view') openImageViewer(id);
+  else if (action === 'download' && m && m.meta) downloadImage(m.meta.url);
   else if (action === 'forward') forwardMessage(id);
   else if (action === 'edit') startEditMessage(id);
   else if (action === 'delete') deleteMessage(id);
@@ -1308,10 +1522,14 @@ function runMsgCtxAction(action) {
 }
 document.addEventListener('click', (e) => {
   if (!e.target.closest('#msgCtxMenu') && !e.target.closest('.msg-menu-btn')) closeMsgCtxMenu();
+  if (!e.target.closest('#attachMenu') && !e.target.closest('#btnAttach')) closeAttachMenu();
 });
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (window.Swal && Swal.isVisible && Swal.isVisible() && !(Swal.getPopup() && Swal.getPopup().classList.contains('swal2-toast'))) return;
+  if (document.getElementById('imgViewer').classList.contains('open')) { closeImageViewer(); return; }
+  if (document.getElementById('cameraModal').classList.contains('open')) { closeCameraModal(); return; }
+  if (document.getElementById('attachMenu').classList.contains('open')) { closeAttachMenu(); return; }
   if (document.getElementById('msgCtxMenu').classList.contains('open')) { closeMsgCtxMenu(); return; }
   if (document.getElementById('forwardModal').classList.contains('open')) { closeForward(); return; }
   if (document.getElementById('contactsModal').classList.contains('open')) { closeContacts(); return; }
@@ -1362,7 +1580,9 @@ function doForward(kind, targetId) {
   const send = (roomId) => {
     const payload = original.msg_type === 'agenda'
       ? { msg_type: 'agenda', body: original.body || original.meta.title, meta: original.meta }
-      : { body: original.body, meta: { forwarded: true } };
+      : original.msg_type === 'image'
+        ? { msg_type: 'image', forward_of: original.id, body: original.body || '' }
+        : { body: original.body, meta: { forwarded: true } };
     return fetch(`/api/chat/rooms/${encodeURIComponent(roomId)}/messages`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     }).then(r => r.json());
@@ -1370,7 +1590,7 @@ function doForward(kind, targetId) {
   const afterSent = (res, roomId) => {
     if (res.error) throw new Error(res.error);
     closeForward();
-    showSwalToast(original.msg_type === 'agenda' ? 'Silabus dibagikan.' : 'Pesan diteruskan.', 'success');
+    showSwalToast(original.msg_type === 'agenda' ? 'Silabus dibagikan.' : original.msg_type === 'image' ? 'Foto diteruskan.' : 'Pesan diteruskan.', 'success');
     loadRooms(false).then(() => { ROOM_LOADED = false; ACTIVE = null; openRoom(roomId); });
   };
   const fail = err => showSwalToast(err.message || 'Gagal meneruskan pesan.', 'error');
@@ -1402,6 +1622,369 @@ function maybeHandleSharedAgenda() {
   document.getElementById('forwardModal').classList.add('open');
   document.getElementById('forwardSearch').value = '';
   renderForwardTargets();
+}
+
+// ─── Kirim foto ───
+// Foto dari galeri/file/kamera SELALU dikompres dulu di perangkat pengirim
+// (sisi terpanjang maks 1600px, JPEG, kualitas diturunkan sampai ± 900 KB)
+// sebelum diunggah — foto HP 5–12 MB biasanya jadi 200–600 KB.
+var ATTACH = null;          // { blob, url, width, height, originalSize }
+var ATTACH_BUSY = false;    // sedang mengompres
+var VIEWER_MSG_ID = null;
+var CAM_STREAM = null;
+var CAM_FACING = 'user';
+var IMG_MAX_DIM = 1600;
+var IMG_TARGET_BYTES = 900 * 1024;
+var IMG_INPUT_MAX = 30 * 1024 * 1024;
+
+function fmtBytes(n) {
+  if (!n && n !== 0) return '';
+  return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1).replace('.', ',')} MB`;
+}
+
+function toggleAttachMenu(e) {
+  e.stopPropagation();
+  if (!ACTIVE || !ROOM_LOADED) return;
+  if (EDITING_ID) { showSwalToast('Selesaikan atau batalkan edit pesan dulu.', 'info'); return; }
+  const menu = document.getElementById('attachMenu');
+  const open = !menu.classList.contains('open');
+  closeMentionPopup();
+  menu.classList.toggle('open', open);
+  document.getElementById('btnAttach').classList.toggle('open', open);
+}
+function closeAttachMenu() {
+  document.getElementById('attachMenu').classList.remove('open');
+  document.getElementById('btnAttach').classList.remove('open');
+}
+
+function pickImage(kind) {
+  closeAttachMenu();
+  // Di HP, input capture langsung membuka aplikasi kamera. Di laptop atribut
+  // itu diabaikan browser, jadi pakai jendela kamera sendiri (getUserMedia).
+  if (kind === 'camera' && !IS_TOUCH && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    openCameraModal();
+    return;
+  }
+  const input = document.getElementById(kind === 'camera' ? 'fileCamera' : 'fileGallery');
+  input.value = '';
+  input.click();
+}
+function onImagePicked(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (file) attachImageFile(file);
+}
+
+async function attachImageFile(file) {
+  if (!ACTIVE || !ROOM_LOADED) return;
+  if (EDITING_ID) cancelEdit();
+  ATTACH_BUSY = true;
+  showAttachPreview(null, 'Mengompres foto...', '');
+  try {
+    setAttachment(await compressImage(file));
+  } catch (err) {
+    ATTACH_BUSY = false;
+    clearAttachment();
+    showSwalToast(err.message || 'Foto tidak bisa diproses.', 'error');
+  }
+}
+
+function decodeImage(file) {
+  const viaImg = () => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { resolve(img); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Format foto tidak didukung. Coba pilih foto JPG atau PNG.')); };
+    img.src = url;
+  });
+  if (window.createImageBitmap) {
+    // imageOrientation: foto HP yang disimpan "miring" (EXIF) tetap tegak.
+    return createImageBitmap(file, { imageOrientation: 'from-image' }).catch(viaImg);
+  }
+  return viaImg();
+}
+function canvasToBlob(canvas, quality) {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
+// source: File/Blob dari galeri, atau <canvas> hasil jepretan kamera laptop.
+async function compressImage(source) {
+  let drawable, w, h;
+  if (source instanceof HTMLCanvasElement) {
+    drawable = source; w = source.width; h = source.height;
+  } else {
+    if (!/^image\//.test(source.type || '')) throw new Error('File yang dipilih bukan foto/gambar.');
+    if (source.size > IMG_INPUT_MAX) throw new Error('Foto terlalu besar (maks 30 MB).');
+    drawable = await decodeImage(source);
+    w = drawable.width || drawable.naturalWidth;
+    h = drawable.height || drawable.naturalHeight;
+  }
+  if (!w || !h) throw new Error('Foto tidak bisa dibaca.');
+  const scale = Math.min(1, IMG_MAX_DIM / Math.max(w, h));
+  const W = Math.max(1, Math.round(w * scale)), H = Math.max(1, Math.round(h * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; // PNG transparan → latar putih (JPEG tidak punya transparansi)
+  ctx.fillRect(0, 0, W, H);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(drawable, 0, 0, W, H);
+  if (drawable.close) drawable.close();
+  let q = 0.82;
+  let blob = await canvasToBlob(canvas, q);
+  while (blob && blob.size > IMG_TARGET_BYTES && q > 0.5) { q -= 0.08; blob = await canvasToBlob(canvas, q); }
+  if (!blob) throw new Error('Gagal mengompres foto.');
+  return { blob, width: W, height: H, originalSize: source instanceof HTMLCanvasElement ? null : source.size, url: URL.createObjectURL(blob) };
+}
+
+function showAttachPreview(url, title, sub) {
+  const thumb = document.getElementById('apThumb');
+  thumb.innerHTML = url ? `<img src="${escHtml(url)}" alt="">` : '<span class="ap-spin"></span>';
+  document.getElementById('apTitle').textContent = title;
+  document.getElementById('apSub').innerHTML = sub;
+  document.getElementById('attachPreview').classList.add('open');
+  updateSendState();
+}
+function setAttachment(att) {
+  if (ATTACH && ATTACH.url && ATTACH.url !== att.url) URL.revokeObjectURL(ATTACH.url);
+  ATTACH = att;
+  ATTACH_BUSY = false;
+  let sub = `${att.width}×${att.height} · <b>${fmtBytes(att.blob.size)}</b>`;
+  if (att.originalSize && att.originalSize > att.blob.size) {
+    sub += ` · asli ${fmtBytes(att.originalSize)} (hemat ${Math.round((1 - att.blob.size / att.originalSize) * 100)}%)`;
+  }
+  showAttachPreview(att.url, 'Foto siap dikirim', sub);
+  const input = document.getElementById('msgInput');
+  input.placeholder = 'Tambahkan keterangan... (opsional)';
+  if (!IS_TOUCH) input.focus();
+}
+// keepUrl: URL sementara masih dipakai bubble "mengirim..." — jangan dilepas dulu.
+function clearAttachment(keepUrl) {
+  if (ATTACH && ATTACH.url && !keepUrl) URL.revokeObjectURL(ATTACH.url);
+  ATTACH = null;
+  ATTACH_BUSY = false;
+  document.getElementById('attachPreview').classList.remove('open');
+  document.getElementById('apThumb').innerHTML = '';
+  document.getElementById('msgInput').placeholder = 'Tulis pesan... (@ untuk tag)';
+  updateSendState();
+}
+function viewAttachment() {
+  if (!ATTACH) return;
+  openViewerWith({ url: ATTACH.url, name: 'Pratinjau foto', time: `${ATTACH.width}×${ATTACH.height} · ${fmtBytes(ATTACH.blob.size)}`, caption: '' });
+}
+
+function previewOf(m) {
+  if (m.msg_type === 'agenda') return '📅 ' + ((m.meta && m.meta.title) || 'Agenda');
+  if (m.msg_type === 'image') return '📷 ' + (m.body || 'Foto');
+  return m.body || '';
+}
+
+// Kirim foto: bubble langsung muncul dengan foto lokal + persentase unggah
+// (XHR supaya progres unggahnya bisa ditampilkan), lalu diganti versi server.
+function sendImageMessage() {
+  if (!ATTACH || ATTACH_BUSY || !ACTIVE || !ROOM_LOADED) return;
+  const input = document.getElementById('msgInput');
+  const caption = input.value.trim();
+  if (caption.length > MSG_MAX) { showSwalToast(`Keterangan maksimal ${MSG_MAX.toLocaleString('id-ID')} karakter.`, 'error'); return; }
+  closeMentionPopup();
+
+  const att = ATTACH;
+  const targetRoom = ACTIVE;
+  const mentions = resolveMentionsFromText(caption);
+  const replyTo = REPLYING_ID;
+  const rpSrc = replyTo ? MSG_CACHE[replyTo] : null;
+  const tmpId = 'tmp-' + (++TMP_SEQ);
+  const tmp = {
+    id: tmpId, sender_id: ME.id, sender_name: ME.name, body: caption, created_at: new Date().toISOString(),
+    msg_type: 'image', meta: { url: att.url, width: att.width, height: att.height }, mentions, mine: true, pending: true, progress: 0,
+    reply_to: replyTo || null,
+    reply_preview: rpSrc ? { sender_name: rpSrc.sender_name, body: previewOf(rpSrc), deleted: !!rpSrc.deleted } : null
+  };
+  PENDING[tmpId] = { body: caption, roomId: String(targetRoom.id), type: 'image' };
+  input.value = '';
+  autoGrow(input);
+  clearAttachment(true);
+  delete DRAFTS[targetRoom.id];
+  if (REPLYING_ID) cancelReply();
+  appendNewMessages([tmp]);
+
+  const fd = new FormData();
+  fd.append('image', att.blob, 'foto.jpg');
+  fd.append('caption', caption);
+  fd.append('width', att.width);
+  fd.append('height', att.height);
+  fd.append('mentions', JSON.stringify(mentions));
+  if (replyTo) fd.append('reply_to', replyTo);
+
+  const onFail = (msg) => {
+    delete PENDING[tmpId];
+    if (ACTIVE === targetRoom) patchMessageInPlace(Object.assign({}, tmp, { pending: false, failed: true }), tmpId);
+    // Foto dikembalikan ke kotak lampiran supaya bisa langsung dikirim ulang.
+    if (ACTIVE === targetRoom && !ATTACH) { setAttachment(att); if (caption && !input.value) { input.value = caption; autoGrow(input); updateSendState(); } }
+    showSwalToast(msg || 'Foto gagal terkirim.', 'error');
+  };
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `/api/chat/rooms/${encodeURIComponent(targetRoom.id)}/images`);
+  xhr.upload.onprogress = (e) => { if (e.lengthComputable) setImgProgress(tmpId, Math.round(e.loaded / e.total * 100)); };
+  xhr.onload = () => {
+    let res = {};
+    try { res = JSON.parse(xhr.responseText); } catch (e) { /* bukan JSON */ }
+    if (xhr.status < 200 || xhr.status >= 300 || res.error) { onFail(res.error || `Gagal mengirim foto (HTTP ${xhr.status}).`); return; }
+    const done = () => {
+      if (PENDING[tmpId] && ACTIVE === targetRoom) {
+        if (document.getElementById('msg-' + res.id)) {
+          const el = document.getElementById('msg-' + tmpId);
+          if (el) el.remove();
+          ROOM_MSGS = ROOM_MSGS.filter(x => x.id !== tmpId);
+        } else {
+          patchMessageInPlace(res, tmpId);
+          bumpLastAt(res);
+        }
+      }
+      delete PENDING[tmpId];
+      URL.revokeObjectURL(att.url);
+      loadRooms(false);
+    };
+    // Tunggu foto versi server termuat dulu supaya bubble tidak berkedip kosong.
+    const pre = new Image();
+    pre.onload = pre.onerror = done;
+    pre.src = res.meta && res.meta.url;
+    setImgProgress(tmpId, 100);
+  };
+  xhr.onerror = () => onFail('Koneksi terputus saat mengirim foto.');
+  xhr.send(fd);
+  if (!IS_TOUCH) input.focus();
+}
+function setImgProgress(id, pct) {
+  const m = MSG_CACHE[id];
+  if (m) m.progress = pct;
+  const el = document.getElementById('prog-' + id);
+  if (el) el.textContent = pct >= 100 ? 'Memproses...' : `${pct}%`;
+}
+
+// ─── Lihat foto layar penuh ───
+function openImageViewer(id) {
+  const m = MSG_CACHE[id];
+  if (!m || !m.meta || !m.meta.url) return;
+  VIEWER_MSG_ID = id;
+  openViewerWith({
+    url: m.meta.url,
+    name: m.mine ? 'Kamu' : m.sender_name,
+    time: `${dayLabel(m.created_at)} · ${hhmm(m.created_at)}`,
+    caption: m.body || ''
+  });
+}
+function openViewerWith(o) {
+  document.getElementById('ivImg').src = o.url;
+  document.getElementById('ivName').textContent = o.name || '';
+  document.getElementById('ivTime').textContent = o.time || '';
+  document.getElementById('ivCaption').textContent = o.caption || '';
+  document.getElementById('imgViewer').classList.add('open');
+  renderIcons();
+}
+function closeImageViewer() {
+  document.getElementById('imgViewer').classList.remove('open');
+  document.getElementById('ivImg').removeAttribute('src');
+  VIEWER_MSG_ID = null;
+}
+function downloadViewerImage() {
+  const src = document.getElementById('ivImg').src;
+  if (src) downloadImage(src);
+}
+// Unduh lewat blob — atribut download diabaikan untuk gambar dari domain lain.
+function downloadImage(url) {
+  const name = `foto-chat-${new Date().toISOString().slice(0, 10)}.jpg`;
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+    .then(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    })
+    .catch(() => window.open(url, '_blank', 'noopener'));
+}
+
+// ─── Kamera laptop ───
+function openCameraModal() {
+  document.getElementById('cameraModal').classList.add('open');
+  startCameraStream();
+}
+function startCameraStream() {
+  stopCameraStream();
+  const video = document.getElementById('camVideo');
+  const msg = document.getElementById('camMsg');
+  const shutter = document.getElementById('camShutter');
+  shutter.disabled = true;
+  msg.style.display = '';
+  msg.textContent = 'Membuka kamera...';
+  video.style.transform = CAM_FACING === 'user' ? 'scaleX(-1)' : 'none';
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: CAM_FACING, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+    .then(stream => {
+      CAM_STREAM = stream;
+      video.srcObject = stream;
+      msg.style.display = 'none';
+      shutter.disabled = false;
+      navigator.mediaDevices.enumerateDevices().then(list => {
+        document.getElementById('camSwitch').hidden = list.filter(d => d.kind === 'videoinput').length < 2;
+      }).catch(() => {});
+    })
+    .catch(() => {
+      msg.innerHTML = 'Kamera tidak bisa dibuka. Izinkan akses kamera di browser,<br>atau pilih foto dari galeri.<br><button onclick="closeCameraModal();pickImage(\'gallery\')">Pilih dari Galeri</button>';
+    });
+}
+function stopCameraStream() {
+  if (CAM_STREAM) CAM_STREAM.getTracks().forEach(t => t.stop());
+  CAM_STREAM = null;
+  const video = document.getElementById('camVideo');
+  if (video) video.srcObject = null;
+}
+function switchCamera() {
+  CAM_FACING = CAM_FACING === 'user' ? 'environment' : 'user';
+  startCameraStream();
+}
+function closeCameraModal() {
+  stopCameraStream();
+  document.getElementById('cameraModal').classList.remove('open');
+}
+function captureCamera() {
+  const video = document.getElementById('camVideo');
+  if (!video.videoWidth) return;
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth; c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video, 0, 0);
+  closeCameraModal();
+  ATTACH_BUSY = true;
+  showAttachPreview(null, 'Mengompres foto...', '');
+  compressImage(c).then(setAttachment).catch(err => { clearAttachment(); showSwalToast(err.message, 'error'); });
+}
+
+// ─── Tempel (Ctrl+V) & tarik-lepas foto ───
+function initImageInputs() {
+  document.getElementById('msgInput').addEventListener('paste', (e) => {
+    const items = (e.clipboardData && e.clipboardData.files) ? [...e.clipboardData.files] : [];
+    const img = items.find(f => /^image\//.test(f.type));
+    if (img) { e.preventDefault(); attachImageFile(img); }
+  });
+  const main = document.querySelector('.chat-main');
+  let depth = 0;
+  const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+  main.addEventListener('dragenter', (e) => {
+    if (!hasFiles(e) || !ACTIVE || !ROOM_LOADED) return;
+    e.preventDefault(); depth++; main.classList.add('dragging');
+  });
+  main.addEventListener('dragover', (e) => { if (hasFiles(e) && ACTIVE) e.preventDefault(); });
+  main.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) main.classList.remove('dragging'); });
+  main.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); depth = 0; main.classList.remove('dragging');
+    const file = [...e.dataTransfer.files].find(f => /^image\//.test(f.type));
+    if (!file) { showSwalToast('Yang bisa dikirim hanya file foto/gambar.', 'info'); return; }
+    attachImageFile(file);
+  });
 }
 
 // ─── Composer ───

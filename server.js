@@ -2396,6 +2396,51 @@ async function pushNotifyRoom(room, sender, previewText) {
   }
 }
 
+// ─── Chat: foto ────────────────────────────────────────────────────────────
+// Foto dikompres di browser pengirim (maks ±1600px, JPEG) sebelum diunggah,
+// jadi yang sampai ke server biasanya < 1 MB. Disimpan di bucket publik
+// "chat-images" (dibuat otomatis saat pertama dipakai — butuh service role key).
+const CHAT_IMG_BUCKET = 'chat-images';
+const CHAT_IMG_MAX_BYTES = 6 * 1024 * 1024;
+const CHAT_IMG_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+const CHAT_IMG_PATH_RE = /^rooms\/[0-9a-f-]{36}\/[\w.-]+\.(jpg|png|webp)$/i;
+const chatImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: CHAT_IMG_MAX_BYTES },
+  fileFilter: (req, file, cb) => cb(null, !!CHAT_IMG_TYPES[file.mimetype])
+});
+
+let chatImageBucketReady = false;
+async function ensureChatImageBucket() {
+  if (chatImageBucketReady) return;
+  const { data } = await supabase.storage.getBucket(CHAT_IMG_BUCKET);
+  if (!data) {
+    const { error } = await supabase.storage.createBucket(CHAT_IMG_BUCKET, {
+      public: true,
+      fileSizeLimit: CHAT_IMG_MAX_BYTES,
+      allowedMimeTypes: Object.keys(CHAT_IMG_TYPES)
+    });
+    if (error && !/exist/i.test(error.message)) throw error;
+  }
+  chatImageBucketReady = true;
+}
+
+// URL publik selalu dibangun server dari path di bucket kita sendiri —
+// tidak pernah menerima URL gambar mentah dari klien.
+function chatImageMeta(path, width, height) {
+  const { data } = supabase.storage.from(CHAT_IMG_BUCKET).getPublicUrl(path);
+  const dim = v => { const n = parseInt(v, 10); return Number.isFinite(n) && n > 0 && n <= 10000 ? n : null; };
+  return { path, url: data.publicUrl, width: dim(width), height: dim(height) };
+}
+
+// Teks ringkas untuk daftar obrolan, notifikasi, dan kutipan balasan.
+function chatPreviewText(m) {
+  if (m.deleted_at) return 'Pesan telah dihapus';
+  if (m.msg_type === 'agenda') return '📅 ' + ((m.meta && m.meta.title) || 'Agenda');
+  if (m.msg_type === 'image') return '📷 ' + (m.body || 'Foto');
+  return m.body;
+}
+
 // GET /api/chat/rooms/:id/members — anggota ruang, dipakai composer untuk
 // membatasi daftar autocomplete @tag sesuai ruang yang sedang dibuka.
 app.get('/api/chat/rooms/:id/members', requireAuth, async (req, res) => {
@@ -2483,12 +2528,7 @@ app.get('/api/chat/rooms', requireAuth, async (req, res) => {
         subtitle = 'Ruang divisi';
       }
       const last = lastMap[r.id] || null;
-      let lastBody = '';
-      if (last) {
-        if (last.deleted_at) lastBody = 'Pesan telah dihapus';
-        else if (last.msg_type === 'agenda') lastBody = '📅 ' + ((last.meta && last.meta.title) || 'Agenda');
-        else lastBody = last.body;
-      }
+      const lastBody = last ? chatPreviewText(last) : '';
       return {
         id: r.id,
         type: r.type,
@@ -2625,7 +2665,7 @@ async function buildReplyMap(replyToIds) {
   (data || []).forEach(m => {
     map[m.id] = {
       sender_name: m.sender_name,
-      body: m.deleted_at ? '' : (m.msg_type === 'agenda' ? '📅 ' + ((m.meta && m.meta.title) || 'Agenda') : m.body),
+      body: m.deleted_at ? '' : chatPreviewText(m),
       deleted: !!m.deleted_at
     };
   });
@@ -2673,7 +2713,20 @@ app.get('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
     const messages = after ? (data || []) : (data || []).reverse();
     const avatarMap = await buildAvatarMap(messages.map(m => m.sender_id));
     const replyMap = await buildReplyMap(messages.map(m => m.reply_to));
-    res.json(messages.map(m => serializeChatMessage(m, user.id, avatarMap, replyMap)));
+    const serialized = messages.map(m => serializeChatMessage(m, user.id, avatarMap, replyMap));
+
+    // ?with_reads=1 → sekalian kirim kapan anggota LAIN terakhir membaca ruang
+    // ini (untuk centang biru "sudah dibaca"), supaya klien tidak perlu
+    // request terpisah tiap polling. Tanpa parameter ini respons tetap array.
+    if (req.query.with_reads === '1') {
+      const { data: reads } = await supabase
+        .from('chat_reads')
+        .select('user_id, last_read_at')
+        .eq('room_id', room.id)
+        .neq('user_id', user.id);
+      return res.json({ messages: serialized, reads: reads || [] });
+    }
+    res.json(serialized);
   } catch (err) {
     console.error('Chat messages error:', err);
     res.status(500).json({ error: 'Gagal memuat pesan: ' + err.message });
@@ -2690,14 +2743,28 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
     const room = await canAccessRoom(user, req.params.id);
     if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
 
-    const msgType = req.body.msg_type === 'agenda' ? 'agenda' : 'text';
+    const msgType = ['agenda', 'image'].includes(req.body.msg_type) ? req.body.msg_type : 'text';
     const body = (req.body.body || '').trim();
+    let imageMeta = null;
 
     if (msgType === 'agenda') {
       const meta = req.body.meta;
       if (!meta || !meta.event_id || !meta.title) {
         return res.status(400).json({ error: 'Data agenda tidak lengkap.' });
       }
+    } else if (msgType === 'image') {
+      // Hanya untuk meneruskan foto yang sudah ada — sumbernya harus pesan
+      // foto di ruang yang juga bisa diakses user ini.
+      const { data: src } = await supabase
+        .from('chat_messages').select('room_id, msg_type, meta, deleted_at')
+        .eq('id', req.body.forward_of || '').maybeSingle();
+      if (!src || src.msg_type !== 'image' || src.deleted_at || !src.meta || !CHAT_IMG_PATH_RE.test(src.meta.path || '')) {
+        return res.status(400).json({ error: 'Foto yang diteruskan tidak ditemukan.' });
+      }
+      if (!(await canAccessRoom(user, src.room_id))) {
+        return res.status(403).json({ error: 'Anda tidak memiliki akses ke foto ini.' });
+      }
+      imageMeta = { ...chatImageMeta(src.meta.path, src.meta.width, src.meta.height), forwarded: true };
     } else if (!body) {
       return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
     }
@@ -2734,7 +2801,9 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       sender_name: user.name,
       body,
       msg_type: msgType,
-      meta: msgType === 'agenda' ? req.body.meta : (req.body.meta && req.body.meta.forwarded ? { forwarded: true } : null),
+      meta: msgType === 'agenda' ? req.body.meta
+          : msgType === 'image' ? imageMeta
+          : (req.body.meta && req.body.meta.forwarded ? { forwarded: true } : null),
       mentions,
       reply_to: replyTo
     };
@@ -2756,14 +2825,86 @@ app.post('/api/chat/rooms/:id/messages', requireAuth, async (req, res) => {
       .then(({ error }) => { if (error) console.error('Gagal update chat_reads:', error.message); });
 
     // Push notification ke anggota lain (tidak menunggu/tidak memblokir response).
-    const pushPreview = msgType === 'agenda' ? `📅 ${req.body.meta.title}` : body;
-    pushNotifyRoom(room, user, pushPreview);
+    pushNotifyRoom(room, user, chatPreviewText(data));
 
     const replyMap = replyTo ? await buildReplyMap([replyTo]) : {};
     res.json(serializeChatMessage(data, user.id, { [user.id]: user.avatar_url }, replyMap));
   } catch (err) {
     console.error('Chat send error:', err);
     res.status(500).json({ error: 'Gagal mengirim pesan: ' + err.message });
+  }
+});
+
+// POST /api/chat/rooms/:id/images — kirim foto (multipart: image, caption,
+// width, height, reply_to, mentions[JSON]). File sudah dikompres di browser.
+app.post('/api/chat/rooms/:id/images', requireAuth, chatImageUpload.single('image'), async (req, res) => {
+  let uploadedPath = null;
+  try {
+    const user = await getChatUser(req);
+    if (!user) return res.status(401).json({ error: 'Sesi tidak valid.' });
+
+    const room = await canAccessRoom(user, req.params.id);
+    if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
+
+    if (!req.file) return res.status(400).json({ error: 'Pilih foto JPG, PNG, atau WEBP (maks 6 MB).' });
+    const caption = String(req.body.caption || '').trim();
+    if (caption.length > CHAT_MSG_MAX) {
+      return res.status(400).json({ error: `Keterangan maksimal ${CHAT_MSG_MAX} karakter.` });
+    }
+
+    let mentions = [];
+    try { mentions = JSON.parse(req.body.mentions || '[]'); } catch (e) { mentions = []; }
+    mentions = Array.isArray(mentions) ? [...new Set(mentions.map(String))].slice(0, CHAT_MENTIONS_MAX) : [];
+    if (mentions.length) {
+      const members = await getRoomMembers(room);
+      const memberIds = new Set(members.map(m => String(m.id)));
+      mentions = mentions.filter(id => memberIds.has(id));
+    }
+
+    let replyTo = req.body.reply_to || null;
+    if (replyTo) {
+      const { data: replyMsg } = await supabase
+        .from('chat_messages').select('id, room_id, deleted_at').eq('id', replyTo).maybeSingle();
+      if (!replyMsg || String(replyMsg.room_id) !== String(room.id) || replyMsg.deleted_at) replyTo = null;
+    }
+
+    await ensureChatImageBucket();
+    const ext = CHAT_IMG_TYPES[req.file.mimetype];
+    uploadedPath = `rooms/${room.id}/${Date.now()}-${require('crypto').randomBytes(6).toString('hex')}.${ext}`;
+    const { error: upErr } = await supabase.storage.from(CHAT_IMG_BUCKET)
+      .upload(uploadedPath, req.file.buffer, { contentType: req.file.mimetype, cacheControl: '31536000' });
+    if (upErr) { uploadedPath = null; throw upErr; }
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert([{
+        room_id: room.id,
+        sender_id: user.id,
+        sender_name: user.name,
+        body: caption,
+        msg_type: 'image',
+        meta: chatImageMeta(uploadedPath, req.body.width, req.body.height),
+        mentions,
+        reply_to: replyTo
+      }])
+      .select(CHAT_MSG_COLUMNS)
+      .single();
+    if (error) throw error;
+    uploadedPath = null; // sudah tercatat di pesan — jangan dibersihkan
+
+    supabase
+      .from('chat_reads')
+      .upsert({ room_id: room.id, user_id: user.id, last_read_at: data.created_at }, { onConflict: 'room_id,user_id' })
+      .then(({ error }) => { if (error) console.error('Gagal update chat_reads:', error.message); });
+    pushNotifyRoom(room, user, chatPreviewText(data));
+
+    const replyMap = replyTo ? await buildReplyMap([replyTo]) : {};
+    res.json(serializeChatMessage(data, user.id, { [user.id]: user.avatar_url }, replyMap));
+  } catch (err) {
+    // Kalau file sudah terunggah tapi pesannya gagal disimpan, bersihkan filenya.
+    if (uploadedPath) supabase.storage.from(CHAT_IMG_BUCKET).remove([uploadedPath]).catch(() => {});
+    console.error('Chat image error:', err);
+    res.status(500).json({ error: 'Gagal mengirim foto: ' + err.message });
   }
 });
 
@@ -2829,7 +2970,7 @@ app.delete('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) 
     if (!room) return res.status(403).json({ error: 'Anda tidak memiliki akses ke ruang ini.' });
 
     const { data: existing, error: findErr } = await supabase
-      .from('chat_messages').select('sender_id, deleted_at')
+      .from('chat_messages').select('sender_id, deleted_at, msg_type, meta')
       .eq('id', req.params.msgId).eq('room_id', room.id).maybeSingle();
     if (findErr) throw findErr;
     if (!existing) return res.status(404).json({ error: 'Pesan tidak ditemukan.' });
@@ -2843,6 +2984,19 @@ app.delete('/api/chat/rooms/:id/messages/:msgId', requireAuth, async (req, res) 
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', req.params.msgId);
     if (error) throw error;
+
+    // Foto yang dihapus ikut dihapus dari storage — kecuali masih dipakai
+    // pesan lain (hasil "Teruskan" berbagi file yang sama).
+    const imgPath = existing.msg_type === 'image' && existing.meta && existing.meta.path;
+    if (imgPath && CHAT_IMG_PATH_RE.test(imgPath)) {
+      const { count } = await supabase
+        .from('chat_messages').select('id', { count: 'exact', head: true })
+        .eq('meta->>path', imgPath).is('deleted_at', null);
+      if (!count) {
+        supabase.storage.from(CHAT_IMG_BUCKET).remove([imgPath])
+          .then(({ error: rmErr }) => { if (rmErr) console.warn('Gagal hapus foto chat:', rmErr.message); });
+      }
+    }
 
     res.json({ ok: true });
   } catch (err) {

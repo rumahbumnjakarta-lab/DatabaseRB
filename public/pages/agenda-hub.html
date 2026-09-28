@@ -336,45 +336,87 @@
   .btn-submit { background: var(--blue-mid); color: #fff; }
   .btn-submit:hover { background: var(--blue-dark); }
 
-  /* Agenda List Section */
+  /* ── Rincian Acara Bulan Ini ──
+     Tiap acara jadi kartu: kotak tanggal + aksen warna kategori (sama dengan
+     kalender), status, jarak hari, jam/lokasi/narasumber, dan progres kelengkapan. */
   .agenda-list-wrapper {
-    margin-top: 32px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(15,23,42,0.07);
+    margin-top: 28px; padding: 22px; border-radius: 18px;
+    background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 4px 24px rgba(15,23,42,0.06);
   }
-  .agenda-list-wrapper h3 {
-    margin: 0 0 16px 0;
-    font-size: 16px;
-    color: var(--text-primary);
+  .al-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .al-head h3 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-primary); }
+  .al-head p { margin: 3px 0 0; font-size: 12.5px; color: var(--text-muted); }
+  .al-filters { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg-surface); }
+  .al-filters button {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: none; border-radius: 9px; cursor: pointer;
+    font: 600 12.5px 'Inter', sans-serif; color: var(--text-muted); background: none; transition: background 0.15s, color 0.15s;
   }
-  .agenda-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-mid);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    transition: transform 0.2s;
+  .al-filters button b { padding: 0 6px; border-radius: 10px; font-size: 11px; background: rgba(15,23,42,0.07); color: var(--text-secondary); }
+  .al-filters button.active { background: var(--bg-card); color: var(--blue-mid); box-shadow: 0 1px 3px rgba(15,23,42,0.1); }
+  .al-filters button.active b { background: var(--blue-active-bg); color: var(--blue-mid); }
+
+  .al-list { display: flex; flex-direction: column; gap: 10px; }
+  .al-item {
+    display: flex; align-items: center; gap: 16px; padding: 14px 16px 14px 14px; cursor: pointer;
+    border-radius: 16px; border: 1px solid var(--border); border-left: 4px solid var(--c, #155eef); background: var(--bg-card);
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
   }
-  .agenda-list-item:hover {
-    transform: translateY(-2px);
-    border-color: var(--blue-mid);
+  .al-item:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -14px rgba(15,23,42,0.35); border-color: color-mix(in srgb, var(--c, #155eef) 35%, transparent); border-left-color: var(--c, #155eef); }
+  .al-item.is-today { background: linear-gradient(90deg, var(--cbg, rgba(21,94,239,0.06)), var(--bg-card) 60%); }
+  .al-item.is-done { background: linear-gradient(180deg, rgba(15,23,42,0.015), transparent); }
+  .al-item svg { flex-shrink: 0; }
+
+  .al-tile { width: 56px; flex-shrink: 0; overflow: hidden; text-align: center; border-radius: 13px; background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(15,23,42,0.06); }
+  .al-tile-m { display: block; padding: 3px 0; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: var(--c, #155eef); }
+  .al-tile b { display: block; padding: 5px 0 1px; font-size: 21px; font-weight: 800; line-height: 1; color: var(--text-primary); }
+  .al-tile-w { display: block; padding-bottom: 5px; font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .al-item.is-done .al-tile-m { background: #94a3b8; }
+
+  .al-main { flex: 1; min-width: 0; }
+  .al-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .al-cat { padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 800; color: var(--c, #155eef); background: var(--cbg, rgba(21,94,239,0.1)); }
+  .al-st { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; }
+  .al-st::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .al-st.wait { background: rgba(217,119,6,0.12); color: #b45309; }
+  .al-st.done { background: rgba(18,183,106,0.12); color: #047857; }
+  .al-rel { padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: var(--blue-active-bg); color: var(--blue-mid); }
+  .al-rel.is-today { background: rgba(220,38,38,0.1); color: #dc2626; }
+  .al-title { font-size: 15px; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; }
+  .al-item:hover .al-title { color: var(--c, #155eef); }
+  .al-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 6px; font-size: 12.5px; color: var(--text-secondary); }
+  .al-meta > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+  .al-meta svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .al-av { width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; background: #7c5cfc; }
+
+  .al-side { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .al-prog { width: 130px; }
+  .al-prog-top { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+  .al-prog-top b { font-weight: 800; color: var(--text-primary); }
+  .al-prog-top b.is-full { color: #059669; }
+  .al-bar { height: 6px; border-radius: 6px; overflow: hidden; background: rgba(15,23,42,0.07); }
+  .al-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #155eef, #4d9ef5); }
+  .al-bar.is-full i { background: linear-gradient(90deg, #12b76a, #34d399); }
+  .al-go { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); background: var(--bg-surface); transition: background 0.15s, color 0.15s, transform 0.15s; }
+  .al-go svg { width: 16px; height: 16px; }
+  .al-item:hover .al-go { background: var(--c, #155eef); color: #fff; transform: translateX(2px); }
+
+  .list-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 16px; text-align: center; font-size: 13px; color: var(--text-muted); }
+  .list-empty .le-ico { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: var(--blue-mid); background: var(--blue-active-bg); }
+  .list-empty .le-ico svg { width: 26px; height: 26px; }
+  .list-empty b { font-size: 14px; color: var(--text-primary); }
+  .list-empty button { margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border: none; border-radius: 11px; cursor: pointer; font: 700 12.5px 'Inter', sans-serif; color: #fff; background: var(--blue-mid); }
+  .list-empty button svg { width: 15px; height: 15px; }
+
+  @media (max-width: 720px) {
+    .agenda-list-wrapper { padding: 16px; }
+    .al-item { flex-wrap: wrap; gap: 12px; padding: 12px; }
+    .al-main { flex-basis: calc(100% - 70px); }
+    .al-title { white-space: normal; }
+    .al-side { width: 100%; padding-top: 10px; border-top: 1px dashed var(--border); }
+    .al-prog { flex: 1; }
+    .al-filters { width: 100%; }
+    .al-filters button { flex: 1; justify-content: center; }
   }
-  .agenda-list-item:last-child { margin-bottom: 0; }
-  .list-item-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .list-item-title { font-weight: 700; color: var(--text-primary); font-size: 15px; }
-  .list-item-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); }
-  .list-item-meta i { width: 14px; height: 14px; }
-  .list-empty { text-align: center; color: var(--text-muted); padding: 24px; font-size: 13px; }
 
   /* Loading Overlay for Calendar */
   #calLoading {
@@ -489,8 +531,18 @@
 
       <!-- Rincian Acara -->
       <div class="agenda-list-wrapper" id="agendaListWrapper">
-        <h3>Rincian Acara Bulan Ini</h3>
-        <div id="agendaListContent"></div>
+        <div class="al-head">
+          <div>
+            <h3>Rincian Acara Bulan Ini</h3>
+            <p id="agendaListSub"></p>
+          </div>
+          <div class="al-filters" id="agendaFilters">
+            <button class="active" data-f="all" onclick="setAgendaFilter('all')">Semua <b id="afAll">0</b></button>
+            <button data-f="upcoming" onclick="setAgendaFilter('upcoming')">Mendatang <b id="afUp">0</b></button>
+            <button data-f="done" onclick="setAgendaFilter('done')">Selesai <b id="afDone">0</b></button>
+          </div>
+        </div>
+        <div class="al-list" id="agendaListContent"></div>
       </div>
 
     </div>
@@ -783,49 +835,74 @@
     }
   }
 
+  var AGENDA_FILTER = 'all';
+  function setAgendaFilter(f) {
+    AGENDA_FILTER = f;
+    document.querySelectorAll('#agendaFilters button').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+    renderAgendaList();
+  }
+
   function renderAgendaList() {
     const listDiv = document.getElementById('agendaListContent');
-    if (!currentEvents || currentEvents.length === 0) {
-      listDiv.innerHTML = '<div class="list-empty">Tidak ada acara di bulan ini.</div>';
+    const all = [...(currentEvents || [])].sort((a, b) =>
+      (a.event_date || '').localeCompare(b.event_date || '') || (a.start_time || '').localeCompare(b.start_time || ''));
+    const doneList = all.filter(isEventCompleted);
+    const upList = all.filter(ev => !isEventCompleted(ev));
+    document.getElementById('afAll').textContent = all.length;
+    document.getElementById('afUp').textContent = upList.length;
+    document.getElementById('afDone').textContent = doneList.length;
+    document.getElementById('agendaListSub').textContent =
+      `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()} · ${all.length} acara, ${upList.length} mendatang`;
+
+    const list = AGENDA_FILTER === 'upcoming' ? upList : AGENDA_FILTER === 'done' ? doneList : all;
+    if (!list.length) {
+      const msg = !all.length ? 'Belum ada acara di bulan ini' : AGENDA_FILTER === 'upcoming' ? 'Tidak ada acara mendatang' : 'Belum ada acara yang selesai';
+      listDiv.innerHTML = `<div class="list-empty"><div class="le-ico"><i data-lucide="calendar-x"></i></div><b>${msg}</b>
+        ${!all.length ? '<span>Tambahkan silabus baru, atau klik + di tanggal kalender.</span><button onclick="openAddModal()"><i data-lucide="plus"></i> Tambah Silabus</button>' : ''}</div>`;
+      if (window.lucide) window.lucide.createIcons();
       return;
     }
-    
-    let html = '';
-    const sorted = [...currentEvents].sort((a,b) => new Date(a.event_date) - new Date(b.event_date));
-    
-    sorted.forEach(ev => {
-      let timeStr = ev.start_time ? ev.start_time.substring(0,5) : 'Seharian';
-      if (ev.start_time && ev.end_time) timeStr += ` - ${ev.end_time.substring(0,5)}`;
+
+    const t = todayWIB().split('-').map(Number);
+    const todayUTC = Date.UTC(t[0], t[1] - 1, t[2]);
+    listDiv.innerHTML = list.map(ev => {
+      const c = catColor(ev.category);
+      const done = isEventCompleted(ev);
+      const d = parseDateLocal(ev.event_date);
+      const diff = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - todayUTC) / 86400000);
+      const rel = done ? '' : diff === 0 ? '<span class="al-rel is-today">Hari ini</span>' : diff === 1 ? '<span class="al-rel">Besok</span>' : diff > 1 ? `<span class="al-rel">${diff} hari lagi</span>` : '';
+      const n = CL_FIELDS.filter(f => ev[f]).length, tot = CL_FIELDS.length;
+      const speaker = String(ev.speaker_name || '').trim();
       const safeData = encodeURIComponent(JSON.stringify(ev));
-      const isCompleted = isEventCompleted(ev);
-      
-      const statusBadge = isCompleted 
-        ? `<span style="background: rgba(34,197,94,0.15); color: #22c55e; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Selesai</span>`
-        : `<span style="background: rgba(245,158,11,0.15); color: #f59e0b; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; margin-left: 8px;">Menunggu</span>`;
-
-      const checkedCount = CL_FIELDS.filter(f => ev[f]).length;
-      const clTotal = CL_FIELDS.length;
-      const progressColor = checkedCount === clTotal ? '#22c55e' : (checkedCount > 0 ? '#3b82f6' : 'var(--text-muted)');
-      const progressBadge = `<span style="display:flex; align-items:center; gap:4px; color:${progressColor};" title="Progress Kelengkapan"><i data-lucide="check-square"></i> ${checkedCount}/${clTotal}</span>`;
-
-      html += `
-        <div class="agenda-list-item" style="cursor:pointer;" onclick="openDetailModal(event, '${safeData}')">
-          <div class="list-item-left">
-            <div class="list-item-title" style="display:flex; align-items:center;">${escHtml(ev.title)} ${statusBadge}</div>
-            <div class="list-item-meta">
-              <span style="display:flex; align-items:center; gap:4px;"><i data-lucide="calendar"></i> ${new Date(ev.event_date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</span>
-              <span style="display:flex; align-items:center; gap:4px; font-family:'JetBrains Mono', monospace;"><i data-lucide="clock"></i> ${timeStr}</span>
-              ${ev.location ? `<span style="display:flex; align-items:center; gap:4px;"><i data-lucide="map-pin"></i> ${escHtml(ev.location)}</span>` : ''}
-              ${progressBadge}
+      return `
+        <div class="al-item${done ? ' is-done' : ''}${diff === 0 && !done ? ' is-today' : ''}" style="--c:${c};--cbg:${hexToRgba(c, 0.1)}" onclick="openDetailModal(event, '${safeData}')">
+          <div class="al-tile" aria-hidden="true">
+            <span class="al-tile-m">${d.toLocaleDateString('id-ID', { month: 'short' }).replace('.', '')}</span>
+            <b>${d.getDate()}</b>
+            <span class="al-tile-w">${d.toLocaleDateString('id-ID', { weekday: 'short' })}</span>
+          </div>
+          <div class="al-main">
+            <div class="al-top">
+              <span class="al-cat">${escHtml(ev.category || 'Acara')}</span>
+              <span class="al-st ${done ? 'done' : 'wait'}">${done ? 'Selesai' : 'Menunggu'}</span>
+              ${rel}
+            </div>
+            <div class="al-title" title="${escHtml(ev.title)}">${escHtml(ev.title)}</div>
+            <div class="al-meta">
+              <span><i data-lucide="clock"></i>${fmtRange(ev)}</span>
+              ${ev.location ? `<span><i data-lucide="map-pin"></i>${escHtml(ev.location)}</span>` : ''}
+              ${speaker ? `<span><span class="al-av">${escHtml(speaker.charAt(0).toUpperCase())}</span>${escHtml(speaker)}</span>` : ''}
             </div>
           </div>
-          <div>
-            <span class="agenda-badge-cat" style="font-size:11px; padding:4px 10px; border-radius:20px; font-weight:700; color:#fff; background:${catColor(ev.category)};">${escHtml(ev.category)}</span>
+          <div class="al-side">
+            <div class="al-prog" title="Kelengkapan ${n} dari ${tot}">
+              <div class="al-prog-top"><span>Kelengkapan</span><b class="${n === tot ? 'is-full' : ''}">${n === tot ? 'Lengkap ✓' : `${n}/${tot}`}</b></div>
+              <div class="al-bar${n === tot ? ' is-full' : ''}"><i style="width:${Math.round(n / tot * 100)}%"></i></div>
+            </div>
+            <span class="al-go"><i data-lucide="chevron-right"></i></span>
           </div>
-        </div>
-      `;
-    });
-    listDiv.innerHTML = html;
+        </div>`;
+    }).join('');
     if (window.lucide) window.lucide.createIcons();
   }
 
