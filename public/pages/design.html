@@ -81,53 +81,118 @@
     background: rgba(15,23,42,0.05); color: var(--text-secondary);
   }
 
-  /* Modals */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-    /* 1055, bukan 2000: harus di bawah SweetAlert2 (1060) supaya pesan
-       error/sukses tidak tertutup modal detail. */
-    z-index: 1055; opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.3s ease;
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: auto; }
-  .modal-box {
-    background: rgba(255,255,255,0.98); border: 1px solid var(--border-mid); border-radius: 22px; padding: 32px;
-    width: 95%; max-width: 520px; max-height: 90vh; overflow-y: auto;
-    transform: translateY(20px); transition: transform 0.3s ease;
-    box-shadow: 0 24px 64px rgba(15,23,42,0.18);
-  }
-  .modal-overlay.open .modal-box { transform: translateY(0); }
-  .modal-box h3 { font-size: 20px; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); }
+  /* ── Modal Detail Request (kerangka dari form-modal.css: .fm-*) ── */
+  .dd-box { max-width: 580px; }
+  .dd-box [hidden] { display: none !important; }
+  .dd-head-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .dd-head-sub .dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .5; }
+  .dd-body { padding-top: 18px; }
 
-  .form-group { margin-bottom: 14px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text-primary); font-size: 13px; font-family: 'Inter', sans-serif;
-    box-sizing: border-box; outline: none; transition: all 0.2s;
+  .dd-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .dd-pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px;
+    font-size: 12px; font-weight: 700; line-height: 1; color: var(--c); background: rgba(var(--c-rgb), 0.11);
   }
-  .form-group textarea { min-height: 80px; resize: vertical; }
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: #d946ef; box-shadow: 0 0 0 3px rgba(217,70,239,0.1);
-  }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dd-pill svg { width: 13px; height: 13px; }
+  .dd-pill.is-muted { --c: #475569; --c-rgb: 71, 85, 105; }
 
-  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-  .btn-cancel {
-    padding: 10px 20px; background: var(--bg-surface); border: 1px solid var(--border-mid);
-    color: var(--text-secondary); border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  /* Progres status */
+  .dd-track {
+    display: flex; align-items: flex-start; padding: 16px 14px 14px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-radius: 16px; background: var(--bg-surface, #f8fafc);
   }
-  .btn-submit {
-    padding: 10px 20px; background: var(--accent-design); border: none;
-    color: #fff; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px;
+  .dd-step { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+  .dd-step + .dd-step::before {
+    content: ''; position: absolute; top: 14px; right: calc(50% + 20px); left: calc(-50% + 20px);
+    height: 2px; border-radius: 2px; background: rgba(15, 23, 42, 0.1);
   }
-  .btn-submit:hover { filter: brightness(1.1); }
+  .dd-step.is-done + .dd-step::before, .dd-step.is-done + .dd-step.is-now::before { background: #16a34a; }
+  .dd-step.is-done + .dd-step.is-bad::before { background: #dc2626; }
+  .dd-dot {
+    width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #fff; border: 2px solid rgba(15, 23, 42, 0.12); color: #94a3b8; position: relative; z-index: 1;
+  }
+  .dd-dot svg { width: 14px; height: 14px; }
+  .dd-step.is-done .dd-dot { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .dd-step.is-now .dd-dot { background: #2563eb; border-color: #2563eb; color: #fff; box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.15); }
+  .dd-step.is-now.is-pending .dd-dot { background: #d97706; border-color: #d97706; box-shadow: 0 0 0 5px rgba(217, 119, 6, 0.15); }
+  .dd-step.is-bad .dd-dot { background: #dc2626; border-color: #dc2626; color: #fff; box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.13); }
+  .dd-step b { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
+  .dd-step.is-done b, .dd-step.is-now b, .dd-step.is-bad b { color: var(--text-primary); }
+  .dd-step small { margin-top: 2px; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+  /* Info tiles */
+  .dd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .dd-tile {
+    display: flex; align-items: center; gap: 11px; min-width: 0; padding: 12px;
+    border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card, #fff);
+  }
+  .dd-tile-ico {
+    width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--c, #a21caf); background: rgba(var(--c-rgb, 192, 38, 211), 0.1); font-size: 13px; font-weight: 800;
+  }
+  .dd-tile-ico svg { width: 17px; height: 17px; }
+  .dd-tile-txt { min-width: 0; }
+  .dd-tile-txt small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+  .dd-tile-txt b { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dd-tile-txt span { display: block; margin-top: 1px; font-size: 11.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dd-tile-txt span.is-warn { color: #b45309; font-weight: 600; }
+  .dd-tile-txt span.is-bad { color: #dc2626; font-weight: 600; }
+  .dd-tile-txt span.is-ok { color: #16a34a; font-weight: 600; }
+
+  /* Blok teks (deskripsi & catatan) */
+  .dd-block { margin-bottom: 16px; }
+  .dd-block-title { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+  .dd-block-title svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .dd-text {
+    padding: 12px 14px; border-radius: 12px; background: var(--bg-surface, #f8fafc); border: 1px solid var(--border);
+    font-size: 13.5px; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .dd-text.is-empty { color: var(--text-muted); font-style: italic; }
+  .dd-note { border-left: 3px solid #c026d3; background: rgba(192, 38, 211, 0.05); }
+
+  /* Kelola (staff) */
+  .dd-manage { margin-top: 4px; padding-top: 18px; border-top: 1px dashed var(--border); }
+  .dd-manage .fm-sec-title { margin-bottom: 12px; }
+  .dd-status { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin-bottom: 14px; }
+  .dd-status .fm-choice { justify-content: center; padding: 9px 8px; font-size: 12.5px; }
+  .dd-manage textarea.fm-input { min-height: 72px; font-size: 13.5px; }
+
+  .dd-btn-del { background: rgba(220, 38, 38, 0.08); color: #dc2626; }
+  .dd-btn-del:hover { background: #dc2626; color: #fff; }
+  .dd-foot-sp { flex: 1; }
+
+  @media (max-width: 640px) {
+    .dd-status { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dd-foot-sp { display: none; }
+    .dd-btn-del { flex: 0 0 auto !important; padding-left: 13px !important; padding-right: 13px !important; }
+    .dd-btn-del span { display: none; }
+  }
+  @media (max-width: 440px) {
+    .dd-grid { gap: 8px; }
+    .dd-tile { gap: 9px; padding: 10px; border-radius: 12px; }
+    .dd-tile-ico { width: 30px; height: 30px; border-radius: 9px; font-size: 11.5px; }
+    .dd-tile-ico svg { width: 15px; height: 15px; }
+    .dd-tile-txt small { font-size: 9.5px; }
+    .dd-tile-txt b { font-size: 13px; }
+    .dd-track { padding: 14px 6px 12px; }
+    .dd-step small { font-size: 10.5px; }
+  }
+
+  .col-clear {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 9px; border-radius: 8px; border: 1px solid transparent; background: none;
+    color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .col-clear:hover { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.2); color: var(--red); }
+  .col-clear[hidden] { display: none; }
+  .col-clear svg { width: 13px; height: 13px; }
 
   .kanban-empty { text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px; }
 
   @media (max-width: 768px) {
     .kanban-board { grid-template-columns: 1fr; }
-    .form-row { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -181,7 +246,9 @@
             <div id="colInProgress"></div>
           </div>
           <div class="kanban-col done">
-            <div class="kanban-col-header"><i data-lucide="check-circle-2" style="width:16px;height:16px;color:var(--green);margin-right:2px;"></i> Selesai <span class="col-count" id="countDone">0</span></div>
+            <div class="kanban-col-header"><i data-lucide="check-circle-2" style="width:16px;height:16px;color:var(--green);margin-right:2px;"></i> Selesai <span class="col-count" id="countDone">0</span>
+              <button type="button" class="col-clear" id="btnClearDone" onclick="clearDoneRequests()" title="Hapus semua request di kolom Selesai" hidden><i data-lucide="trash-2"></i> Bersihkan</button>
+            </div>
             <div id="colDone"></div>
           </div>
         </div>
@@ -305,34 +372,48 @@
 </div>
 
 <!-- Modal Detail Request -->
-<div class="modal-overlay" id="detailRequestModal" onclick="if(event.target===this) closeDetailRequestModal()">
-  <div class="modal-box">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-      <h3 id="detDrTitle" style="margin:0; padding-right:20px;">Detail Request</h3>
-      <button onclick="closeDetailRequestModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:20px;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
-    </div>
-    <div id="detDrBadges" style="margin-bottom:16px;"></div>
-    <div id="detDrBody" style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border-mid); margin-bottom:16px;"></div>
-    <div id="detDrActions" style="display:none;">
-      <div class="form-row" style="margin-bottom:12px;">
-        <div class="form-group">
-          <label>Ubah Status</label>
-          <select id="detDrStatus">
-            <option value="pending">Pending</option>
-            <option value="in_progress">Dikerjakan</option>
-            <option value="done">Selesai</option>
-            <option value="rejected">Ditolak</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Catatan Designer (Opsional)</label>
-          <input type="text" id="detDrNotes" placeholder="Catatan...">
-        </div>
+<div class="fm-overlay" id="detailRequestModal" style="--fm-a:#c026d3; --fm-a2:#a21caf; --fm-rgb:192,38,211;">
+  <div class="fm-box dd-box" role="dialog" aria-modal="true" aria-labelledby="detDrTitle">
+    <div class="fm-head">
+      <div class="fm-head-ico" id="detDrIco"><i data-lucide="palette"></i></div>
+      <div class="fm-head-text">
+        <h3 id="detDrTitle">Detail Request</h3>
+        <p class="dd-head-sub" id="detDrSub"></p>
       </div>
-      <button class="btn-submit" onclick="updateRequestStatus()" style="width:100%;">Perbarui Status</button>
+      <button type="button" class="fm-close" onclick="closeDetailRequestModal()" aria-label="Tutup"><i data-lucide="x"></i></button>
     </div>
-    <div class="modal-actions" style="margin-top:16px;">
-      <button type="button" class="btn-cancel" onclick="closeDetailRequestModal()">Tutup</button>
+
+    <div class="fm-body dd-body">
+      <div class="dd-pills" id="detDrBadges"></div>
+      <div class="dd-track" id="detDrTrack"></div>
+      <div class="dd-grid" id="detDrInfo"></div>
+
+      <div class="dd-block">
+        <div class="dd-block-title"><i data-lucide="file-text"></i> Deskripsi / Brief</div>
+        <div class="dd-text" id="detDrDesc"></div>
+      </div>
+      <div class="dd-block" id="detDrNoteWrap" hidden>
+        <div class="dd-block-title"><i data-lucide="message-square-quote"></i> Catatan Designer</div>
+        <div class="dd-text dd-note" id="detDrNoteView"></div>
+      </div>
+
+      <section class="dd-manage" id="detDrActions" hidden>
+        <div class="fm-sec-title"><span class="fm-sec-ico"><i data-lucide="sliders-horizontal"></i></span> Kelola Request</div>
+        <div class="fm-label">Status</div>
+        <div class="dd-status" id="detDrStatusChoices"></div>
+        <input type="hidden" id="detDrStatus">
+        <div class="fm-field">
+          <label for="detDrNotes">Catatan Designer <span class="fm-aside">opsional · terlihat oleh pemohon</span></label>
+          <textarea class="fm-input" id="detDrNotes" rows="2" maxlength="500" placeholder="Mis. link hasil desain, revisi yang dibutuhkan, atau alasan ditolak…"></textarea>
+        </div>
+      </section>
+    </div>
+
+    <div class="fm-foot">
+      <button type="button" class="fm-btn dd-btn-del" id="detDrDelete" onclick="deleteRequest()" title="Hapus request" hidden><i data-lucide="trash-2"></i><span>Hapus</span></button>
+      <span class="dd-foot-sp"></span>
+      <button type="button" class="fm-btn fm-btn-ghost" onclick="closeDetailRequestModal()">Tutup</button>
+      <button type="button" class="fm-btn fm-btn-primary" id="detDrSave" onclick="updateRequestStatus()" hidden><i data-lucide="check"></i> Simpan</button>
     </div>
   </div>
 </div>
@@ -354,15 +435,6 @@
       'low': 'Low' 
     };
     return `<span class="badge ${m[p] || 'badge-normal'}">${l[p] || p}</span>`;
-  }
-  function getStatusLabel(s) {
-    const m = { 
-      'pending': '<i data-lucide="clock" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Pending', 
-      'in_progress': '<i data-lucide="wrench" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Dikerjakan', 
-      'done': '<i data-lucide="check-circle-2" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Selesai', 
-      'rejected': '<i data-lucide="x-circle" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"></i> Ditolak' 
-    };
-    return m[s] || s;
   }
 
   function fetchRequests() {
@@ -411,6 +483,7 @@
     document.getElementById('countPending').textContent = pending.length;
     document.getElementById('countInProgress').textContent = inProg.length;
     document.getElementById('countDone').textContent = done.length;
+    document.getElementById('btnClearDone').hidden = !(isStaffUser() && done.length);
 
     renderColumn('colPending', pending);
     renderColumn('colInProgress', inProg);
@@ -495,62 +568,250 @@
   function openRequestModal(prefill) { drForm.open(prefill); }
   function closeRequestModal(force) { drForm.close(force); }
 
+  // ── Modal Detail Request ──
+  const DD_STATUS = {
+    pending:     { label: 'Pending',    color: '#d97706', rgb: '217, 119, 6',  icon: 'clock' },
+    in_progress: { label: 'Dikerjakan', color: '#2563eb', rgb: '37, 99, 235',  icon: 'wrench' },
+    done:        { label: 'Selesai',    color: '#16a34a', rgb: '22, 163, 74',  icon: 'check-circle-2' },
+    rejected:    { label: 'Ditolak',    color: '#dc2626', rgb: '220, 38, 38',  icon: 'x-circle' }
+  };
+  const DD_PRIORITY = {
+    urgent: { label: 'Urgent', color: '#dc2626', rgb: '220, 38, 38', icon: 'zap' },
+    normal: { label: 'Normal', color: '#2563eb', rgb: '37, 99, 235', icon: 'equal' },
+    low:    { label: 'Low',    color: '#64748b', rgb: '100, 116, 139', icon: 'arrow-down' }
+  };
+  const DD_TYPE_ICON = {
+    'Poster': 'image', 'Flyer': 'file-image', 'Banner': 'rectangle-horizontal', 'Feed IG': 'square',
+    'Story IG': 'smartphone', 'Carousel': 'gallery-horizontal', 'Logo': 'hexagon', 'Sertifikat': 'award'
+  };
+
+  function ddIcon(name) { return `<i data-lucide="${name}"></i>`; }
+  function ddDate(v, opts) {
+    const d = new Date(v);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('id-ID', Object.assign({ day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }, opts || {}));
+  }
+  function ddDaysAgo(v) {
+    const iso = new Date(v).toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+    const diff = Math.round((Date.parse(FormModal.todayISO(0)) - Date.parse(iso)) / 86400000);
+    if (isNaN(diff)) return '';
+    return diff <= 0 ? 'hari ini' : diff === 1 ? 'kemarin' : diff + ' hari lalu';
+  }
+  function ddInitials(name) {
+    const w = String(name || '?').trim().split(/\s+/);
+    return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase();
+  }
+  function ddTile(icon, label, value, sub, subCls, style) {
+    return `<div class="dd-tile">
+      <div class="dd-tile-ico"${style ? ` style="${style}"` : ''}>${icon}</div>
+      <div class="dd-tile-txt"><small>${label}</small><b title="${escHtml(value)}">${escHtml(value)}</b>${sub ? `<span class="${subCls || ''}">${escHtml(sub)}</span>` : ''}</div>
+    </div>`;
+  }
+  function ddDeadline(r) {
+    if (!r.deadline) return { value: 'Tidak ditentukan', sub: 'Fleksibel', cls: '' };
+    const iso = String(r.deadline).slice(0, 10);
+    const p = iso.split('-').map(Number);
+    const narrow = window.matchMedia('(max-width: 440px)').matches;
+    const value = new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('id-ID', { day: 'numeric', month: narrow ? 'short' : 'long', year: 'numeric' });
+    if (r.status === 'done' || r.status === 'rejected') {
+      return { value, sub: new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('id-ID', { weekday: 'long' }), cls: '', closed: true };
+    }
+    const diff = Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - Date.parse(FormModal.todayISO(0))) / 86400000);
+    if (diff < 0) return { value, sub: 'Terlambat ' + (-diff) + ' hari', cls: 'is-bad' };
+    if (diff === 0) return { value, sub: 'Hari ini', cls: 'is-warn' };
+    if (diff === 1) return { value, sub: 'Besok', cls: 'is-warn' };
+    return { value, sub: diff + ' hari lagi', cls: diff <= 3 ? 'is-warn' : '' };
+  }
+  function ddTrack(r) {
+    const created = ddDate(r.created_at, { year: undefined });
+    const doneAt = r.completed_at ? ddDate(r.completed_at, { year: undefined }) : '';
+    let steps;
+    if (r.status === 'rejected') {
+      steps = [
+        { cls: 'is-done', icon: 'check', label: 'Diajukan', sub: created },
+        { cls: 'is-bad', icon: 'x', label: 'Ditolak', sub: 'Tidak dilanjutkan' }
+      ];
+    } else {
+      const at = { pending: 0, in_progress: 1, done: 2 }[r.status] ?? 0;
+      const st = i => i < at || r.status === 'done' ? 'is-done' : i === at ? 'is-now' + (at === 0 ? ' is-pending' : '') : '';
+      steps = [
+        { cls: st(0), icon: st(0) === 'is-done' ? 'check' : 'clock', label: 'Diajukan', sub: at === 0 ? 'Menunggu antrean' : created },
+        { cls: st(1), icon: st(1) === 'is-done' ? 'check' : 'wrench', label: 'Dikerjakan', sub: at === 1 ? 'Sedang berjalan' : at > 1 ? 'Selesai digarap' : 'Belum mulai' },
+        { cls: st(2), icon: 'check', label: 'Selesai', sub: r.status === 'done' ? (doneAt || 'Selesai') : '—' }
+      ];
+    }
+    return steps.map(s => `<div class="dd-step ${s.cls}"><div class="dd-dot">${ddIcon(s.icon)}</div><b>${s.label}</b><small>${escHtml(s.sub)}</small></div>`).join('');
+  }
+
   let activeRequest = null;
   function openDetailRequest(dataStr) {
     const r = JSON.parse(decodeURIComponent(dataStr));
     activeRequest = r;
-    document.getElementById('detDrTitle').textContent = r.title;
-    document.getElementById('detDrBadges').innerHTML = `
-      <span class="badge badge-${r.status}" style="font-size:12px; padding:4px 12px;">${getStatusLabel(r.status)}</span>
-      ${getPriorityBadge(r.priority)}
-      <span class="div-badge" style="font-size:12px; padding:4px 12px; margin-left:4px;">${escHtml(r.requester_division)}</span>
-    `;
-    const dateStr = new Date(r.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
-    let body = `
-      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
-        <strong style="color:var(--text-primary);">Jenis Desain:</strong> ${escHtml(r.design_type)}
-      </div>
-      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">
-        <strong style="color:var(--text-primary);">Pemohon:</strong> ${escHtml(r.requester_name)} (${escHtml(r.requester_division)})
-      </div>
-      ${r.description ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Deskripsi:</strong><br><div style="margin-top:4px; white-space:pre-wrap;">${escHtml(r.description)}</div></div>` : ''}
-      ${r.deadline ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Deadline:</strong> ${new Date(r.deadline).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</div>` : ''}
-      ${r.designer_notes ? `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;"><strong style="color:var(--text-primary);">Catatan Designer:</strong> ${escHtml(r.designer_notes)}</div>` : ''}
-      <div style="font-size:11px; color:var(--text-muted); margin-top:12px;">Diajukan: ${dateStr}</div>
-    `;
-    document.getElementById('detDrBody').innerHTML = body;
+    const staff = isStaffUser();
+    const st = DD_STATUS[r.status] || DD_STATUS.pending;
+    const pr = DD_PRIORITY[r.priority] || DD_PRIORITY.normal;
 
-    // Show action buttons for staff
-    const actionsEl = document.getElementById('detDrActions');
-    if (currentUser && (currentUser.role === 'staff' || currentUser.role === 'sistem')) {
-      actionsEl.style.display = 'block';
-      document.getElementById('detDrStatus').value = r.status;
+    document.getElementById('detDrIco').innerHTML = ddIcon(DD_TYPE_ICON[r.design_type] || 'palette');
+    document.getElementById('detDrTitle').textContent = r.title;
+    document.getElementById('detDrSub').innerHTML = `Diajukan ${escHtml(ddDate(r.created_at, { month: 'long' }))}<span class="dot"></span>${escHtml(ddDaysAgo(r.created_at))}`;
+    document.getElementById('detDrBadges').innerHTML =
+      `<span class="dd-pill" style="--c:${st.color}; --c-rgb:${st.rgb};">${ddIcon(st.icon)} ${st.label}</span>` +
+      `<span class="dd-pill" style="--c:${pr.color}; --c-rgb:${pr.rgb};">${ddIcon(pr.icon)} Prioritas ${pr.label}</span>`;
+    document.getElementById('detDrTrack').innerHTML = ddTrack(r);
+
+    const dl = ddDeadline(r);
+    document.getElementById('detDrInfo').innerHTML =
+      ddTile(ddIcon(DD_TYPE_ICON[r.design_type] || 'palette'), 'Jenis Desain', r.design_type || '-') +
+      ddTile(ddIcon('building-2'), 'Divisi Pemohon', r.requester_division || '-', '', '', '--c:#0891b2; --c-rgb:8, 145, 178;') +
+      ddTile(escHtml(ddInitials(r.requester_name)), 'Pemohon', r.requester_name || '-', '', '', '--c:#7c3aed; --c-rgb:124, 58, 237;') +
+      ddTile(ddIcon('calendar-clock'), 'Deadline', dl.value, dl.sub, dl.cls,
+        dl.cls === 'is-bad' ? '--c:#dc2626; --c-rgb:220, 38, 38;' : dl.cls === 'is-warn' ? '--c:#d97706; --c-rgb:217, 119, 6;'
+          : dl.closed || !r.deadline ? '--c:#64748b; --c-rgb:100, 116, 139;' : '--c:#16a34a; --c-rgb:22, 163, 74;');
+
+    const desc = document.getElementById('detDrDesc');
+    desc.textContent = r.description || 'Tidak ada deskripsi.';
+    desc.classList.toggle('is-empty', !r.description);
+
+    // Staff mengedit catatan lewat textarea, jadi kotak catatan read-only
+    // cuma untuk yang bukan staff.
+    document.getElementById('detDrNoteWrap').hidden = staff || !r.designer_notes;
+    document.getElementById('detDrNoteView').textContent = r.designer_notes || '';
+
+    document.getElementById('detDrActions').hidden = !staff;
+    document.getElementById('detDrDelete').hidden = !staff;
+    document.getElementById('detDrSave').hidden = !staff;
+    if (staff) {
+      ddSetStatus(r.status);
       document.getElementById('detDrNotes').value = r.designer_notes || '';
-    } else {
-      actionsEl.style.display = 'none';
+      ddSyncSave();
     }
 
+    document.querySelector('#detailRequestModal .fm-body').scrollTop = 0;
+    document.documentElement.classList.add('fm-lock');
     document.getElementById('detailRequestModal').classList.add('open');
     if (window.lucide) window.lucide.createIcons();
   }
-  function closeDetailRequestModal() { document.getElementById('detailRequestModal').classList.remove('open'); }
+  function closeDetailRequestModal() {
+    document.getElementById('detailRequestModal').classList.remove('open');
+    if (!document.getElementById('requestModal').classList.contains('open')) document.documentElement.classList.remove('fm-lock');
+  }
+
+  function ddSetStatus(v) {
+    document.getElementById('detDrStatus').value = v;
+    document.querySelectorAll('#detDrStatusChoices .fm-choice').forEach(b => {
+      const on = b.dataset.value === v;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    ddSyncSave();
+  }
+  // Tombol Simpan cuma aktif kalau ada yang berubah
+  function ddSyncSave() {
+    if (!activeRequest) return;
+    const changed = document.getElementById('detDrStatus').value !== activeRequest.status ||
+      document.getElementById('detDrNotes').value.trim() !== (activeRequest.designer_notes || '').trim();
+    document.getElementById('detDrSave').disabled = !changed;
+  }
+
+  (function initDetailModal() {
+    const wrap = document.getElementById('detDrStatusChoices');
+    wrap.innerHTML = Object.keys(DD_STATUS).map(k => {
+      const s = DD_STATUS[k];
+      return `<button type="button" class="fm-choice has-ico" data-value="${k}" style="--c:${s.color};" aria-pressed="false">${ddIcon(s.icon)} ${s.label}</button>`;
+    }).join('');
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('.fm-choice');
+      if (b) ddSetStatus(b.dataset.value);
+    });
+    document.getElementById('detDrNotes').addEventListener('input', ddSyncSave);
+
+    const ov = document.getElementById('detailRequestModal');
+    let downOnBackdrop = false;
+    ov.addEventListener('mousedown', e => { downOnBackdrop = e.target === ov; });
+    ov.addEventListener('click', e => { if (e.target === ov && downOnBackdrop) closeDetailRequestModal(); });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || !ov.classList.contains('open')) return;
+      if (window.Swal && Swal.isVisible && Swal.isVisible() && !(Swal.getPopup() && Swal.getPopup().classList.contains('swal2-toast'))) return;
+      closeDetailRequestModal();
+    });
+  })();
 
   function updateRequestStatus() {
     if (!activeRequest) return;
+    const btn = document.getElementById('detDrSave');
     const status = document.getElementById('detDrStatus').value;
-    const designer_notes = document.getElementById('detDrNotes').value;
-    fetch('/api/design-requests/' + activeRequest.id + '/status', {
+    const designer_notes = document.getElementById('detDrNotes').value.trim();
+    const html = btn.innerHTML;
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    fetch('/api/design-requests/' + encodeURIComponent(activeRequest.id) + '/status', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, designer_notes })
     })
     .then(r => r.json())
     .then(res => {
-      if (res.error) { Swal.fire({ icon:'error', title:'Gagal', text:res.error }); return; }
-      Swal.fire({ icon:'success', title:'Berhasil', text:'Status request diperbarui!', timer:1500, showConfirmButton:false });
+      if (res.error) throw new Error(res.error);
+      showSwalToast('Request berhasil diperbarui.', 'success');
       closeDetailRequestModal();
       fetchRequests();
     })
-    .catch(() => Swal.fire({ icon:'error', title:'Gagal', text:'Terjadi kesalahan jaringan.' }));
+    .catch(err => Swal.fire({ icon:'error', title:'Gagal', text: err.message && err.message !== 'Failed to fetch' ? err.message : 'Terjadi kesalahan jaringan.' }))
+    .finally(() => { btn.innerHTML = html; ddSyncSave(); });
+  }
+
+  function isStaffUser() {
+    return !!(currentUser && (currentUser.role === 'staff' || currentUser.role === 'sistem'));
+  }
+
+  function confirmDelete(title, html) {
+    return Swal.fire({
+      icon: 'warning', title, html,
+      showCancelButton: true, reverseButtons: true, focusCancel: true,
+      confirmButtonText: 'Ya, hapus', cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626'
+    }).then(r => r.isConfirmed);
+  }
+
+  function sendDelete(url, body) {
+    return fetch(url, {
+      method: 'DELETE',
+      headers: body ? { 'Content-Type': 'application/json' } : {},
+      body: body ? JSON.stringify(body) : undefined
+    }).then(r => r.json().catch(() => ({})).then(res => {
+      if (!r.ok || res.error) throw new Error(res.error || 'Gagal menghapus request.');
+      return res;
+    }));
+  }
+
+  function deleteRequest() {
+    if (!activeRequest) return;
+    const r = activeRequest;
+    confirmDelete('Hapus request ini?', `<b>${escHtml(r.title)}</b> akan dihapus permanen dan tidak bisa dikembalikan.`)
+      .then(ok => {
+        if (!ok) return;
+        return sendDelete('/api/design-requests/' + encodeURIComponent(r.id)).then(() => {
+          closeDetailRequestModal();
+          showSwalToast('Request berhasil dihapus.', 'success');
+          fetchRequests();
+        });
+      })
+      .catch(err => Swal.fire({ icon:'error', title:'Gagal', text: err.message || 'Terjadi kesalahan jaringan.' }));
+  }
+
+  // Bersihkan kolom Selesai — ikut filter yang aktif, jadi yang dihapus
+  // persis kartu yang sedang terlihat di kolom itu.
+  function clearDoneRequests() {
+    const filtered = currentFilter === 'all' ? allRequests : allRequests.filter(r => r.status === currentFilter);
+    const done = filtered.filter(r => r.status === 'done' || r.status === 'rejected');
+    if (!done.length) return;
+    confirmDelete('Bersihkan kolom Selesai?', `<b>${done.length} request</b> yang sudah selesai/ditolak akan dihapus permanen dan tidak bisa dikembalikan.`)
+      .then(ok => {
+        if (!ok) return;
+        return sendDelete('/api/design-requests', { ids: done.map(r => r.id) }).then(res => {
+          showSwalToast((res.deleted || 0) + ' request berhasil dihapus.', 'success');
+          fetchRequests();
+        });
+      })
+      .catch(err => Swal.fire({ icon:'error', title:'Gagal', text: err.message || 'Terjadi kesalahan jaringan.' }));
   }
 
   function submitRequest(e) {

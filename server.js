@@ -1252,6 +1252,39 @@ app.put('/api/design-requests/:id/status', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/design-requests — Hapus banyak request sekaligus (tombol
+// "Bersihkan" di kolom Selesai). Cuma yang statusnya done/rejected yang
+// ikut terhapus, jadi request yang masih jalan aman walau id-nya terkirim.
+app.delete('/api/design-requests', requireAuth, requireStaff, async (req, res) => {
+  const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.filter(id => typeof id === 'string').slice(0, 500) : [];
+  if (!ids.length) return res.status(400).json({ error: 'Tidak ada request yang dipilih.' });
+  try {
+    const { data, error } = await supabase
+      .from('design_requests').delete()
+      .in('id', ids).in('status', ['done', 'rejected'])
+      .select('id');
+    if (error) throw error;
+    res.json({ message: 'Request berhasil dihapus.', deleted: (data || []).length });
+  } catch (err) {
+    console.error('Error bulk deleting design requests:', err);
+    res.status(500).json({ error: err.message || 'Gagal menghapus request.' });
+  }
+});
+
+// DELETE /api/design-requests/:id — Hapus satu request (Staff/Sistem)
+app.delete('/api/design-requests/:id', requireAuth, requireStaff, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('design_requests').delete().eq('id', req.params.id).select('id');
+    if (error) throw error;
+    if (!data || !data.length) return res.status(404).json({ error: 'Request tidak ditemukan.' });
+    res.json({ message: 'Request berhasil dihapus.' });
+  } catch (err) {
+    console.error('Error deleting design request:', err);
+    res.status(500).json({ error: err.message || 'Gagal menghapus request.' });
+  }
+});
+
 // ─── Business Development Partnerships API ──────────────────────────────────────
 
 // GET /api/bd-partnerships — Ambil data outreach/partnership
